@@ -12,7 +12,7 @@ export default function Footer() {
       <motion.div
         className="sticky z-30 bottom-0 bg-[#3B82F6] rounded-[36px] left-0 w-full h-80 flex justify-center items-center overflow-hidden"
         style={{
-          scale: useTransform(scrollYProgress, [0.4, 0.6], [1, 1]),
+          scale: useTransform(scrollYProgress, [0.2, 0.4], [1, 1]),
         }}
         initial={{ opacity: 0, y: 100 }}
         whileInView={{ opacity: 1, y: 0 }}

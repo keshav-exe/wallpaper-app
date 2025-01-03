@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { motion } from "motion/react";
+import { toast } from "sonner";
 
 interface CircleProps {
   color: string;
@@ -149,6 +150,8 @@ export default function Home() {
   } as const;
 
   const [isCompatibleBrowser, setIsCompatibleBrowser] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     const isChromium = /chrome|chromium|crios/i.test(navigator.userAgent);
@@ -206,9 +209,11 @@ export default function Home() {
   if (!isCompatibleBrowser) {
     return (
       <main className="h-screen flex items-center justify-center p-4">
-        <div className="max-w-md text-center">
-          <h1 className="text-2xl font-bold mb-4">Browser Not Supported</h1>
-          <p className="text-gray-600">
+        <div className="max-w-lg text-center flex flex-col items-center justify-center gap-4">
+          <h1 className="text-4xl font-bold tracking-tighter">
+            Coming Soon to your browser!
+          </h1>
+          <p className="text-secondary-foreground font-medium">
             Sorry, this app is only compatible with Chrome and Chromium-based
             browsers at this time.
           </p>
@@ -229,13 +234,17 @@ export default function Home() {
 
   const downloadImage = async () => {
     const wallpaper = document.getElementById("wallpaper");
-    if (!wallpaper) return;
+    if (!wallpaper) {
+      toast.error("Could not find wallpaper element");
+      return;
+    }
 
+    setIsDownloading(true);
     try {
       const dataUrl = await toPng(wallpaper, {
         backgroundColor: "#ffffff",
-        width: canvasRef.current?.width, // 4K width
-        height: canvasRef.current?.height, // 4K height
+        width: canvasRef.current?.width,
+        height: canvasRef.current?.height,
         style: {
           width: "100%",
           height: "100%",
@@ -247,8 +256,33 @@ export default function Home() {
       link.download = "gradient-circles.png";
       link.href = dataUrl;
       link.click();
+      toast.success("Image downloaded successfully!");
     } catch (err) {
       console.error("Failed to generate image:", err);
+      toast.error("Failed to generate image");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const generateNewPalette = () => {
+    setIsGenerating(true);
+    try {
+      setPreviousCircles(circles);
+      setCircles(
+        circles.map((circle) => ({
+          ...circle,
+          cx: Math.random() * 100,
+          cy: Math.random() * 100,
+        }))
+      );
+      setNoiseIntensity(Math.floor(Math.random() * (100 - 30) + 30));
+      toast.success("Generated new palette!");
+    } catch (err) {
+      console.error("Failed to generate new palette:", err);
+      toast.error("Failed to generate new palette");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -305,20 +339,15 @@ export default function Home() {
         </div>
         <div className="absolute bottom-4 flex items-center justify-end gap-2 z-50 px-4 w-full">
           <button
-            className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors duration-300 z-50"
-            onClick={() => {
-              setPreviousCircles(circles);
-              setCircles(
-                circles.map((circle) => ({
-                  ...circle,
-                  cx: Math.random() * 100,
-                  cy: Math.random() * 100,
-                }))
-              );
-              setNoiseIntensity(Math.floor(Math.random() * (100 - 30) + 30));
-            }}
+            className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors duration-300 z-50 disabled:opacity-50"
+            onClick={generateNewPalette}
+            disabled={isGenerating}
           >
-            <RefreshCcw className="size-4 text-primary" />
+            <RefreshCcw
+              className={`size-4 text-primary ${
+                isGenerating ? "animate-spin" : ""
+              }`}
+            />
             <span className="sr-only">Generate New Palette</span>
           </button>
           <button
@@ -336,10 +365,15 @@ export default function Home() {
 
           <button
             onClick={downloadImage}
-            className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors duration-300 z-50"
+            className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors duration-300 z-50 disabled:opacity-50"
             type="button"
+            disabled={isDownloading}
           >
-            <Download className="size-4 text-primary" />
+            <Download
+              className={`size-4 text-primary ${
+                isDownloading ? "animate-pulse" : ""
+              }`}
+            />
             <span className="sr-only">Download PNG</span>
           </button>
         </div>
@@ -506,7 +540,7 @@ export default function Home() {
                       <button
                         key={pos.name}
                         onClick={() => setTextPosition(pos.class)}
-                        className={`rounded-xl md:rounded-2xl flex items-center justify-center transition-all ${
+                        className={`rounded-xl md:rounded-2xl flex flex-shrink-0 items-center justify-center transition-all ${
                           textPosition === pos.class
                             ? "border-2 border-secondary/80 bg-primary/20"
                             : "border-2 hover:border-secondary/80 bg-secondary"
