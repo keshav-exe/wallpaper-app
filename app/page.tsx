@@ -148,6 +148,24 @@ export default function Home() {
     pointerEvents: "none",
   } as const;
 
+  const [isCompatibleBrowser, setIsCompatibleBrowser] = useState(true);
+
+  useEffect(() => {
+    const isChromium = /chrome|chromium|crios/i.test(navigator.userAgent);
+    setIsCompatibleBrowser(isChromium);
+  }, []);
+
+  useEffect(() => {
+    const currentFont = fonts.find((f) => f.name === fontFamily);
+    if (!currentFont?.variable) {
+      const availableWeights = currentFont?.weights || [];
+      const closestWeight = availableWeights.reduce((prev, curr) =>
+        Math.abs(curr - fontWeight) < Math.abs(prev - fontWeight) ? curr : prev
+      );
+      setFontWeight(closestWeight);
+    }
+  }, [fontFamily]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -185,17 +203,19 @@ export default function Home() {
     ctx.putImageData(imageData, 0, 0);
   }, [noiseIntensity, noiseColor]);
 
-  useEffect(() => {
-    const currentFont = fonts.find((f) => f.name === fontFamily);
-    if (!currentFont?.variable) {
-      // If font is not variable, set weight to closest available
-      const availableWeights = currentFont?.weights || [];
-      const closestWeight = availableWeights.reduce((prev, curr) =>
-        Math.abs(curr - fontWeight) < Math.abs(prev - fontWeight) ? curr : prev
-      );
-      setFontWeight(closestWeight);
-    }
-  }, [fontFamily]);
+  if (!isCompatibleBrowser) {
+    return (
+      <main className="h-screen flex items-center justify-center p-4">
+        <div className="max-w-md text-center">
+          <h1 className="text-2xl font-bold mb-4">Browser Not Supported</h1>
+          <p className="text-gray-600">
+            Sorry, this app is only compatible with Chrome and Chromium-based
+            browsers at this time.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   const updateColor = (newColor: string, index: number) => {
     setPreviousCircles(circles);
