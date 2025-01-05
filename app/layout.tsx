@@ -1,7 +1,7 @@
 import "./globals.css";
 import { onest } from "@/lib/fonts";
-import Footer from "@/components/core-ui/footer";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata = {
   title: "Create your own gradient wallpapers - GradientWalls",
@@ -66,9 +66,16 @@ export default function RootLayout({
       <body
         className={`${onest.variable} antialiased min-h-screen bg-background`}
       >
-        {children}
-        <Toaster />
-        <Footer />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+          {/* <Footer /> */}
+        </ThemeProvider>
       </body>
     </html>
   );

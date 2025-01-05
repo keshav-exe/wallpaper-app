@@ -1,48 +1,23 @@
 "use client";
+import DesktopApp from "@/components/core-ui/desktop-app";
+import MobileApp from "@/components/core-ui/mobile-app";
 
-import { Input } from "@/components/ui/input";
-import { RefreshCcw, Download, Undo } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { toPng } from "html-to-image";
-import { Slider } from "@/components/ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { motion } from "motion/react";
 import { toast } from "sonner";
-
-interface CircleProps {
-  color: string;
-  cx: number;
-  cy: number;
-}
-
-interface FontOption {
-  name: string;
-  variable: boolean;
-  weights: number[];
-}
-
-interface Position {
-  name: string;
-  class: string;
-}
+import {
+  INITIAL_BACKGROUND_COLORS,
+  FONTS,
+  NOISE_SVG_PATTERNS,
+  type CircleProps,
+  type FontOption,
+  RESOLUTIONS,
+  INITIAL_COLORS,
+} from "@/lib/constants";
 
 export default function Home() {
-  const [colors] = useState([
-    "#FF0080", // Pink
-    "#7928CA", // Purple
-    "#0070F3", // Blue
-    "#00DFD8", // Cyan
-    "#F5A623", // Orange
-    "#FF4D4D", // Red
-    "#F472B6", // Pink
-    "#6366F1", // Violet
-  ]);
+  const [colors] = useState(INITIAL_COLORS);
+  const [backgroundColors] = useState(INITIAL_BACKGROUND_COLORS);
   const [activeColor, setActiveColor] = useState<number | null>(null);
   const [circles, setCircles] = useState<CircleProps[]>(() =>
     colors.map((color) => ({
@@ -57,83 +32,27 @@ export default function Home() {
   const [fontWeight, setFontWeight] = useState(800);
   const [letterSpacing, setLetterSpacing] = useState(-0.02);
   const [opacity, setOpacity] = useState(100);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fontFamily, setFontFamily] = useState("Onest");
-  const [activeTab, setActiveTab] = useState("text");
-  const [noiseIntensity, setNoiseIntensity] = useState(0);
-  const [noiseColor, setNoiseColor] = useState(30);
-  const [textPosition, setTextPosition] = useState<string>(
-    "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+  const [activeTab, setActiveTab] = useState<"colors" | "text" | "effects">(
+    "text"
   );
+  const [noiseIntensity, setNoiseIntensity] = useState(0);
+  const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [lineHeight, setLineHeight] = useState(1.2);
   const [textColor, setTextColor] = useState("#ffffff");
-  const positions: Position[] = [
-    { name: "Top Left", class: "top-4 left-4 -translate-x-0 -translate-y-0" },
-    { name: "Top", class: "top-4 left-1/2 -translate-x-1/2 -translate-y-0" },
-    { name: "Top Right", class: "top-4 right-4 translate-x-0 -translate-y-0" },
-    { name: "Left", class: "top-1/2 left-4 -translate-x-0 -translate-y-1/2" },
-    {
-      name: "Center",
-      class: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-    },
-    { name: "Right", class: "top-1/2 right-4 translate-x-0 -translate-y-1/2" },
-    {
-      name: "Bottom Left",
-      class: "bottom-4 left-4 -translate-x-0 translate-y-0",
-    },
-    {
-      name: "Bottom",
-      class: "bottom-4 left-1/2 -translate-x-1/2 translate-y-0",
-    },
-    {
-      name: "Bottom Right",
-      class: "bottom-4 right-4 translate-x-0 translate-y-0",
-    },
-  ];
+  const [noiseType, setNoiseType] = useState<"original" | "film">("original");
+  const [activeColorPicker, setActiveColorPicker] = useState<string>(textColor);
+  const [activeColorType, setActiveColorType] = useState<
+    "text" | "background" | "gradient"
+  >("text");
+  const [resolution, setResolution] = useState<(typeof RESOLUTIONS)[number]>(
+    RESOLUTIONS[0]
+  );
+  const [saturation, setSaturation] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [brightness, setBrightness] = useState(100);
 
-  const fonts: FontOption[] = [
-    {
-      name: "Onest",
-      variable: true,
-      weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
-    },
-    {
-      name: "Bricolage Grotesque",
-      variable: true,
-      weights: [200, 300, 400, 500, 600, 700, 800],
-    },
-    { name: "Space Mono", variable: false, weights: [400, 700] },
-    {
-      name: "Space Grotesk",
-      variable: true,
-      weights: [300, 400, 500, 600, 700],
-    },
-    {
-      name: "Manrope",
-      variable: true,
-      weights: [200, 300, 400, 500, 600, 700, 800],
-    },
-    {
-      name: "Poppins",
-      variable: false,
-      weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
-    },
-  ];
-
-  const noiseSvg = `
-  <svg viewBox="0 0 200 200" xmlns='http://www.w3.org/2000/svg'>
-    <filter id='noiseFilter'>
-      <feTurbulence 
-        type='fractalNoise' 
-        baseFrequency='1.5' 
-        numOctaves='3' 
-        stitchTiles='stitch'/>
-      <feColorMatrix type="saturate" values="0"/>
-      <feBlend mode='overlay' in2='SourceGraphic'/>
-    </filter>
-    <rect width='100%' height='100%' filter='url(#noiseFilter)'/>
-  </svg>
-  `;
+  const fonts: FontOption[] = FONTS;
 
   const svgToBase64 = (svg: string) => `data:image/svg+xml;base64,${btoa(svg)}`;
 
@@ -143,9 +62,9 @@ export default function Home() {
     left: 0,
     width: "100%",
     height: "100%",
-    backgroundImage: `url("${svgToBase64(noiseSvg)}")`,
+    backgroundImage: `url("${svgToBase64(NOISE_SVG_PATTERNS[noiseType])}")`,
     opacity: noiseIntensity / 100,
-    mixBlendMode: "overlay",
+    mixBlendMode: noiseType === "film" ? "multiply" : "soft-light",
     pointerEvents: "none",
   } as const;
 
@@ -168,43 +87,6 @@ export default function Home() {
       setFontWeight(closestWeight);
     }
   }, [fontFamily]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const container = document.getElementById("wallpaper");
-    if (!container) return;
-
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const imageData = ctx.createImageData(canvas.width, canvas.height);
-    const data = imageData.data;
-
-    // Fill with dark pixels
-    for (let i = 0; i < data.length; i += 4) {
-      data[i] = 0; // R
-      data[i + 1] = 0; // G
-      data[i + 2] = 0; // B
-      data[i + 3] = 255; // A
-    }
-
-    // Apply noise with reduced intensity
-    if (noiseIntensity > 0) {
-      for (let i = 0; i < data.length; i += 4) {
-        const noiseValue = (noiseColor / 600) * Math.random();
-        data[i] += noiseValue * 255;
-        data[i + 1] += noiseValue * 255;
-        data[i + 2] += noiseValue * 255;
-      }
-    }
-
-    ctx.putImageData(imageData, 0, 0);
-  }, [noiseIntensity, noiseColor]);
 
   if (!isCompatibleBrowser) {
     return (
@@ -234,32 +116,42 @@ export default function Home() {
 
   const downloadImage = async () => {
     const wallpaper = document.getElementById("wallpaper");
-    if (!wallpaper) {
-      toast.error("Could not find wallpaper element");
-      return;
-    }
+    if (!wallpaper) return;
 
     setIsDownloading(true);
     try {
+      // Store original styles
+      const originalTransform = wallpaper.style.transform;
+      const originalWidth = wallpaper.style.width;
+      const originalHeight = wallpaper.style.height;
+
+      // Reset transform and set exact dimensions
+      wallpaper.style.transform = "none";
+      wallpaper.style.width = `${resolution.width}px`;
+      wallpaper.style.height = `${resolution.height}px`;
+
       const dataUrl = await toPng(wallpaper, {
-        backgroundColor: "#ffffff",
-        width: canvasRef.current?.width,
-        height: canvasRef.current?.height,
+        width: resolution.width,
+        height: resolution.height,
+        pixelRatio: 1, // Force 1:1 pixel ratio
         style: {
-          width: "100%",
-          height: "100%",
+          transform: "none",
+          transformOrigin: "top left",
         },
-        pixelRatio: 10,
       });
 
+      // Restore original styles
+      wallpaper.style.transform = originalTransform;
+      wallpaper.style.width = originalWidth;
+      wallpaper.style.height = originalHeight;
+
       const link = document.createElement("a");
-      link.download = "gradient-circles.png";
+      link.download = `gradient-circles-${resolution.width}x${resolution.height}.png`;
       link.href = dataUrl;
       link.click();
-      toast.success("Image downloaded successfully!");
     } catch (err) {
-      console.error("Failed to generate image:", err);
-      toast.error("Failed to generate image");
+      console.error(err);
+      toast.error("Failed to download image");
     } finally {
       setIsDownloading(false);
     }
@@ -276,7 +168,36 @@ export default function Home() {
           cy: Math.random() * 100,
         }))
       );
+
+      // Randomize noise settings
       setNoiseIntensity(Math.floor(Math.random() * (100 - 30) + 30));
+      const noiseTypes: ("original" | "film")[] = ["original", "film"];
+      setNoiseType(noiseTypes[Math.floor(Math.random() * noiseTypes.length)]);
+
+      // Randomize background color
+      const randomColor =
+        backgroundColors[Math.floor(Math.random() * backgroundColors.length)];
+      setBackgroundColor(randomColor);
+
+      // Randomize font family
+      const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
+      setFontFamily(randomFont.name);
+
+      // Randomize font weight (between 100-900)
+      const availableWeights = randomFont.weights || [
+        100, 200, 300, 400, 500, 600, 700, 800, 900,
+      ];
+      setFontWeight(
+        availableWeights[Math.floor(Math.random() * availableWeights.length)]
+      );
+
+      //Randomize font size
+      const fontSizes = [24, 28, 32, 36, 40, 44, 48, 52, 56, 60];
+      setFontSize(fontSizes[Math.floor(Math.random() * fontSizes.length)]);
+
+      // Randomize letter spacing (between -0.05 and 0.1)
+      setLetterSpacing(Number((Math.random() * 0.15 - 0.05).toFixed(2)));
+
       toast.success("Generated new palette!");
     } catch (err) {
       console.error("Failed to generate new palette:", err);
@@ -286,355 +207,78 @@ export default function Home() {
     }
   };
 
+  const handleColorChange = (color: string) => {
+    switch (activeColorType) {
+      case "text":
+        setTextColor(color);
+        break;
+      case "background":
+        setBackgroundColor(color);
+        break;
+      case "gradient":
+        if (activeColor !== null) {
+          updateColor(color, activeColor);
+        }
+        break;
+    }
+  };
   return (
-    <main className="relative flex flex-col max-w-3xl mx-auto gap-4 items-center justify-center p-4 h-screen md:p-8">
-      <motion.section
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{
-          duration: 1,
-          ease: "easeInOut",
-          type: "spring",
-          damping: 20,
-          stiffness: 100,
-          mass: 0.5,
-        }}
-        className="max-w-3xl w-full aspect-video relative rounded-3xl overflow-hidden shadow-[0_0_24px_rgba(31,31,31,0.1)] flex-shrink-0"
-      >
-        <div className="w-full h-full relative" id="wallpaper">
-          <canvas
-            ref={canvasRef}
-            className="absolute top-0 left-0 w-full h-full"
-            style={{ mixBlendMode: "overlay", opacity: noiseIntensity / 100 }}
-          />
-          <div style={noiseStyle} />
-          <p
-            className={`absolute ${textPosition} z-50`}
-            style={{
-              fontSize: `${fontSize}px`,
-              fontWeight: fontWeight,
-              letterSpacing: `${letterSpacing}em`,
-              fontFamily: fontFamily,
-              opacity: opacity / 100,
-              lineHeight: lineHeight,
-              color: textColor,
-            }}
-          >
-            {text}
-          </p>
-          <svg className="w-full h-full">
-            {circles.map((circle, i) => (
-              <circle
-                key={i}
-                cx={`${circle.cx}%`}
-                cy={`${circle.cy}%`}
-                r="30%"
-                fill={circle.color}
-                style={{
-                  filter: "blur(100px)",
-                }}
-              />
-            ))}
-          </svg>
-        </div>
-        <div className="absolute bottom-4 flex items-center justify-end gap-2 z-50 px-4 w-full">
-          <button
-            className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors duration-300 z-50 disabled:opacity-50"
-            onClick={generateNewPalette}
-            disabled={isGenerating}
-          >
-            <RefreshCcw
-              className={`size-4 text-primary ${
-                isGenerating ? "animate-spin" : ""
-              }`}
-            />
-            <span className="sr-only">Generate New Palette</span>
-          </button>
-          <button
-            className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors duration-300 z-50"
-            onClick={() => {
-              if (previousCircles.length > 0) {
-                setCircles(previousCircles);
-                setPreviousCircles([]);
-              }
-            }}
-          >
-            <Undo className="size-4 text-primary" />
-            <span className="sr-only">Undo</span>
-          </button>
-
-          <button
-            onClick={downloadImage}
-            className="p-2 bg-white/80 rounded-full hover:bg-white transition-colors duration-300 z-50 disabled:opacity-50"
-            type="button"
-            disabled={isDownloading}
-          >
-            <Download
-              className={`size-4 text-primary ${
-                isDownloading ? "animate-pulse" : ""
-              }`}
-            />
-            <span className="sr-only">Download PNG</span>
-          </button>
-        </div>
-      </motion.section>
-
-      <motion.section
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{
-          duration: 1,
-          ease: "easeInOut",
-          type: "spring",
-          damping: 20,
-          stiffness: 100,
-          mass: 0.5,
-        }}
-        className="w-full bg-white shadow-[0_0_12px_rgba(31,31,31,0.1)] rounded-3xl flex flex-col h-full md:max-h-[30vh] max-h-[50vh] no-scrollbar"
-      >
-        <div className="flex border-b flex-shrink-0 px-4">
-          <button
-            onClick={() => setActiveTab("text")}
-            className={`px-4 py-3 text-sm ${
-              activeTab === "text" ? "border-b-2 border-primary" : ""
-            }`}
-          >
-            Text
-          </button>
-          <button
-            onClick={() => setActiveTab("colors")}
-            className={`px-4 py-3 text-sm ${
-              activeTab === "colors" ? "border-b-2 border-primary" : ""
-            }`}
-          >
-            Colors
-          </button>
-          <button
-            onClick={() => setActiveTab("effects")}
-            className={`px-4 py-3 text-sm ${
-              activeTab === "effects" ? "border-b-2 border-primary" : ""
-            }`}
-          >
-            Effects
-          </button>
-        </div>
-
-        <div className="p-4 overflow-y-auto h-full no-scrollbar">
-          {activeTab === "text" && (
-            <div className="flex flex-col gap-4">
-              <div className="flex gap-4 w-full">
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">Text</label>
-                  <Input
-                    type="text"
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="Enter text"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Font Family
-                  </label>
-                  <Select value={fontFamily} onValueChange={setFontFamily}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select font" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {fonts.map((font) => (
-                        <SelectItem key={font.name} value={font.name}>
-                          {font.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">Size</label>
-                  <Slider
-                    min={12}
-                    max={100}
-                    step={1}
-                    value={[fontSize]}
-                    onValueChange={([value]) => setFontSize(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {fontSize}px
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Weight
-                  </label>
-                  <Slider
-                    min={100}
-                    max={900}
-                    step={100}
-                    value={[fontWeight]}
-                    onValueChange={([value]) => setFontWeight(value)}
-                    disabled={
-                      !fonts.find((f) => f.name === fontFamily)?.variable
-                    }
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {fontWeight}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Spacing
-                  </label>
-                  <Slider
-                    min={-0.1}
-                    max={0.1}
-                    step={0.01}
-                    value={[letterSpacing]}
-                    onValueChange={([value]) => setLetterSpacing(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {letterSpacing}em
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Opacity
-                  </label>
-                  <Slider
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={[opacity]}
-                    onValueChange={([value]) => setOpacity(value)}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Line Height
-                  </label>
-                  <Slider
-                    min={0.5}
-                    max={2}
-                    step={0.1}
-                    value={[lineHeight]}
-                    onValueChange={([value]) => setLineHeight(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {lineHeight}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 w-full">
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Position
-                  </label>
-                  <div className="grid grid-cols-3 gap-1 aspect-video">
-                    {positions.map((pos) => (
-                      <button
-                        key={pos.name}
-                        onClick={() => setTextPosition(pos.class)}
-                        className={`rounded-xl md:rounded-2xl flex flex-shrink-0 items-center justify-center transition-all ${
-                          textPosition === pos.class
-                            ? "border-2 border-secondary/80 bg-primary/20"
-                            : "border-2 hover:border-secondary/80 bg-secondary"
-                        }`}
-                        title={pos.name}
-                      ></button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">Color</label>
-                  <div className="flex items-center gap-2">
-                    <span
-                      onClick={() => {
-                        setTextColor(textColor ?? "#ffffff");
-                      }}
-                      className="size-5 rounded-full cursor-pointer aspect-square border border-primary/60"
-                      style={{
-                        backgroundColor: textColor,
-                      }}
-                    />
-                    <Input
-                      type="text"
-                      value={textColor}
-                      placeholder="Color"
-                      onChange={(e) => setTextColor(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "colors" && (
-            <div className="grid grid-cols-2 gap-4">
-              {circles.map((circle, i) => (
-                <div key={i} className="flex items-start gap-2 relative w-full">
-                  <div className="flex items-center gap-2 w-full">
-                    <span
-                      onClick={() => {
-                        if (activeColor === i) {
-                          setActiveColor(null);
-                        } else {
-                          setActiveColor(i);
-                        }
-                      }}
-                      className="size-5 rounded-full cursor-pointer aspect-square"
-                      style={{
-                        backgroundColor: circle.color,
-                      }}
-                    />
-                    <Input
-                      type="text"
-                      value={circle.color}
-                      placeholder="Color"
-                      onChange={(e) => updateColor(e.target.value, i)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === "effects" && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-sm text-muted-foreground">
-                  Noise Intensity
-                </label>
-                <Slider
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={[noiseIntensity]}
-                  onValueChange={([value]) => setNoiseIntensity(value)}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm text-muted-foreground">
-                  Noise Color
-                </label>
-                <Slider
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={[noiseColor]}
-                  onValueChange={([value]) => setNoiseColor(value)}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </motion.section>
-    </main>
+    <>
+      <div className="md:hidden">
+        <MobileApp />
+      </div>
+      <div className="hidden md:block">
+        <DesktopApp
+          backgroundColor={backgroundColor}
+          activeTab={activeTab}
+          fontSize={fontSize}
+          fontWeight={fontWeight}
+          letterSpacing={letterSpacing}
+          fontFamily={fontFamily}
+          opacity={opacity}
+          lineHeight={lineHeight}
+          text={text}
+          circles={circles}
+          noiseIntensity={noiseIntensity}
+          noiseStyle={noiseStyle}
+          textColor={textColor}
+          generateNewPalette={generateNewPalette}
+          isGenerating={isGenerating}
+          downloadImage={downloadImage}
+          isDownloading={isDownloading}
+          fonts={fonts}
+          activeColorPicker={activeColorPicker}
+          noiseType={noiseType}
+          setNoiseIntensity={setNoiseIntensity}
+          setNoiseType={setNoiseType}
+          setTextColor={setTextColor}
+          setText={setText}
+          setFontFamily={setFontFamily}
+          setFontSize={setFontSize}
+          setFontWeight={setFontWeight}
+          setLetterSpacing={setLetterSpacing}
+          setOpacity={setOpacity}
+          setLineHeight={setLineHeight}
+          setBackgroundColor={setBackgroundColor}
+          setActiveColorPicker={setActiveColorPicker}
+          handleColorChange={handleColorChange}
+          setActiveColorType={setActiveColorType}
+          setActiveColor={setActiveColor}
+          updateColor={updateColor}
+          previousCircles={previousCircles}
+          setCircles={setCircles}
+          setPreviousCircles={setPreviousCircles}
+          setActiveTab={setActiveTab}
+          resolution={resolution}
+          setResolution={setResolution}
+          saturation={saturation}
+          setSaturation={setSaturation}
+          contrast={contrast}
+          setContrast={setContrast}
+          brightness={brightness}
+          setBrightness={setBrightness}
+        />
+      </div>
+    </>
   );
 }
