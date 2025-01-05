@@ -15,15 +15,15 @@ import { motion } from "motion/react";
 import { HexColorPicker } from "react-colorful";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { CircleProps, FontOption, RESOLUTIONS } from "@/lib/constants";
-import { ModeToggle } from "../ui/themeSwitch";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+  BLUR_OPTIONS,
+  CircleProps,
+  FontOption,
+  RESOLUTIONS,
+} from "@/lib/constants";
+import { ModeToggle } from "../ui/themeSwitch";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -35,8 +35,8 @@ interface DesktopAppProps {
   lineHeight: number;
   text: string;
   circles: CircleProps[];
-  noiseIntensity: number;
-  noiseStyle: React.CSSProperties;
+  filterIntensity: number;
+  filterStyle: React.CSSProperties;
   textColor: string;
   generateNewPalette: () => void;
   isGenerating: boolean;
@@ -62,9 +62,9 @@ interface DesktopAppProps {
   updateColor: (color: string, index: number) => void;
   fonts: FontOption[];
   activeColorPicker: string;
-  noiseType: "original" | "film";
-  setNoiseIntensity: (noiseIntensity: number) => void;
-  setNoiseType: (noiseType: "original" | "film") => void;
+  filterType: "pastel" | "film" | "grain" | "static";
+  setFilterIntensity: (filterIntensity: number) => void;
+  setFilterType: (filterType: "pastel" | "film" | "grain" | "static") => void;
   setTextColor: (textColor: string) => void;
   resolution: (typeof RESOLUTIONS)[number];
   setResolution: (res: (typeof RESOLUTIONS)[number]) => void;
@@ -74,9 +74,13 @@ interface DesktopAppProps {
   setContrast: (value: number) => void;
   brightness: number;
   setBrightness: (value: number) => void;
+  blur: number;
+  setBlur: (value: number) => void;
 }
 
 export default function DesktopApp({
+  blur,
+  setBlur,
   backgroundColor,
   fontSize,
   fontWeight,
@@ -86,8 +90,8 @@ export default function DesktopApp({
   lineHeight,
   text,
   circles,
-  noiseIntensity,
-  noiseStyle,
+  filterIntensity,
+  filterStyle,
   textColor,
   generateNewPalette,
   isGenerating,
@@ -113,9 +117,9 @@ export default function DesktopApp({
   updateColor,
   fonts,
   activeColorPicker,
-  noiseType,
-  setNoiseIntensity,
-  setNoiseType,
+  filterType,
+  setFilterIntensity,
+  setFilterType,
   setTextColor,
   resolution,
   setResolution,
@@ -144,7 +148,7 @@ export default function DesktopApp({
         <div className="flex items-center gap-2 p-2 bg-muted rounded-xl w-full">
           <div className="flex items-center gap-2">
             <Image src={logo} alt="logo" className="size-6" unoptimized />
-            <p className="text-xs text-foreground bg-primary/20 border border-primary/40 px-2 py-1 rounded-full tracking-tighter">
+            <p className="text-xs text-foreground bg-primary/50 font-semibold border border-primary/50 px-3 py-1 rounded-full tracking-tighter">
               ALPHA
             </p>
           </div>
@@ -391,37 +395,57 @@ export default function DesktopApp({
               <div className="flex flex-col gap-4 p-4">
                 <div className="flex flex-col gap-2">
                   <label className="text-sm text-muted-foreground">
-                    Noise Type
+                    Filter Type
                   </label>
                   <Select
-                    value={noiseType}
-                    onValueChange={(value: "original" | "film") =>
-                      setNoiseType(value)
-                    }
+                    value={filterType}
+                    onValueChange={(
+                      value: "pastel" | "film" | "grain" | "static"
+                    ) => setFilterType(value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select noise type" />
+                      <SelectValue placeholder="Select filter type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="original">Original</SelectItem>
+                      <SelectItem value="pastel">Pastel</SelectItem>
                       <SelectItem value="film">Film Grain</SelectItem>
+                      <SelectItem value="grain">Grain</SelectItem>
+                      <SelectItem value="static">Static</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm text-muted-foreground">
-                    Noise Intensity
+                    Filter Intensity
                   </label>
                   <Slider
                     min={0}
                     max={100}
                     step={1}
-                    value={[noiseIntensity]}
-                    onValueChange={([value]) => setNoiseIntensity(value)}
+                    value={[filterIntensity]}
+                    onValueChange={([value]) => setFilterIntensity(value)}
                   />
                   <span className="text-xs text-muted-foreground">
-                    {noiseIntensity}%
+                    {filterIntensity}%
                   </span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm text-muted-foreground">Blur</label>
+                  <div className="flex items-center gap-2">
+                    {BLUR_OPTIONS.map((blurOption) => (
+                      <button
+                        key={blurOption.value}
+                        onClick={() => setBlur(blurOption.value)}
+                        className={cn(
+                          "w-full rounded-full px-4 py-2 text-sm",
+                          blur === blurOption.value &&
+                            "bg-primary text-primary-foreground"
+                        )}
+                      >
+                        <span>{blurOption.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm text-muted-foreground">
@@ -482,21 +506,18 @@ export default function DesktopApp({
                   <Download className="size-4" />
                 </button>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="w-fit px-4 py-2">
-                    {resolution.scale}x
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    {RESOLUTIONS.map((res) => (
-                      <DropdownMenuItem
-                        key={res.name}
-                        onClick={() => setResolution(res)}
-                      >
-                        {res.name} ({res.width}×{res.height})
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <button
+                  onClick={() => {
+                    const currentIndex = RESOLUTIONS.findIndex(
+                      (r) => r.width === resolution.width
+                    );
+                    const nextIndex = (currentIndex + 1) % RESOLUTIONS.length;
+                    setResolution(RESOLUTIONS[nextIndex]);
+                  }}
+                  className="w-fit px-4 py-2"
+                >
+                  {resolution.scale}x
+                </button>
               </div>
             </div>
           </div>
@@ -521,7 +542,7 @@ export default function DesktopApp({
           <div
             className="relative w-full aspect-video overflow-hidden"
             style={{
-              maxWidth: "100%",
+              width: "100%",
               height: "auto",
             }}
           >
@@ -532,14 +553,19 @@ export default function DesktopApp({
                 backgroundColor,
                 width: `${resolution.width}px`,
                 height: `${resolution.height}px`,
-                transform: `scale(${770 / resolution.width})`,
+                transform: `scale(${768 / resolution.width})`,
                 transformOrigin: "top left",
                 fontSize: `${fontSize}px`,
                 letterSpacing: `${letterSpacing}em`,
-                filter: `contrast(${contrast}%) brightness(${brightness}%) saturate(${saturation}%)`,
+                filter: `brightness(${brightness}%) saturate(${saturation}%)`,
               }}
             >
-              <div style={noiseStyle} />
+              <div
+                style={{
+                  filter: `contrast(${contrast}%) `,
+                  ...filterStyle,
+                }}
+              />
               <p
                 className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2  z-50 px-8 right-1/2`}
                 style={{
@@ -568,7 +594,7 @@ export default function DesktopApp({
                     r="30%"
                     fill={circle.color}
                     style={{
-                      filter: `blur(${(100 * resolution.width) / 1920}px)`,
+                      filter: `blur(${(blur * resolution.width) / 1920}px)`,
                     }}
                   />
                 ))}

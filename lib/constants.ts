@@ -66,8 +66,8 @@ export const FONTS: FontOption[] = [
   },
 ];
 
-export const NOISE_SVG_PATTERNS = {
-  original: `
+export const FILTER_SVG_PATTERNS = {
+  pastel: `
     <svg viewBox="0 0 200 200" xmlns='http://www.w3.org/2000/svg'>
       <filter id='noiseFilter'>
         <feTurbulence 
@@ -100,10 +100,50 @@ export const NOISE_SVG_PATTERNS = {
       <rect width='100%' height='100%' filter='url(#noiseFilter)'/>
     </svg>
   `,
+  grain: `
+    <svg viewBox="0 0 200 200" xmlns='http://www.w3.org/2000/svg'>
+      <filter id='noiseFilter'>
+        <feTurbulence 
+          type='turbulence' 
+          baseFrequency='0.8' 
+          numOctaves='4' 
+          seed='5'
+          stitchTiles='stitch'/>
+        <feColorMatrix type="saturate" values="0"/>
+        <feComponentTransfer>
+          <feFuncR type="gamma" amplitude="0.8" exponent="1"/>
+          <feFuncG type="gamma" amplitude="0.8" exponent="1"/>
+          <feFuncB type="gamma" amplitude="0.8" exponent="1"/>
+        </feComponentTransfer>
+      </filter>
+      <rect width='100%' height='100%' filter='url(#noiseFilter)'/>
+    </svg>
+  `,
+  static: `
+    <svg viewBox="0 0 200 200" xmlns='http://www.w3.org/2000/svg'>
+      <filter id='noiseFilter'>
+        <feTurbulence 
+          type='fractalNoise' 
+          baseFrequency='2' 
+          numOctaves='5' 
+          seed='10'
+          stitchTiles='stitch'/>
+        <feColorMatrix type="saturate" values="0"/>
+        <feConvolveMatrix order="3" kernelMatrix="1 -1 1 -1 1 -1 1 -1 1"/>
+      </filter>
+      <rect width='100%' height='100%' filter='url(#noiseFilter)'/>
+    </svg>
+  `,
 } as const;
 
 export const RESOLUTIONS = [
   { name: "1080p", width: 1920, height: 1080, scale: 1 },
   { name: "2K", width: 2560, height: 1440, scale: 2 },
   { name: "4K", width: 3840, height: 2160, scale: 3 },
+] as const;
+
+export const BLUR_OPTIONS = [
+  { name: "Low", value: 100 },
+  { name: "Medium", value: 150 },
+  { name: "High", value: 200 },
 ] as const;
