@@ -1,13 +1,13 @@
 import "./globals.css";
 import { onest } from "@/lib/fonts";
-import Footer from "@/components/core-ui/footer";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata = {
-  title: "Create your own gradient wallpapers - GradientWalls",
+  title: "Gradii - Generate your own gradient wallpapers",
   description:
     "A simple gradient generator for your walls. Add your own colors or use one of our presets. Texts are also supported.",
-  metadataBase: new URL("https://gradientwalls.keshavbagaade.com"),
+  metadataBase: new URL("https://gradii.keshavbagaade.com"),
   keywords: [
     "gradient",
     "wallpaper",
@@ -21,23 +21,23 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://gradientwalls.keshavbagaade.com",
-    title: "Create your own gradient wallpapers - GradientWalls",
+    url: "https://gradii.keshavbagaade.com",
+    title: "Gradii - Generate your own gradient wallpapers",
     description:
       "A simple gradient generator for your walls. Add your own colors or use one of our presets. Texts are also supported.",
-    siteName: "GradientWalls",
+    siteName: "Gradii",
     images: [
       {
         url: "https://i.ibb.co/sjgMRkz/16x9.png",
         width: 1200,
         height: 630,
-        alt: "GradientWalls Preview",
+        alt: "Gradii Preview",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Create your own gradient wallpapers - GradientWalls",
+    title: "Gradii - Generate your own gradient wallpapers",
     description:
       "A simple gradient generator for your walls. Add your own colors or use one of our presets. Texts are also supported.",
     creator: "@kshvbgde",
@@ -56,6 +56,22 @@ export const metadata = {
   },
 };
 
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "white" },
+    { media: "(prefers-color-scheme: dark)", color: "black" },
+  ],
+};
+
+export const links = [
+  {
+    rel: "preload",
+    href: "/logo.svg",
+    as: "image",
+    type: "image/svg+xml",
+  },
+];
+
 export default function RootLayout({
   children,
 }: {
@@ -66,9 +82,16 @@ export default function RootLayout({
       <body
         className={`${onest.variable} antialiased min-h-screen bg-background`}
       >
-        {children}
-        <Toaster />
-        <Footer />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+          {/* <Footer /> */}
+        </ThemeProvider>
       </body>
     </html>
   );
