@@ -39,7 +39,13 @@ export function SidebarHeader() {
         <button className="flex items-center justify-between w-full outline-none focus:outline-none">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
-              <Image src={logo} alt="logo" className="size-8" />
+              <Image
+                src={logo}
+                alt="logo"
+                className="size-8"
+                priority
+                loading="eager"
+              />
               <p className="font-bold text-primary tracking-tighter text-xl">
                 Gradii
               </p>
@@ -92,7 +98,7 @@ export function SidebarHeader() {
             <Image
               src={gradientWallpaper}
               alt="gradient"
-              className="absolute bottom-0 right-0 size-40 inset-0 w-full h-full"
+              className="absolute bottom-0 right-0 inset-0 w-full h-full"
             />
           </section>
 

@@ -147,6 +147,24 @@ export default function DesktopApp({
     }),
   };
 
+  const scaleVariants: Variants = {
+    initial: {
+      y: 20,
+      opacity: 0,
+      position: "absolute",
+    },
+    animate: {
+      y: 0,
+      opacity: 1,
+      position: "absolute",
+    },
+    exit: {
+      y: -20,
+      opacity: 0,
+      position: "absolute",
+    },
+  };
+
   const [[page, direction], setPage] = useState([0, 0]);
   const tabIndex = ["text", "colors", "effects"].indexOf(activeTab);
 
@@ -345,7 +363,7 @@ export default function DesktopApp({
                   }}
                   className="flex flex-col gap-4 relative"
                 >
-                  <div className="w-full flex justify-center bg-gradient-to-b from-muted to-muted/5 py-6 px-4 sticky top-0 z-10">
+                  <div className="w-full flex justify-center bg-gradient-to-b from-secondary to-secondary/5 py-6 px-4 sticky top-0 z-10">
                     <HexColorPicker
                       color={activeColorPicker}
                       onChange={(color) => {
@@ -561,8 +579,8 @@ export default function DesktopApp({
                 </motion.div>
               )}
 
-              <div className="sticky bottom-0 flex items-center gap-2 z-50 w-full bg-gradient-to-b from-transparent to-muted p-4">
-                <div className="flex w-full bg-primary rounded-full text-primary-foreground divide-x divide-primary-foreground/20 divide-dashed">
+              <div className="sticky bottom-0 flex items-center gap-2 z-50 w-full bg-gradient-to-b from-transparent to-secondary p-4">
+                <div className="flex w-full bg-primary rounded-2xl text-primary-foreground divide-x divide-primary-foreground/20 divide-dashed">
                   <button
                     onClick={downloadImage}
                     className="w-full flex items-center justify-center gap-2 text-primary-foreground text-sm"
@@ -580,9 +598,24 @@ export default function DesktopApp({
                       const nextIndex = (currentIndex + 1) % RESOLUTIONS.length;
                       setResolution(RESOLUTIONS[nextIndex]);
                     }}
-                    className="w-fit px-4 py-2"
+                    className="w-14 h-12 px-4 py-2 relative items-center justify-center"
                   >
-                    {resolution.scale}x
+                    <AnimatePresence mode="sync">
+                      <motion.span
+                        key={resolution.scale}
+                        variants={scaleVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={{
+                          duration: 0.2,
+                          ease: "easeInOut",
+                        }}
+                        className="top-3 inset-0"
+                      >
+                        {resolution.scale}x
+                      </motion.span>
+                    </AnimatePresence>
                   </button>
                 </div>
               </div>
@@ -612,7 +645,7 @@ export default function DesktopApp({
             </div>
           )}
           <div
-            className="relative w-full aspect-video overflow-hidden"
+            className="relative w-full aspect-video overflow-hidden shadow-[0_0_24px_rgba(31,31,31,0.5)] dark:shadow-[0_0_24px_rgba(231,231,231,0.5)]"
             style={{
               width: "100%",
               height: "auto",
