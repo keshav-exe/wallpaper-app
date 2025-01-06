@@ -4,10 +4,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata = {
-  title: "Create your own gradient wallpapers - GradientWalls",
+  title: "Gradii - Generate your own gradient wallpapers",
   description:
     "A simple gradient generator for your walls. Add your own colors or use one of our presets. Texts are also supported.",
-  metadataBase: new URL("https://gradientwalls.keshavbagaade.com"),
+  metadataBase: new URL("https://gradii.keshavbagaade.com"),
   keywords: [
     "gradient",
     "wallpaper",
@@ -21,23 +21,23 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://gradientwalls.keshavbagaade.com",
-    title: "Create your own gradient wallpapers - GradientWalls",
+    url: "https://gradii.keshavbagaade.com",
+    title: "Gradii - Generate your own gradient wallpapers",
     description:
       "A simple gradient generator for your walls. Add your own colors or use one of our presets. Texts are also supported.",
-    siteName: "GradientWalls",
+    siteName: "Gradii",
     images: [
       {
         url: "https://i.ibb.co/sjgMRkz/16x9.png",
         width: 1200,
         height: 630,
-        alt: "GradientWalls Preview",
+        alt: "Gradii Preview",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Create your own gradient wallpapers - GradientWalls",
+    title: "Gradii - Generate your own gradient wallpapers",
     description:
       "A simple gradient generator for your walls. Add your own colors or use one of our presets. Texts are also supported.",
     creator: "@kshvbgde",

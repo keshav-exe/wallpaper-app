@@ -1,9 +1,8 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { Download, Undo, WandSparklesIcon } from "lucide-react";
+import { CameraIcon, Download } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
-import logo from "@/public/logo.svg";
 import {
   Select,
   SelectContent,
@@ -11,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { motion } from "motion/react";
+import { motion, AnimatePresence, Variants } from "motion/react";
 import { HexColorPicker } from "react-colorful";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -21,9 +20,10 @@ import {
   FontOption,
   RESOLUTIONS,
 } from "@/lib/constants";
-import { ModeToggle } from "../ui/themeSwitch";
-import Image from "next/image";
+import { ButtonsChin } from "../ui/buttonsChin";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { SidebarHeader } from "../ui/sidebarHeader";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -130,6 +130,31 @@ export default function DesktopApp({
   brightness,
   setBrightness,
 }: DesktopAppProps) {
+  const slideVariants: Variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 1000 : -1000,
+      opacity: 0,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 1000 : -1000,
+      opacity: 0,
+    }),
+  };
+
+  const [[page, direction], setPage] = useState([0, 0]);
+  const tabIndex = ["text", "colors", "effects"].indexOf(activeTab);
+
+  useEffect(() => {
+    const newDirection = tabIndex > page ? 1 : -1;
+    setPage([tabIndex, newDirection]);
+  }, [tabIndex]);
+
   return (
     <main className="relative flex gap-2 items-center justify-center p-4 h-screen w-full">
       <motion.aside
@@ -145,17 +170,14 @@ export default function DesktopApp({
         }}
         className="flex flex-col gap-2 w-full max-w-[40vw] lg:max-w-[30vw] xl:max-w-[20vw] h-full overflow-hidden"
       >
-        <div className="flex items-center gap-2 p-2 bg-muted rounded-xl w-full">
-          <div className="flex items-center gap-2">
-            <Image src={logo} alt="logo" className="size-6" unoptimized />
-            <p className="text-xs text-foreground bg-primary/50 font-semibold border border-primary/50 px-3 py-1 rounded-full tracking-tighter">
-              ALPHA
-            </p>
+        <div className="flex items-center gap-2 p-2 bg-secondary rounded-xl w-full">
+          <div className="flex items-center gap-2 justify-between w-full">
+            <SidebarHeader />
           </div>
         </div>
 
         {/* controls */}
-        <section className="w-full bg-muted border-primary/20 rounded-2xl flex flex-col no-scrollbar overflow-hidden h-full">
+        <section className="w-full bg-secondary border-primary/20 rounded-2xl flex flex-col no-scrollbar overflow-hidden h-full">
           <Tabs
             value={activeTab}
             onValueChange={(value) =>
@@ -164,368 +186,413 @@ export default function DesktopApp({
             className="w-full"
           >
             <TabsList className="w-full flex items-center gap-1">
-              <TabsTrigger value="text" className="flex-1">
-                Text
-              </TabsTrigger>
-              <TabsTrigger value="colors" className="flex-1">
-                Colors
-              </TabsTrigger>
-              <TabsTrigger value="effects" className="flex-1">
-                Effects
-              </TabsTrigger>
+              {["text", "colors", "effects"].map((tab) => (
+                <TabsTrigger key={tab} value={tab} className="flex-1 relative">
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {activeTab === tab && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-primary/10 rounded-full"
+                      transition={{ type: "spring", duration: 0.5 }}
+                    />
+                  )}
+                </TabsTrigger>
+              ))}
             </TabsList>
           </Tabs>
 
-          <div className="flex flex-col gap-4 overflow-y-auto justify-between no-scrollbar relative h-full">
-            {activeTab === "text" && (
-              <div className="flex flex-col gap-4 p-4">
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">Text</label>
-                  <Input
-                    type="text"
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="Enter text"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Font Family
-                  </label>
-                  <Select value={fontFamily} onValueChange={setFontFamily}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select font" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {fonts.map((font) => (
-                        <SelectItem key={font.name} value={font.name}>
-                          {font.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Font Size
-                  </label>
-                  <Slider
-                    min={12}
-                    max={100}
-                    step={1}
-                    value={[fontSize]}
-                    onValueChange={([value]) => setFontSize(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {fontSize}px
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Font Weight
-                  </label>
-                  <Slider
-                    min={100}
-                    max={900}
-                    step={100}
-                    value={[fontWeight]}
-                    onValueChange={([value]) => setFontWeight(value)}
-                    disabled={
-                      !fonts.find((f) => f.name === fontFamily)?.variable
-                    }
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {fontWeight}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Letter Spacing
-                  </label>
-                  <Slider
-                    min={-0.1}
-                    max={0.1}
-                    step={0.01}
-                    value={[letterSpacing]}
-                    onValueChange={([value]) => setLetterSpacing(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {letterSpacing}em
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Text Opacity
-                  </label>
-                  <Slider
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={[opacity]}
-                    onValueChange={([value]) => setOpacity(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {opacity}%
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Line Height
-                  </label>
-                  <Slider
-                    min={0.5}
-                    max={2}
-                    step={0.1}
-                    value={[lineHeight]}
-                    onValueChange={([value]) => setLineHeight(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {lineHeight}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "colors" && (
-              <div className="flex flex-col gap-4 relative">
-                <div className="w-full flex justify-center bg-gradient-to-b from-muted to-muted/5 py-6 px-4 sticky top-0 z-10">
-                  <HexColorPicker
-                    color={activeColorPicker}
-                    onChange={(color) => {
-                      setActiveColorPicker(color);
-                      handleColorChange(color);
-                    }}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar p-4">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Gradient Colors
-                    </label>
-                    {circles.map((circle, i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-2 relative w-full"
-                      >
-                        <div
-                          className="flex items-center gap-2 w-full"
-                          onClick={() => {
-                            setActiveColorType("gradient");
-                            setActiveColor(i);
-                            setActiveColorPicker(circle.color);
-                          }}
-                        >
-                          <span
-                            className="size-5 rounded-full cursor-pointer aspect-square"
-                            style={{
-                              backgroundColor: circle.color,
-                            }}
-                          />
-                          <Input
-                            type="text"
-                            value={circle.color}
-                            placeholder="Color"
-                            onChange={(e) => updateColor(e.target.value, i)}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Background Color
-                    </label>
-                    <div
-                      className="flex items-center gap-2"
-                      onClick={() => {
-                        setActiveColorType("background");
-                        setActiveColorPicker(backgroundColor);
-                      }}
-                    >
-                      <span
-                        className="size-5 rounded-full cursor-pointer aspect-square border border-primary/60"
-                        style={{ backgroundColor: backgroundColor }}
-                      />
-                      <Input
-                        type="text"
-                        value={backgroundColor}
-                        placeholder="Color"
-                        onChange={(e) => setBackgroundColor(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Text Color
-                    </label>
-                    <div
-                      className="flex  items-center gap-2"
-                      onClick={() => {
-                        setActiveColorType("text");
-                        setActiveColorPicker(textColor);
-                      }}
-                    >
-                      <span
-                        className="size-5 rounded-full cursor-pointer aspect-square border border-primary/60"
-                        style={{
-                          backgroundColor: textColor,
-                        }}
-                      />
-                      <Input
-                        type="text"
-                        value={textColor}
-                        placeholder="Color"
-                        onChange={(e) => setTextColor(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "effects" && (
-              <div className="flex flex-col gap-4 p-4">
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">
-                    Filter Type
-                  </label>
-                  <Select
-                    value={filterType}
-                    onValueChange={(
-                      value: "pastel" | "film" | "grain" | "static"
-                    ) => setFilterType(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select filter type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pastel">Pastel</SelectItem>
-                      <SelectItem value="film">Film Grain</SelectItem>
-                      <SelectItem value="grain">Grain</SelectItem>
-                      <SelectItem value="static">Static</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">
-                    Filter Intensity
-                  </label>
-                  <Slider
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={[filterIntensity]}
-                    onValueChange={([value]) => setFilterIntensity(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {filterIntensity}%
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">Blur</label>
-                  <div className="flex items-center gap-2">
-                    {BLUR_OPTIONS.map((blurOption) => (
-                      <button
-                        key={blurOption.value}
-                        onClick={() => setBlur(blurOption.value)}
-                        className={cn(
-                          "w-full rounded-full px-4 py-2 text-sm",
-                          blur === blurOption.value &&
-                            "bg-primary text-primary-foreground"
-                        )}
-                      >
-                        <span>{blurOption.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">
-                    Saturation
-                  </label>
-                  <Slider
-                    min={0}
-                    max={200}
-                    step={1}
-                    value={[saturation]}
-                    onValueChange={([value]) => setSaturation(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {saturation}%
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">
-                    Contrast
-                  </label>
-                  <Slider
-                    min={0}
-                    max={200}
-                    step={1}
-                    value={[contrast]}
-                    onValueChange={([value]) => setContrast(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {contrast}%
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">
-                    Brightness
-                  </label>
-                  <Slider
-                    min={0}
-                    max={200}
-                    step={1}
-                    value={[brightness]}
-                    onValueChange={([value]) => setBrightness(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {brightness}%
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <div className="sticky bottom-0 flex items-center gap-2 z-50 w-full bg-gradient-to-b from-transparent to-muted p-4">
-              <div className="flex w-full bg-primary rounded-full text-primary-foreground divide-x divide-primary-foreground/20 divide-dashed">
-                <button
-                  onClick={downloadImage}
-                  className="w-full flex items-center justify-center gap-2 text-primary-foreground text-sm"
-                  disabled={isDownloading}
-                >
-                  Download
-                  <Download className="size-4" />
-                </button>
-
-                <button
-                  onClick={() => {
-                    const currentIndex = RESOLUTIONS.findIndex(
-                      (r) => r.width === resolution.width
-                    );
-                    const nextIndex = (currentIndex + 1) % RESOLUTIONS.length;
-                    setResolution(RESOLUTIONS[nextIndex]);
+          <AnimatePresence custom={direction} mode="wait">
+            <motion.div className="flex flex-col gap-4 overflow-y-auto justify-between no-scrollbar relative h-full">
+              {activeTab === "text" && (
+                <motion.div
+                  key={activeTab}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 },
                   }}
-                  className="w-fit px-4 py-2"
+                  className="flex flex-col gap-4 p-4"
                 >
-                  {resolution.scale}x
-                </button>
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="text-sm text-muted-foreground">
+                      Text
+                    </label>
+                    <Input
+                      type="text"
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      placeholder="Enter text"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="text-sm text-muted-foreground">
+                      Font Family
+                    </label>
+                    <Select value={fontFamily} onValueChange={setFontFamily}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select font" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fonts.map((font) => (
+                          <SelectItem key={font.name} value={font.name}>
+                            {font.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="text-sm text-muted-foreground">
+                      Font Size
+                    </label>
+                    <Slider
+                      min={12}
+                      max={100}
+                      step={1}
+                      value={[fontSize]}
+                      onValueChange={([value]) => setFontSize(value)}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {fontSize}px
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="text-sm text-muted-foreground">
+                      Font Weight
+                    </label>
+                    <Slider
+                      min={100}
+                      max={900}
+                      step={100}
+                      value={[fontWeight]}
+                      onValueChange={([value]) => setFontWeight(value)}
+                      disabled={
+                        !fonts.find((f) => f.name === fontFamily)?.variable
+                      }
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {fontWeight}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="text-sm text-muted-foreground">
+                      Letter Spacing
+                    </label>
+                    <Slider
+                      min={-0.1}
+                      max={0.1}
+                      step={0.01}
+                      value={[letterSpacing]}
+                      onValueChange={([value]) => setLetterSpacing(value)}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {letterSpacing}em
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="text-sm text-muted-foreground">
+                      Text Opacity
+                    </label>
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={[opacity]}
+                      onValueChange={([value]) => setOpacity(value)}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {opacity}%
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="text-sm text-muted-foreground">
+                      Line Height
+                    </label>
+                    <Slider
+                      min={0.5}
+                      max={2}
+                      step={0.1}
+                      value={[lineHeight]}
+                      onValueChange={([value]) => setLineHeight(value)}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {lineHeight}
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === "colors" && (
+                <motion.div
+                  key={activeTab}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 },
+                  }}
+                  className="flex flex-col gap-4 relative"
+                >
+                  <div className="w-full flex justify-center bg-gradient-to-b from-muted to-muted/5 py-6 px-4 sticky top-0 z-10">
+                    <HexColorPicker
+                      color={activeColorPicker}
+                      onChange={(color) => {
+                        setActiveColorPicker(color);
+                        handleColorChange(color);
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar p-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm text-muted-foreground">
+                        Gradient Colors
+                      </label>
+                      {circles.map((circle, i) => (
+                        <div
+                          key={i}
+                          className="flex items-start gap-2 relative w-full"
+                        >
+                          <div
+                            className="flex items-center gap-2 w-full"
+                            onClick={() => {
+                              setActiveColorType("gradient");
+                              setActiveColor(i);
+                              setActiveColorPicker(circle.color);
+                            }}
+                          >
+                            <span
+                              className="size-5 rounded-full cursor-pointer aspect-square"
+                              style={{
+                                backgroundColor: circle.color,
+                              }}
+                            />
+                            <Input
+                              type="text"
+                              value={circle.color}
+                              placeholder="Color"
+                              onChange={(e) => updateColor(e.target.value, i)}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm text-muted-foreground">
+                        Background Color
+                      </label>
+                      <div
+                        className="flex items-center gap-2"
+                        onClick={() => {
+                          setActiveColorType("background");
+                          setActiveColorPicker(backgroundColor);
+                        }}
+                      >
+                        <span
+                          className="size-5 rounded-full cursor-pointer aspect-square border border-primary/60"
+                          style={{ backgroundColor: backgroundColor }}
+                        />
+                        <Input
+                          type="text"
+                          value={backgroundColor}
+                          placeholder="Color"
+                          onChange={(e) => setBackgroundColor(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm text-muted-foreground">
+                        Text Color
+                      </label>
+                      <div
+                        className="flex  items-center gap-2"
+                        onClick={() => {
+                          setActiveColorType("text");
+                          setActiveColorPicker(textColor);
+                        }}
+                      >
+                        <span
+                          className="size-5 rounded-full cursor-pointer aspect-square border border-primary/60"
+                          style={{
+                            backgroundColor: textColor,
+                          }}
+                        />
+                        <Input
+                          type="text"
+                          value={textColor}
+                          placeholder="Color"
+                          onChange={(e) => setTextColor(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === "effects" && (
+                <motion.div
+                  key={activeTab}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 },
+                  }}
+                  className="flex flex-col gap-4 p-4"
+                >
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm text-muted-foreground">
+                      Filter Type
+                    </label>
+                    <Select
+                      value={filterType}
+                      onValueChange={(
+                        value: "pastel" | "film" | "grain" | "static"
+                      ) => setFilterType(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select filter type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pastel">Pastel</SelectItem>
+                        <SelectItem value="film">Film Grain</SelectItem>
+                        <SelectItem value="grain">Grain</SelectItem>
+                        <SelectItem value="static">Static</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm text-muted-foreground">
+                      Filter Intensity
+                    </label>
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={[filterIntensity]}
+                      onValueChange={([value]) => setFilterIntensity(value)}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {filterIntensity}%
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm text-muted-foreground">
+                      Blur
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {BLUR_OPTIONS.map((blurOption) => (
+                        <button
+                          key={blurOption.value}
+                          onClick={() => setBlur(blurOption.value)}
+                          className={cn(
+                            "w-full rounded-full px-4 py-2 text-sm",
+                            blur === blurOption.value &&
+                              "bg-primary text-primary-foreground"
+                          )}
+                        >
+                          <span>{blurOption.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm text-muted-foreground">
+                      Saturation
+                    </label>
+                    <Slider
+                      min={0}
+                      max={200}
+                      step={1}
+                      value={[saturation]}
+                      onValueChange={([value]) => setSaturation(value)}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {saturation}%
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm text-muted-foreground">
+                      Contrast
+                    </label>
+                    <Slider
+                      min={0}
+                      max={200}
+                      step={1}
+                      value={[contrast]}
+                      onValueChange={([value]) => setContrast(value)}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {contrast}%
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm text-muted-foreground">
+                      Brightness
+                    </label>
+                    <Slider
+                      min={0}
+                      max={200}
+                      step={1}
+                      value={[brightness]}
+                      onValueChange={([value]) => setBrightness(value)}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {brightness}%
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+
+              <div className="sticky bottom-0 flex items-center gap-2 z-50 w-full bg-gradient-to-b from-transparent to-muted p-4">
+                <div className="flex w-full bg-primary rounded-full text-primary-foreground divide-x divide-primary-foreground/20 divide-dashed">
+                  <button
+                    onClick={downloadImage}
+                    className="w-full flex items-center justify-center gap-2 text-primary-foreground text-sm"
+                    disabled={isDownloading}
+                  >
+                    Download
+                    <Download className="size-4" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const currentIndex = RESOLUTIONS.findIndex(
+                        (r) => r.width === resolution.width
+                      );
+                      const nextIndex = (currentIndex + 1) % RESOLUTIONS.length;
+                      setResolution(RESOLUTIONS[nextIndex]);
+                    }}
+                    className="w-fit px-4 py-2"
+                  >
+                    {resolution.scale}x
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </AnimatePresence>
         </section>
       </motion.aside>
 
       {/* preview */}
-      <section className="flex flex-col gap-4 w-full h-full items-center justify-center">
+      <section className="flex flex-col gap-4 w-full h-full items-center justify-center relative">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -539,6 +606,11 @@ export default function DesktopApp({
           }}
           className="rounded-3xl overflow-hidden shadow-[0_0_24px_rgba(31,31,31,0.1)] w-full max-w-3xl"
         >
+          {isDownloading && (
+            <div className="flex items-center justify-center h-full bg-secondary/25">
+              <CameraIcon className="size-4 " />
+            </div>
+          )}
           <div
             className="relative w-full aspect-video overflow-hidden"
             style={{
@@ -602,33 +674,14 @@ export default function DesktopApp({
             </div>
           </div>
         </motion.div>
-        <div className="flex items-center gap-2 p-4 w-fit mx-auto">
-          <ModeToggle />
 
-          <button
-            className="px-4 py-2 bg-gradient-to-b from-[#60A5FA] to-[#3B82F6] rounded-xl hover:text-white/80 text-white transition-all duration-300 z-50 disabled:opacity-50 flex items-center gap-2 w-full justify-center"
-            onClick={generateNewPalette}
-            disabled={isGenerating}
-          >
-            <WandSparklesIcon className={`size-4`} />
-            <span className="text-xs font-semibold tracking-tight">
-              Generate
-            </span>
-          </button>
-          <button
-            className="px-4 py-2 bg-secondary rounded-xl hover:text-primary/80 transition-colors duration-300 z-50 flex items-center gap-2 w-full justify-center"
-            onClick={() => {
-              if (previousCircles.length > 0) {
-                setCircles(previousCircles);
-                setPreviousCircles([]);
-              }
-            }}
-            disabled={previousCircles.length === 0}
-          >
-            <Undo className="size-4" />
-            <span className="sr-only">Undo</span>
-          </button>
-        </div>
+        <ButtonsChin
+          generateNewPalette={generateNewPalette}
+          isGenerating={isGenerating}
+          previousCircles={previousCircles}
+          setCircles={setCircles}
+          setPreviousCircles={setPreviousCircles}
+        />
       </section>
     </main>
   );
