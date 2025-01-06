@@ -32,6 +32,7 @@
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.0.0",
     "react-draggable": "^4.4.6",
+    "react-zoom-pan-pinch": "^3.6.1",
     "simplex-noise": "^4.0.3",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.6.0",
