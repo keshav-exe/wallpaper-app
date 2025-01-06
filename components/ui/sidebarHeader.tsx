@@ -77,16 +77,14 @@ export function SidebarHeader() {
           <section className="flex items-center gap-6 justify-center flex-col rounded-2xl p-4 relative overflow-hidden min-h-[50%]">
             <div className="flex flex-col items-center gap-4 z-10">
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Image src={logo} alt="logo" className="size-10" />
-                  <p className="font-bold text-white text-4xl tracking-tighter">
-                    Gradii
-                  </p>
-                </div>
-                <span className="text-[10px] text-white bg-gradient-to-b font-semibold border-white/50 border px-2 py-1 rounded-full tracking-tighter">
-                  v0.2 ALPHA
-                </span>
+                <Image src={logo} alt="logo" className="size-10" />
+                <p className="font-bold text-white text-4xl tracking-tighter">
+                  Gradii
+                </p>
               </div>
+              <span className="text-[10px] text-white bg-gradient-to-b font-semibold border-white/50 border px-2 py-1 rounded-full tracking-tighter">
+                v0.2 ALPHA
+              </span>
               <p className="text-white text-center max-w-sm">
                 Generate beautiful gradient wallpapers with customizable colors,
                 text, and effects.
@@ -170,6 +168,23 @@ export function SidebarHeader() {
                 )
               )}
             </Marquee>
+          </section>
+
+          <section className="flex flex-col gap-4 p-4 rounded-2xl bg-muted/50">
+            <h2 className="text-lg font-semibold tracking-tighter">
+              What&apos;s New in v0.2 ALPHA
+            </h2>
+            <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-4">
+              <li>Complete UI rewrite with smoother animations</li>
+              <li>New gradient generation system with improved performance</li>
+              <li>4 filter types: Pastel, Film Grain, Grain, Static</li>
+              <li>Enhanced text customization with 6 premium fonts</li>
+              <li>Advanced color adjustment controls</li>
+              <li>Resolution scale switching up to 8K</li>
+              <li>Undo/redo support for gradient changes</li>
+              <li>Blur intensity controls</li>
+              <li>Performance optimizations for large resolutions</li>
+            </ul>
           </section>
 
           <div className="bg-muted/50 p-4 rounded-lg">
