@@ -73,7 +73,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <Toaster />
+          <Toaster richColors />
           {/* <Footer /> */}
         </ThemeProvider>
       </body>

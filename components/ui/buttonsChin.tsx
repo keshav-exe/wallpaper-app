@@ -16,6 +16,8 @@ export function ButtonsChin({
   handleImageUpload,
   backgroundImage,
   setBackgroundImage,
+  setBlur,
+  blur,
 }: {
   generateNewPalette: () => void;
   isGenerating: boolean;
@@ -25,6 +27,8 @@ export function ButtonsChin({
   handleImageUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   backgroundImage: string | null;
   setBackgroundImage: (image: string | null) => void;
+  setBlur: (blur: number) => void;
+  blur: number;
 }) {
   const [hoveredButton, setHoveredButton] = useState<
     "theme" | "generate" | "undo" | "upload" | null
@@ -59,6 +63,9 @@ export function ButtonsChin({
         onClick={() => {
           generateNewPalette();
           setBackgroundImage(null);
+          if (blur === 0) {
+            setBlur(200);
+          }
         }}
         disabled={isGenerating}
         onMouseEnter={() => handleMouseEnter("generate")}

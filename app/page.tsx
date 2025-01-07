@@ -55,6 +55,9 @@ export default function Home() {
   const [contrast, setContrast] = useState(100);
   const [brightness, setBrightness] = useState(100);
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
+  const [isStrikethrough, setIsStrikethrough] = useState(false);
 
   const fonts: FontOption[] = FONTS;
 
@@ -139,7 +142,17 @@ export default function Home() {
       const link = document.createElement("a");
       link.download = `gradii-${resolution.width}x${resolution.height}.png`;
       link.href = dataUrl;
-      link.click();
+
+      const downloadPromise = new Promise((resolve) => {
+        link.click();
+        resolve(true);
+      });
+
+      toast.promise(downloadPromise, {
+        loading: "Downloading image...",
+        success: "Downloaded image successfully",
+        error: "Failed to download image",
+      });
     } catch (err) {
       console.error(err);
       toast.error("Failed to download image");
@@ -244,16 +257,21 @@ export default function Home() {
     };
 
     reader.onloadend = () => {
-      // Preload image to ensure it loads properly
-      const img = new Image();
-      img.onload = () => {
-        setBackgroundImage(reader.result as string);
-        toast.success("Image uploaded successfully");
-      };
-      img.onerror = () => {
-        toast.error("Failed to load image");
-      };
-      img.src = reader.result as string;
+      const loadPromise = new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          setBackgroundImage(reader.result as string);
+          resolve(true);
+        };
+        img.onerror = reject;
+        img.src = reader.result as string;
+      });
+
+      toast.promise(loadPromise, {
+        loading: "Loading image...",
+        success: "Image uploaded successfully",
+        error: "Failed to load image",
+      });
     };
 
     reader.readAsDataURL(file);
@@ -319,6 +337,12 @@ export default function Home() {
           backgroundImage={backgroundImage}
           handleImageUpload={handleImageUpload}
           setBackgroundImage={setBackgroundImage}
+          isItalic={isItalic}
+          setIsItalic={setIsItalic}
+          isUnderline={isUnderline}
+          setIsUnderline={setIsUnderline}
+          isStrikethrough={isStrikethrough}
+          setIsStrikethrough={setIsStrikethrough}
         />
       </div>
     </>

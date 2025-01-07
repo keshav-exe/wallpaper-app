@@ -80,6 +80,12 @@ interface DesktopAppProps {
   backgroundImage: string | null;
   setBackgroundImage: (backgroundImage: string | null) => void;
   handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isItalic: boolean;
+  isUnderline: boolean;
+  isStrikethrough: boolean;
+  setIsItalic: (value: boolean) => void;
+  setIsUnderline: (value: boolean) => void;
+  setIsStrikethrough: (value: boolean) => void;
 }
 
 const PREVIEW_DIMENSIONS = {
@@ -150,6 +156,12 @@ export default function DesktopApp({
   setBrightness,
   backgroundImage,
   setBackgroundImage,
+  isItalic,
+  isUnderline,
+  isStrikethrough,
+  setIsItalic,
+  setIsUnderline,
+  setIsStrikethrough,
 }: DesktopAppProps) {
   const slideVariants: Variants = {
     enter: (direction: number) => ({
@@ -334,7 +346,7 @@ export default function DesktopApp({
                   exit="exit"
                   transition={{
                     x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.2 },
+                    opacity: { duration: 0.3 },
                   }}
                   className="flex flex-col gap-4 p-4"
                 >
@@ -396,6 +408,10 @@ export default function DesktopApp({
                       disabled={
                         !fonts.find((f) => f.name === fontFamily)?.variable
                       }
+                      className={cn(
+                        !fonts.find((f) => f.name === fontFamily)?.variable &&
+                          "cursor-not-allowed"
+                      )}
                     />
                     <span className="text-xs text-muted-foreground">
                       {fontWeight}
@@ -449,6 +465,44 @@ export default function DesktopApp({
                       {lineHeight}
                     </span>
                   </div>
+
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="text-sm text-muted-foreground">
+                      Text Decoration
+                    </label>
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
+                      <button
+                        onClick={() => setIsItalic(!isItalic)}
+                        className={cn(
+                          "w-full rounded-xl px-4 py-2 text-sm relative",
+                          "text-primary transition-all duration-300",
+                          isItalic ? "bg-primary/20 " : "bg-background"
+                        )}
+                      >
+                        <span className="italic">Italic</span>
+                      </button>
+                      <button
+                        onClick={() => setIsUnderline(!isUnderline)}
+                        className={cn(
+                          "w-full rounded-xl px-4 py-2 text-sm relative",
+                          "transition-all duration-300 text-primary",
+                          isUnderline ? "bg-primary/20" : "bg-background"
+                        )}
+                      >
+                        <span className="underline">Underline</span>
+                      </button>
+                      <button
+                        onClick={() => setIsStrikethrough(!isStrikethrough)}
+                        className={cn(
+                          "w-full rounded-xl px-4 py-2 text-sm relative",
+                          "transition-all duration-300 text-primary",
+                          isStrikethrough ? "bg-primary/20" : "bg-background"
+                        )}
+                      >
+                        <span className="line-through">Strikethrough</span>
+                      </button>
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
@@ -462,11 +516,11 @@ export default function DesktopApp({
                   exit="exit"
                   transition={{
                     x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.2 },
+                    opacity: { duration: 0.3 },
                   }}
                   className="flex flex-col relative"
                 >
-                  <div className="w-full flex justify-center bg-gradient-to-b from-secondary to-secondary/5 py-6 px-4  z-10">
+                  <div className="w-full flex justify-center bg-gradient-to-b from-secondary to-secondary/5 py-6 px-4 z-10">
                     <HexColorPicker
                       color={activeColorPicker}
                       onChange={(color) => {
@@ -495,7 +549,7 @@ export default function DesktopApp({
                             }}
                           >
                             <span
-                              className="size-5 rounded-full cursor-pointer aspect-square"
+                              className="size-5 rounded-xl cursor-pointer aspect-square"
                               style={{
                                 backgroundColor: circle.color,
                               }}
@@ -523,7 +577,7 @@ export default function DesktopApp({
                         }}
                       >
                         <span
-                          className="size-5 rounded-full cursor-pointer aspect-square border border-primary/60"
+                          className="size-5 rounded-xl cursor-pointer aspect-square border border-primary/60"
                           style={{ backgroundColor: backgroundColor }}
                         />
                         <Input
@@ -547,7 +601,7 @@ export default function DesktopApp({
                         }}
                       >
                         <span
-                          className="size-5 rounded-full cursor-pointer aspect-square border border-primary/60"
+                          className="size-5 rounded-xl cursor-pointer aspect-square border border-primary/60"
                           style={{
                             backgroundColor: textColor,
                           }}
@@ -574,9 +628,9 @@ export default function DesktopApp({
                   exit="exit"
                   transition={{
                     x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.2 },
+                    opacity: { duration: 0.3 },
                   }}
-                  className="flex flex-col gap-4 p-4"
+                  className="flex flex-col p-4 gap-4"
                 >
                   <div className="flex flex-col gap-2">
                     <label className="text-sm text-muted-foreground">
@@ -618,23 +672,25 @@ export default function DesktopApp({
                     <label className="text-sm text-muted-foreground">
                       Blur
                     </label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
                       {BLUR_OPTIONS.map((blurOption) => (
                         <button
                           key={blurOption.value}
                           onClick={() => setBlur(blurOption.value)}
+                          disabled={!backgroundImage && blurOption.value === 0}
                           className={cn(
-                            "w-full rounded-full px-4 py-2 text-sm relative",
-                            "transition-colors duration-200",
-                            blur !== blurOption.value && "bg-background"
+                            "w-full rounded-xl px-4 py-2 text-sm relative",
+                            "transition-colors duration-200 bg-background",
+                            !backgroundImage &&
+                              blurOption.value === 0 &&
+                              "opacity-50 cursor-not-allowed"
                           )}
                         >
                           <span>{blurOption.name}</span>
                           {blur === blurOption.value && (
                             <motion.div
-                              layoutId="activeBlur"
-                              className="absolute inset-0 bg-primary/20 rounded-full -z-10"
-                              transition={{ type: "spring", duration: 0.5 }}
+                              className="absolute inset-0 bg-primary/20 rounded-xl z-10"
+                              layoutId="blur-background"
                             />
                           )}
                         </button>
@@ -713,13 +769,13 @@ export default function DesktopApp({
                   >
                     <AnimatePresence mode="sync">
                       <motion.span
-                        key={resolution.ratio}
+                        key={resolution.scale}
                         variants={scaleVariants}
                         initial="initial"
                         animate="animate"
                         exit="exit"
                         transition={{
-                          duration: 0.2,
+                          duration: 0.3,
                           ease: "easeInOut",
                         }}
                         className="top-3 inset-0"
@@ -879,6 +935,10 @@ export default function DesktopApp({
                     color: textColor,
                     textAlign: "center",
                     maxWidth: "90%",
+                    fontStyle: isItalic ? "italic" : "normal",
+                    textDecoration: `${isUnderline ? "underline" : ""} ${
+                      isStrikethrough ? "line-through" : ""
+                    }`.trim(),
                   }}
                 >
                   {text}
@@ -897,6 +957,8 @@ export default function DesktopApp({
           previousCircles={previousCircles}
           setCircles={setCircles}
           setPreviousCircles={setPreviousCircles}
+          setBlur={setBlur}
+          blur={blur}
         />
       </motion.section>
     </main>

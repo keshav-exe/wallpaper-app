@@ -166,13 +166,12 @@ export function SidebarHeader() {
               What&apos;s New in v0.3 ALPHA
             </h2>
             <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-4">
-              <li>Multiple aspect ratio support (Desktop, Mobile, Square)</li>
-              <li>Background image upload with filters</li>
-              <li>
-                Advanced image adjustments (Saturation, Contrast, Brightness)
-              </li>
               <li>Safari browser compatibility</li>
-              <li>Improved color picker with hex input</li>
+              <li>Added more fonts to select from</li>
+              <li>Text decoration support (Underline, Strikethrough)</li>
+              <li>Multiple aspect ratio support (Desktop, Mobile, Square)</li>
+              <li>Upload background images to create gradients</li>
+              <li>Performance improvements</li>
             </ul>
           </section>
 
@@ -180,8 +179,7 @@ export function SidebarHeader() {
             <p className="text-sm text-muted-foreground">
               <span className="font-semibold">Note:</span> Gradii is currently
               in alpha (v0.3) and only supports desktop. I&apos;m actively
-              working on expanding compatibility to mobile devices. More
-              features are coming soon!
+              working on expanding compatibility to mobile devices.
             </p>
           </div>
 

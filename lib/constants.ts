@@ -74,6 +74,26 @@ export const FONTS: FontOption[] = [
     variable: false,
     weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
   },
+  {
+    name: "Instrument Serif",
+    variable: false,
+    weights: [400],
+  },
+  {
+    name: "Inter",
+    variable: true,
+    weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
+  },
+  {
+    name: "DM Serif Display",
+    variable: false,
+    weights: [400],
+  },
+  {
+    name: "Lora",
+    variable: true,
+    weights: [400, 500, 600, 700],
+  },
 ];
 
 export const FILTER_SVG_PATTERNS = {
@@ -178,6 +198,7 @@ export const RESOLUTIONS = [
 ] as const;
 
 export const BLUR_OPTIONS = [
+  { name: "None", value: 0 },
   { name: "Low", value: 100 },
   { name: "Medium", value: 150 },
   { name: "High", value: 200 },
