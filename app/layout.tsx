@@ -28,7 +28,7 @@ export const metadata = {
     siteName: "Gradii",
     images: [
       {
-        url: "https://i.ibb.co/sjgMRkz/16x9.png",
+        url: "https://i.ibb.co/kSThZVg/gradii-og.png",
         width: 1200,
         height: 630,
         alt: "Gradii Preview",
@@ -41,7 +41,7 @@ export const metadata = {
     description:
       "A simple gradient generator for your walls. Add your own colors or use one of our presets. Texts are also supported.",
     creator: "@kshvbgde",
-    images: ["https://i.ibb.co/sjgMRkz/16x9.png"],
+    images: ["https://i.ibb.co/kSThZVg/gradii-og.png"],
   },
   robots: {
     index: true,

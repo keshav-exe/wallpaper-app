@@ -2,7 +2,6 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
-  DialogClose,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -15,46 +14,58 @@ import {
 import Link from "next/link";
 import logo from "@/public/logo.svg";
 import Image from "next/image";
-import gradientWallpaper from "@/public/gradient-wall.png";
+import gradientWallpaper from "@/public/gradii-logo.png";
 import { motion } from "motion/react";
 import { IMAGES } from "@/assets";
 import Marquee from "./marquee";
-import { Button } from "./button";
 import { useEffect, useState } from "react";
+
+const CURRENT_VERSION = "0.3";
 
 export function SidebarHeader() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const hasSeenDialog = localStorage.getItem("hasSeenGradiiDialog");
-    if (!hasSeenDialog) {
+    // Clean up ALL old version keys
+    const cleanupOldVersions = () => {
+      const oldVersions = ["0.1", "0.2"];
+      oldVersions.forEach((version) => {
+        localStorage.removeItem(`gradiiLastSeenVersion_${version}`);
+      });
+      localStorage.removeItem("hasSeenGradiiDialog"); // Remove the very old key too
+    };
+
+    cleanupOldVersions();
+
+    const lastSeenVersion = localStorage.getItem("gradiiLastSeenVersion");
+    if (!lastSeenVersion || lastSeenVersion !== CURRENT_VERSION) {
       setOpen(true);
-      localStorage.setItem("hasSeenGradiiDialog", "true");
+      localStorage.setItem("gradiiLastSeenVersion", CURRENT_VERSION);
     }
   }, []);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="flex items-center justify-between w-full outline-none focus:outline-none">
+        <button className="flex items-center justify-between w-full outline-none focus:outline-none group">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <Image
                 src={logo}
                 alt="logo"
-                className="size-8"
+                className="size-7"
                 priority
                 loading="eager"
               />
-              <p className="font-bold text-primary tracking-tighter text-xl">
+              <p className="font-bold text-primary tracking-tighter text-2xl">
                 Gradii
               </p>
             </div>
-            <span className="text-[10px] text-primary font-semibold border-primary/50 border px-2 py-1 rounded-full tracking-tighter">
-              v0.2 ALPHA
+            <span className="text-[10px] text-white font-bold border-white/25 border px-2 py-1 rounded-full tracking-tighter bg-gradient-to-b from-[#0A0A0A]/65 to-[#292929]/35">
+              v0.3 ALPHA
             </span>
           </div>
-          <span className="text-xs text-muted-foreground hover:text-primary transition-colors duration-300">
+          <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors duration-300 p-2">
             <ArrowRightIcon className="size-4" />
           </span>
         </button>
@@ -75,28 +86,10 @@ export function SidebarHeader() {
           className="flex flex-col gap-4 overflow-auto no-scrollbar rounded-2xl"
         >
           <section className="flex items-center gap-6 justify-center flex-col rounded-2xl p-4 relative overflow-hidden min-h-[50%]">
-            <div className="flex flex-col items-center gap-4 z-10">
-              <div className="flex items-center gap-4">
-                <Image src={logo} alt="logo" className="size-10" />
-                <p className="font-bold text-white text-4xl tracking-tighter">
-                  Gradii
-                </p>
-              </div>
-              <span className="text-[10px] text-white bg-gradient-to-b font-semibold border-white/50 border px-2 py-1 rounded-full tracking-tighter">
-                v0.2 ALPHA
-              </span>
-              <p className="text-white text-center max-w-sm">
-                Generate beautiful gradient wallpapers with customizable colors,
-                text, and effects.
-              </p>
-              <DialogClose asChild>
-                <Button className="rounded-full">Generate Now!</Button>
-              </DialogClose>
-            </div>
             <Image
               src={gradientWallpaper}
               alt="gradient"
-              className="absolute bottom-0 right-0 inset-0 w-full h-full"
+              className="absolute bottom-0 right-0 inset-0 w-full h-full object-cover"
             />
           </section>
 
@@ -110,7 +103,7 @@ export function SidebarHeader() {
                   </h2>
                   <p className="text-sm">
                     Create gradients of infinite possibilities with up to 8
-                    custom colors. Additional colors coming soon!
+                    custom colors and background images.
                   </p>
                 </div>
               </div>
@@ -121,8 +114,7 @@ export function SidebarHeader() {
                     Customizable text
                   </h2>
                   <p className="text-sm">
-                    Add customizable text with various fonts and styles. With
-                    more fonts coming soon!
+                    Add customizable text with various fonts and styles.
                   </p>
                 </div>
               </div>
@@ -134,7 +126,7 @@ export function SidebarHeader() {
                   </h2>
                   <p className="text-sm">
                     Fine tune your wallpapers to your liking with noise, grain,
-                    static effects and other filters. More filters coming soon!
+                    static effects and other filters.
                   </p>
                 </div>
               </div>
@@ -142,12 +134,11 @@ export function SidebarHeader() {
                 <DownloadIcon className="size-6 text-[#00DFD8]" />
                 <div className="flex flex-col gap-2">
                   <h2 className="text-lg font-semibold tracking-tighter">
-                    8K Wallpapers.
+                    4K Wallpapers.
                   </h2>
                   <p className="text-sm">
-                    Download your custom wallpapers in up to 8k resolutions in
-                    16:9 aspect ratio. Additional resolutions and aspect ratios
-                    coming soon!
+                    Download your custom wallpapers in up to 4k resolutions in
+                    desktop, mobile and square aspect ratios.
                   </p>
                 </div>
               </div>
@@ -172,27 +163,25 @@ export function SidebarHeader() {
 
           <section className="flex flex-col gap-4 p-4 rounded-2xl bg-muted/50">
             <h2 className="text-lg font-semibold tracking-tighter">
-              What&apos;s New in v0.2 ALPHA
+              What&apos;s New in v0.3 ALPHA
             </h2>
             <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-4">
-              <li>Complete UI rewrite with smoother animations</li>
-              <li>New gradient generation system with improved performance</li>
-              <li>4 filter types: Pastel, Film Grain, Grain, Static</li>
-              <li>Enhanced text customization with 6 premium fonts</li>
-              <li>Advanced color adjustment controls</li>
-              <li>Resolution scale switching up to 8K</li>
-              <li>Undo/redo support for gradient changes</li>
-              <li>Blur intensity controls</li>
-              <li>Performance optimizations for large resolutions</li>
+              <li>Multiple aspect ratio support (Desktop, Mobile, Square)</li>
+              <li>Background image upload with filters</li>
+              <li>
+                Advanced image adjustments (Saturation, Contrast, Brightness)
+              </li>
+              <li>Safari browser compatibility</li>
+              <li>Improved color picker with hex input</li>
             </ul>
           </section>
 
           <div className="bg-muted/50 p-4 rounded-lg">
             <p className="text-sm text-muted-foreground">
               <span className="font-semibold">Note:</span> Gradii is currently
-              in alpha (v0.2) and only supports Chromium-based browsers on
-              desktop. I&apos;m actively working on expanding compatibility to
-              all major browsers and devices. More features are coming soon!
+              in alpha (v0.3) and only supports desktop. I&apos;m actively
+              working on expanding compatibility to mobile devices. More
+              features are coming soon!
             </p>
           </div>
 

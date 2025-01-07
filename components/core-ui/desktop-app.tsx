@@ -22,8 +22,9 @@ import {
 } from "@/lib/constants";
 import { ButtonsChin } from "../ui/buttonsChin";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { SidebarHeader } from "../ui/sidebarHeader";
+import { ThemeSwitch } from "../ui/themeSwitch";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -76,7 +77,25 @@ interface DesktopAppProps {
   setBrightness: (value: number) => void;
   blur: number;
   setBlur: (value: number) => void;
+  backgroundImage: string | null;
+  setBackgroundImage: (backgroundImage: string | null) => void;
+  handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
+
+const PREVIEW_DIMENSIONS = {
+  desktop: {
+    width: 768,
+    height: 432, // 16:9
+  },
+  mobile: {
+    width: 293,
+    height: 520,
+  },
+  square: {
+    width: 520,
+    height: 520, // 1:1
+  },
+} as const;
 
 export default function DesktopApp({
   blur,
@@ -129,6 +148,8 @@ export default function DesktopApp({
   setContrast,
   brightness,
   setBrightness,
+  backgroundImage,
+  setBackgroundImage,
 }: DesktopAppProps) {
   const slideVariants: Variants = {
     enter: (direction: number) => ({
@@ -173,8 +194,85 @@ export default function DesktopApp({
     setPage([tabIndex, newDirection]);
   }, [tabIndex]);
 
+  const getPreviewScale = (resolution: (typeof RESOLUTIONS)[number]) => {
+    const container = PREVIEW_DIMENSIONS[aspectRatio];
+    const scaleX = container.width / resolution.width;
+    const scaleY = container.height / resolution.height;
+    return Math.min(scaleX, scaleY);
+  };
+
+  const [aspectRatio, setAspectRatio] = useState<
+    "desktop" | "mobile" | "square"
+  >("desktop");
+
+  const filteredResolutions = RESOLUTIONS.filter(
+    (r) => r.ratio === aspectRatio
+  );
+
+  useEffect(() => {
+    const resolutionsForRatio = RESOLUTIONS.filter(
+      (r) => r.ratio === aspectRatio
+    );
+    if (resolutionsForRatio.length > 0) {
+      setResolution(resolutionsForRatio[0]);
+    }
+  }, [aspectRatio]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBackgroundImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const memoizedCircles = useMemo(
+    () =>
+      circles.map((circle, i) => (
+        <circle
+          key={i}
+          cx={`${circle.cx}%`}
+          cy={`${circle.cy}%`}
+          r="30%"
+          fill={circle.color}
+          style={{
+            transform: "translate3d(0,0,0)",
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
+            willChange: "transform",
+            contain: "strict",
+          }}
+        />
+      )),
+    [circles]
+  );
+
+  const fontPreloadText = useMemo(() => {
+    return fonts.map((font) => (
+      <div
+        key={font.name}
+        style={{
+          fontFamily: font.name,
+          position: "absolute",
+          visibility: "hidden",
+          pointerEvents: "none",
+          fontSize: "0px",
+        }}
+        aria-hidden="true"
+      >
+        {text}
+      </div>
+    ));
+  }, [fonts, text]);
+
   return (
     <main className="relative flex gap-2 items-center justify-center p-4 h-screen w-full">
+      <div aria-hidden="true" className="sr-only">
+        {fontPreloadText}
+      </div>
       <motion.aside
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -188,39 +286,44 @@ export default function DesktopApp({
         }}
         className="flex flex-col gap-2 w-full max-w-[40vw] lg:max-w-[30vw] xl:max-w-[20vw] h-full overflow-hidden"
       >
-        <div className="flex items-center gap-2 p-2 bg-secondary rounded-xl w-full">
+        <div className="flex items-center gap-2 p-2 bg-secondary rounded-3xl w-full">
           <div className="flex items-center gap-2 justify-between w-full">
             <SidebarHeader />
           </div>
         </div>
 
         {/* controls */}
-        <section className="w-full bg-secondary border-primary/20 rounded-2xl flex flex-col no-scrollbar overflow-hidden h-full">
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) =>
-              setActiveTab(value as "text" | "colors" | "effects")
-            }
-            className="w-full"
-          >
-            <TabsList className="w-full flex items-center gap-1">
-              {["text", "colors", "effects"].map((tab) => (
-                <TabsTrigger key={tab} value={tab} className="flex-1 relative">
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  {activeTab === tab && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-primary/10 rounded-full"
-                      transition={{ type: "spring", duration: 0.5 }}
-                    />
-                  )}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-
+        <section className="w-full bg-secondary border-primary/20 rounded-3xl flex flex-col no-scrollbar overflow-hidden h-full">
           <AnimatePresence custom={direction} mode="wait">
-            <motion.div className="flex flex-col gap-4 overflow-y-auto justify-between no-scrollbar relative h-full">
+            <motion.div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full">
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) =>
+                  setActiveTab(value as "text" | "colors" | "effects")
+                }
+                className="sticky top-0 flex flex-col items-center z-50 w-full bg-gradient-to-t to-70% from-transparent to-secondary/80"
+              >
+                <TabsList className="w-full flex items-center gap-1">
+                  {["text", "colors", "effects"].map((tab) => (
+                    <TabsTrigger
+                      key={tab}
+                      value={tab}
+                      className="flex-1 relative"
+                      disabled={tab === "colors" && !!backgroundImage}
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {activeTab === tab && (
+                        <motion.div
+                          layoutId="activeTab"
+                          className="absolute inset-0 bg-primary/10 rounded-2xl"
+                          transition={{ type: "spring", duration: 0.5 }}
+                        />
+                      )}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+
               {activeTab === "text" && (
                 <motion.div
                   key={activeTab}
@@ -271,8 +374,8 @@ export default function DesktopApp({
                     </label>
                     <Slider
                       min={12}
-                      max={100}
-                      step={1}
+                      max={180}
+                      step={2}
                       value={[fontSize]}
                       onValueChange={([value]) => setFontSize(value)}
                     />
@@ -361,9 +464,9 @@ export default function DesktopApp({
                     x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.2 },
                   }}
-                  className="flex flex-col gap-4 relative"
+                  className="flex flex-col relative"
                 >
-                  <div className="w-full flex justify-center bg-gradient-to-b from-secondary to-secondary/5 py-6 px-4 sticky top-0 z-10">
+                  <div className="w-full flex justify-center bg-gradient-to-b from-secondary to-secondary/5 py-6 px-4  z-10">
                     <HexColorPicker
                       color={activeColorPicker}
                       onChange={(color) => {
@@ -521,12 +624,19 @@ export default function DesktopApp({
                           key={blurOption.value}
                           onClick={() => setBlur(blurOption.value)}
                           className={cn(
-                            "w-full rounded-full px-4 py-2 text-sm",
-                            blur === blurOption.value &&
-                              "bg-primary text-primary-foreground"
+                            "w-full rounded-full px-4 py-2 text-sm relative",
+                            "transition-colors duration-200",
+                            blur !== blurOption.value && "bg-background"
                           )}
                         >
                           <span>{blurOption.name}</span>
+                          {blur === blurOption.value && (
+                            <motion.div
+                              layoutId="activeBlur"
+                              className="absolute inset-0 bg-primary/20 rounded-full -z-10"
+                              transition={{ type: "spring", duration: 0.5 }}
+                            />
+                          )}
                         </button>
                       ))}
                     </div>
@@ -579,30 +689,31 @@ export default function DesktopApp({
                 </motion.div>
               )}
 
-              <div className="sticky bottom-0 flex items-center gap-2 z-50 w-full bg-gradient-to-b from-transparent to-secondary p-4">
+              <div className="sticky bottom-0 flex flex-col items-center z-50 w-full bg-gradient-to-b to-50% from-transparent to-secondary p-4">
                 <div className="flex w-full bg-primary rounded-2xl text-primary-foreground divide-x divide-primary-foreground/20 divide-dashed">
                   <button
                     onClick={downloadImage}
                     className="w-full flex items-center justify-center gap-2 text-primary-foreground text-sm"
                     disabled={isDownloading}
                   >
+                    <Download className="size-5" />
                     Download
-                    <Download className="size-4" />
                   </button>
 
                   <button
                     onClick={() => {
-                      const currentIndex = RESOLUTIONS.findIndex(
+                      const currentIndex = filteredResolutions.findIndex(
                         (r) => r.width === resolution.width
                       );
-                      const nextIndex = (currentIndex + 1) % RESOLUTIONS.length;
-                      setResolution(RESOLUTIONS[nextIndex]);
+                      const nextIndex =
+                        (currentIndex + 1) % filteredResolutions.length;
+                      setResolution(filteredResolutions[nextIndex]);
                     }}
                     className="w-14 h-12 px-4 py-2 relative items-center justify-center"
                   >
                     <AnimatePresence mode="sync">
                       <motion.span
-                        key={resolution.scale}
+                        key={resolution.ratio}
                         variants={scaleVariants}
                         initial="initial"
                         animate="animate"
@@ -618,6 +729,24 @@ export default function DesktopApp({
                     </AnimatePresence>
                   </button>
                 </div>
+
+                <Tabs
+                  value={aspectRatio}
+                  onValueChange={(v) => setAspectRatio(v as typeof aspectRatio)}
+                  className="w-full"
+                >
+                  <TabsList className="w-full">
+                    <TabsTrigger value="desktop" className="w-full">
+                      Desktop
+                    </TabsTrigger>
+                    <TabsTrigger value="mobile" className="w-full">
+                      Mobile
+                    </TabsTrigger>
+                    <TabsTrigger value="square" className="w-full">
+                      Square
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
             </motion.div>
           </AnimatePresence>
@@ -625,7 +754,22 @@ export default function DesktopApp({
       </motion.aside>
 
       {/* preview */}
-      <section className="flex flex-col gap-4 w-full h-full items-center justify-center relative">
+      <motion.section
+        className="flex flex-col gap-4 w-full h-full items-center justify-center relative bg-secondary rounded-3xl"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{
+          duration: 1,
+          ease: "easeInOut",
+          type: "spring",
+          damping: 20,
+          stiffness: 100,
+          mass: 0.5,
+        }}
+      >
+        <div className="absolute top-2 right-2">
+          <ThemeSwitch />
+        </div>
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -637,7 +781,7 @@ export default function DesktopApp({
             stiffness: 100,
             mass: 0.5,
           }}
-          className="rounded-3xl overflow-hidden shadow-[0_0_24px_rgba(31,31,31,0.1)] w-full max-w-3xl"
+          className="rounded-3xl overflow-hidden w-full max-w-3xl flex items-center justify-center relative"
         >
           {isDownloading && (
             <div className="flex items-center justify-center h-full bg-secondary/25">
@@ -645,75 +789,116 @@ export default function DesktopApp({
             </div>
           )}
           <div
-            className="relative w-full aspect-video overflow-hidden shadow-[0_0_24px_rgba(31,31,31,0.5)] dark:shadow-[0_0_24px_rgba(231,231,231,0.5)]"
+            className="relative w-full overflow-hidden rounded-3xl max-h-[95vh]"
             style={{
-              width: "100%",
-              height: "auto",
+              width: PREVIEW_DIMENSIONS[aspectRatio].width,
+              height: PREVIEW_DIMENSIONS[aspectRatio].height,
             }}
           >
             <div
-              className="absolute inset-0 object-center"
+              className="absolute inset-0 object-center overflow-hidden"
               id="wallpaper"
               style={{
-                backgroundColor,
                 width: `${resolution.width}px`,
                 height: `${resolution.height}px`,
-                transform: `scale(${768 / resolution.width})`,
+                transform: `scale(${getPreviewScale(resolution)})`,
                 transformOrigin: "top left",
-                fontSize: `${fontSize}px`,
-                letterSpacing: `${letterSpacing}em`,
-                filter: `brightness(${brightness}%) saturate(${saturation}%)`,
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
               }}
             >
+              {/* Background Layer */}
               <div
+                className="absolute inset-0"
                 style={{
-                  filter: `contrast(${contrast}%) `,
-                  ...filterStyle,
+                  backgroundColor: backgroundImage
+                    ? "transparent"
+                    : backgroundColor,
                 }}
               />
-              <p
-                className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 px-8 right-1/2 w-full`}
-                style={{
-                  fontSize: `${(fontSize * resolution.width) / 1920}px`,
-                  fontWeight,
-                  letterSpacing: `${
-                    (letterSpacing * resolution.width) / 1920
-                  }em`,
-                  fontFamily,
-                  opacity: opacity / 100,
-                  lineHeight: `${(lineHeight * resolution.width) / 1920}em`,
-                  color: textColor,
-                  textAlign: "center",
-                }}
-              >
-                {text}
-              </p>
-              <svg className="w-full h-full">
-                {circles.map((circle, i) => (
-                  <circle
-                    key={i}
-                    cx={`${circle.cx}%`}
-                    cy={`${circle.cy}%`}
-                    r="30%"
-                    fill={circle.color}
+
+              {/* Image/Gradient Layer */}
+              {!backgroundImage ? (
+                <div
+                  className="absolute inset-0"
+                  style={{ contain: "paint layout" }}
+                >
+                  <svg
+                    className="w-full h-full"
                     style={{
-                      filter: `blur(${(blur * resolution.width) / 1920}px)`,
+                      filter: `blur(${
+                        (blur * resolution.width) / 1920
+                      }px) brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`,
+                      transform: "translate3d(0,0,0)",
+                      backfaceVisibility: "hidden",
+                      WebkitBackfaceVisibility: "hidden",
+                      willChange: "transform filter",
+                      contain: "strict",
                     }}
-                  />
-                ))}
-              </svg>
+                    preserveAspectRatio="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 100 100"
+                  >
+                    {memoizedCircles}
+                  </svg>
+                </div>
+              ) : (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `url(${backgroundImage})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    filter: `blur(${
+                      (blur * resolution.width) / 1920
+                    }px) brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`,
+                    transform: "translate3d(0,0,0)",
+                    backfaceVisibility: "hidden",
+                    WebkitBackfaceVisibility: "hidden",
+                    willChange: "transform filter",
+                    contain: "paint layout",
+                  }}
+                />
+              )}
+
+              {/* Filter Effects Layer */}
+              <div className="absolute inset-0" style={filterStyle} />
+
+              {/* Text Layer */}
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <p
+                  style={{
+                    fontSize: `${(fontSize * resolution.width) / 1920}px`,
+                    fontWeight,
+                    letterSpacing: `${
+                      (letterSpacing * resolution.width) / 1920
+                    }em`,
+                    fontFamily,
+                    opacity: opacity / 100,
+                    lineHeight: `${(lineHeight * resolution.width) / 1920}em`,
+                    color: textColor,
+                    textAlign: "center",
+                    maxWidth: "90%",
+                  }}
+                >
+                  {text}
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>
 
         <ButtonsChin
+          handleImageUpload={handleImageUpload}
+          backgroundImage={backgroundImage}
+          setBackgroundImage={setBackgroundImage}
           generateNewPalette={generateNewPalette}
           isGenerating={isGenerating}
           previousCircles={previousCircles}
           setCircles={setCircles}
           setPreviousCircles={setPreviousCircles}
         />
-      </section>
+      </motion.section>
     </main>
   );
 }

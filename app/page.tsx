@@ -54,6 +54,7 @@ export default function Home() {
   const [saturation, setSaturation] = useState(100);
   const [contrast, setContrast] = useState(100);
   const [brightness, setBrightness] = useState(100);
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
 
   const fonts: FontOption[] = FONTS;
 
@@ -71,14 +72,8 @@ export default function Home() {
     pointerEvents: "none",
   } as const;
 
-  const [isCompatibleBrowser, setIsCompatibleBrowser] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-
-  useEffect(() => {
-    const isChromium = /chrome|chromium|crios/i.test(navigator.userAgent);
-    setIsCompatibleBrowser(isChromium);
-  }, []);
 
   useEffect(() => {
     const currentFont = fonts.find((f) => f.name === fontFamily);
@@ -91,9 +86,9 @@ export default function Home() {
     }
   }, [fontFamily]);
 
-  if (!isCompatibleBrowser) {
-    return <MobileApp />;
-  }
+  // if (!isCompatibleBrowser) {
+  //   return <MobileApp />;
+  // }
 
   const updateColor = (newColor: string, index: number) => {
     setPreviousCircles(circles);
@@ -121,10 +116,27 @@ export default function Home() {
       wallpaper.style.width = `${resolution.width}px`;
       wallpaper.style.height = `${resolution.height}px`;
 
+      // Scale text and effects based on resolution
+      const scaleFactor = resolution.width / 1920;
+      const textElements = wallpaper.getElementsByTagName("p");
+      const svgElements = wallpaper.getElementsByTagName("circle");
+
+      // Scale text
+      for (const text of textElements) {
+        text.style.fontSize = `${fontSize * scaleFactor}px`;
+        text.style.letterSpacing = `${letterSpacing * scaleFactor}em`;
+        text.style.lineHeight = `${lineHeight * scaleFactor}`;
+      }
+
+      // Scale blur for circles
+      for (const circle of svgElements) {
+        circle.style.filter = `blur(${blur * scaleFactor}px)`;
+      }
+
       const dataUrl = await toPng(wallpaper, {
         width: resolution.width,
         height: resolution.height,
-        pixelRatio: 1, // Force 1:1 pixel ratio
+        pixelRatio: 1,
         style: {
           transform: "none",
           transformOrigin: "top left",
@@ -135,6 +147,16 @@ export default function Home() {
       wallpaper.style.transform = originalTransform;
       wallpaper.style.width = originalWidth;
       wallpaper.style.height = originalHeight;
+
+      // Reset text and circle scaling
+      for (const text of textElements) {
+        text.style.fontSize = `${fontSize}px`;
+        text.style.letterSpacing = `${letterSpacing}em`;
+        text.style.lineHeight = `${lineHeight}`;
+      }
+      for (const circle of svgElements) {
+        circle.style.filter = `blur(${blur}px)`;
+      }
 
       const link = document.createElement("a");
       link.download = `gradient-circles-${resolution.width}x${resolution.height}.png`;
@@ -220,6 +242,45 @@ export default function Home() {
         break;
     }
   };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (e.g., 10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be smaller than 10MB");
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onerror = () => {
+      toast.error("Failed to read image file");
+    };
+
+    reader.onloadend = () => {
+      // Preload image to ensure it loads properly
+      const img = new Image();
+      img.onload = () => {
+        setBackgroundImage(reader.result as string);
+        toast.success("Image uploaded successfully");
+      };
+      img.onerror = () => {
+        toast.error("Failed to load image");
+      };
+      img.src = reader.result as string;
+    };
+
+    reader.readAsDataURL(file);
+  };
+
   return (
     <>
       <div className="md:hidden">
@@ -277,6 +338,9 @@ export default function Home() {
           setContrast={setContrast}
           brightness={brightness}
           setBrightness={setBrightness}
+          backgroundImage={backgroundImage}
+          handleImageUpload={handleImageUpload}
+          setBackgroundImage={setBackgroundImage}
         />
       </div>
     </>
