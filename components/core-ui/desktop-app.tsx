@@ -301,7 +301,7 @@ export default function DesktopApp({
                 onValueChange={(value) =>
                   setActiveTab(value as "text" | "colors" | "effects")
                 }
-                className="sticky top-0 flex flex-col items-center z-50 w-full bg-gradient-to-t to-70% from-transparent to-secondary/80"
+                className="sticky top-0 flex flex-col items-center z-50 w-full bg-gradient-to-t to-35% from-transparent to-secondary"
               >
                 <TabsList className="w-full flex items-center gap-1">
                   {["text", "colors", "effects"].map((tab) => (

@@ -106,32 +106,17 @@ export default function Home() {
 
     setIsDownloading(true);
     try {
-      // Store original styles
+      // Store ALL original styles
+      const svgElement = wallpaper.querySelector("svg");
+      const originalSvgStyle = svgElement?.getAttribute("style");
       const originalTransform = wallpaper.style.transform;
       const originalWidth = wallpaper.style.width;
       const originalHeight = wallpaper.style.height;
 
-      // Reset transform and set exact dimensions
+      // Set download styles
       wallpaper.style.transform = "none";
       wallpaper.style.width = `${resolution.width}px`;
       wallpaper.style.height = `${resolution.height}px`;
-
-      // Scale text and effects based on resolution
-      const scaleFactor = resolution.width / 1920;
-      const textElements = wallpaper.getElementsByTagName("p");
-      const svgElements = wallpaper.getElementsByTagName("circle");
-
-      // Scale text
-      for (const text of textElements) {
-        text.style.fontSize = `${fontSize * scaleFactor}px`;
-        text.style.letterSpacing = `${letterSpacing * scaleFactor}em`;
-        text.style.lineHeight = `${lineHeight * scaleFactor}`;
-      }
-
-      // Scale blur for circles
-      for (const circle of svgElements) {
-        circle.style.filter = `blur(${blur * scaleFactor}px)`;
-      }
 
       const dataUrl = await toPng(wallpaper, {
         width: resolution.width,
@@ -143,23 +128,16 @@ export default function Home() {
         },
       });
 
-      // Restore original styles
+      // Restore ALL original styles
       wallpaper.style.transform = originalTransform;
       wallpaper.style.width = originalWidth;
       wallpaper.style.height = originalHeight;
-
-      // Reset text and circle scaling
-      for (const text of textElements) {
-        text.style.fontSize = `${fontSize}px`;
-        text.style.letterSpacing = `${letterSpacing}em`;
-        text.style.lineHeight = `${lineHeight}`;
-      }
-      for (const circle of svgElements) {
-        circle.style.filter = `blur(${blur}px)`;
+      if (svgElement && originalSvgStyle) {
+        svgElement.setAttribute("style", originalSvgStyle);
       }
 
       const link = document.createElement("a");
-      link.download = `gradient-circles-${resolution.width}x${resolution.height}.png`;
+      link.download = `gradii-${resolution.width}x${resolution.height}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
