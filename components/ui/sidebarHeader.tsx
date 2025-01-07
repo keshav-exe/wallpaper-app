@@ -20,14 +20,16 @@ import { IMAGES } from "@/assets";
 import Marquee from "./marquee";
 import { useEffect, useState } from "react";
 
+const CURRENT_VERSION = "0.3";
+
 export function SidebarHeader() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const hasSeenDialog = localStorage.getItem("hasSeenGradiiDialog");
-    if (!hasSeenDialog) {
+    const lastSeenVersion = localStorage.getItem("gradiiLastSeenVersion");
+    if (!lastSeenVersion || lastSeenVersion !== CURRENT_VERSION) {
       setOpen(true);
-      localStorage.setItem("hasSeenGradiiDialog", "true");
+      localStorage.setItem("gradiiLastSeenVersion", CURRENT_VERSION);
     }
   }, []);
 
