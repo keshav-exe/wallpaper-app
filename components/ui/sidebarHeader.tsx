@@ -26,6 +26,17 @@ export function SidebarHeader() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    // Clean up ALL old version keys
+    const cleanupOldVersions = () => {
+      const oldVersions = ["0.1", "0.2"];
+      oldVersions.forEach((version) => {
+        localStorage.removeItem(`gradiiLastSeenVersion_${version}`);
+      });
+      localStorage.removeItem("hasSeenGradiiDialog"); // Remove the very old key too
+    };
+
+    cleanupOldVersions();
+
     const lastSeenVersion = localStorage.getItem("gradiiLastSeenVersion");
     if (!lastSeenVersion || lastSeenVersion !== CURRENT_VERSION) {
       setOpen(true);
