@@ -144,6 +144,20 @@ export const FILTER_SVG_PATTERNS = {
       <rect width='100%' height='100%' filter='url(#noiseFilter)'/>
     </svg>
   `,
+  pixelate: `
+    <svg viewBox="0 0 200 200" xmlns='http://www.w3.org/2000/svg'>
+      <filter id='pixelate'>
+        <feFlood x="0" y="0" width="100%" height="100%" />
+        <feImage xlink:href="#source" result="img"/>
+        <feComponentTransfer>
+          <feFuncR type="discrete" tableValues="0 .5 1 1"/>
+          <feFuncG type="discrete" tableValues="0 .5 1"/>
+          <feFuncB type="discrete" tableValues="0"/>
+        </feComponentTransfer>
+      </filter>
+      <rect width='100%' height='100%' filter='url(#pixelate)'/>
+    </svg>
+  `,
 } as const;
 
 export const RESOLUTIONS = [
@@ -167,4 +181,12 @@ export const BLUR_OPTIONS = [
   { name: "Low", value: 100 },
   { name: "Medium", value: 150 },
   { name: "High", value: 200 },
+] as const;
+
+export const PIXEL_SIZES = [
+  { name: "4px", value: 4 },
+  { name: "8px", value: 8 },
+  { name: "16px", value: 16 },
+  { name: "32px", value: 32 },
+  { name: "64px", value: 64 },
 ] as const;

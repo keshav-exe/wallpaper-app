@@ -24,6 +24,7 @@ import { ButtonsChin } from "../ui/buttonsChin";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo } from "react";
 import { SidebarHeader } from "../ui/sidebarHeader";
+import { ThemeSwitch } from "../ui/themeSwitch";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -285,39 +286,44 @@ export default function DesktopApp({
         }}
         className="flex flex-col gap-2 w-full max-w-[40vw] lg:max-w-[30vw] xl:max-w-[20vw] h-full overflow-hidden"
       >
-        <div className="flex items-center gap-2 p-2 bg-secondary rounded-xl w-full">
+        <div className="flex items-center gap-2 p-2 bg-secondary rounded-3xl w-full">
           <div className="flex items-center gap-2 justify-between w-full">
             <SidebarHeader />
           </div>
         </div>
 
         {/* controls */}
-        <section className="w-full bg-secondary border-primary/20 rounded-2xl flex flex-col no-scrollbar overflow-hidden h-full">
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) =>
-              setActiveTab(value as "text" | "colors" | "effects")
-            }
-            className="w-full"
-          >
-            <TabsList className="w-full flex items-center gap-1">
-              {["text", "colors", "effects"].map((tab) => (
-                <TabsTrigger key={tab} value={tab} className="flex-1 relative">
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  {activeTab === tab && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-primary/10 rounded-full"
-                      transition={{ type: "spring", duration: 0.5 }}
-                    />
-                  )}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-
+        <section className="w-full bg-secondary border-primary/20 rounded-3xl flex flex-col no-scrollbar overflow-hidden h-full">
           <AnimatePresence custom={direction} mode="wait">
-            <motion.div className="flex flex-col gap-4 overflow-y-auto justify-between no-scrollbar relative h-full">
+            <motion.div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full">
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) =>
+                  setActiveTab(value as "text" | "colors" | "effects")
+                }
+                className="sticky top-0 flex flex-col items-center z-50 w-full bg-gradient-to-t to-70% from-transparent to-secondary/80"
+              >
+                <TabsList className="w-full flex items-center gap-1">
+                  {["text", "colors", "effects"].map((tab) => (
+                    <TabsTrigger
+                      key={tab}
+                      value={tab}
+                      className="flex-1 relative"
+                      disabled={tab === "colors" && !!backgroundImage}
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {activeTab === tab && (
+                        <motion.div
+                          layoutId="activeTab"
+                          className="absolute inset-0 bg-primary/10 rounded-2xl"
+                          transition={{ type: "spring", duration: 0.5 }}
+                        />
+                      )}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+
               {activeTab === "text" && (
                 <motion.div
                   key={activeTab}
@@ -458,9 +464,9 @@ export default function DesktopApp({
                     x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.2 },
                   }}
-                  className="flex flex-col gap-4 relative"
+                  className="flex flex-col relative"
                 >
-                  <div className="w-full flex justify-center bg-gradient-to-b from-secondary to-secondary/5 py-6 px-4 sticky top-0 z-10">
+                  <div className="w-full flex justify-center bg-gradient-to-b from-secondary to-secondary/5 py-6 px-4  z-10">
                     <HexColorPicker
                       color={activeColorPicker}
                       onChange={(color) => {
@@ -618,12 +624,19 @@ export default function DesktopApp({
                           key={blurOption.value}
                           onClick={() => setBlur(blurOption.value)}
                           className={cn(
-                            "w-full rounded-full px-4 py-2 text-sm",
-                            blur === blurOption.value &&
-                              "bg-primary text-primary-foreground"
+                            "w-full rounded-full px-4 py-2 text-sm relative",
+                            "transition-colors duration-200",
+                            blur !== blurOption.value && "bg-background"
                           )}
                         >
                           <span>{blurOption.name}</span>
+                          {blur === blurOption.value && (
+                            <motion.div
+                              layoutId="activeBlur"
+                              className="absolute inset-0 bg-primary/20 rounded-full -z-10"
+                              transition={{ type: "spring", duration: 0.5 }}
+                            />
+                          )}
                         </button>
                       ))}
                     </div>
@@ -673,39 +686,18 @@ export default function DesktopApp({
                       {brightness}%
                     </span>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Background Image
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="flex-1"
-                      />
-                      {backgroundImage && (
-                        <button
-                          onClick={() => setBackgroundImage(null)}
-                          className="px-2 py-1 bg-destructive text-destructive-foreground rounded-md text-sm"
-                        >
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                  </div>
                 </motion.div>
               )}
 
-              <div className="sticky bottom-0 flex flex-col items-center z-50 w-full bg-gradient-to-b from-transparent to-secondary p-4">
+              <div className="sticky bottom-0 flex flex-col items-center z-50 w-full bg-gradient-to-b to-50% from-transparent to-secondary p-4">
                 <div className="flex w-full bg-primary rounded-2xl text-primary-foreground divide-x divide-primary-foreground/20 divide-dashed">
                   <button
                     onClick={downloadImage}
                     className="w-full flex items-center justify-center gap-2 text-primary-foreground text-sm"
                     disabled={isDownloading}
                   >
+                    <Download className="size-5" />
                     Download
-                    <Download className="size-4" />
                   </button>
 
                   <button
@@ -762,7 +754,22 @@ export default function DesktopApp({
       </motion.aside>
 
       {/* preview */}
-      <section className="flex flex-col gap-4 w-full h-full items-center justify-center relative">
+      <motion.section
+        className="flex flex-col gap-4 w-full h-full items-center justify-center relative bg-secondary rounded-3xl"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{
+          duration: 1,
+          ease: "easeInOut",
+          type: "spring",
+          damping: 20,
+          stiffness: 100,
+          mass: 0.5,
+        }}
+      >
+        <div className="absolute top-2 right-2">
+          <ThemeSwitch />
+        </div>
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -774,7 +781,7 @@ export default function DesktopApp({
             stiffness: 100,
             mass: 0.5,
           }}
-          className="rounded-3xl overflow-hidden w-full max-w-3xl flex items-center justify-center"
+          className="rounded-3xl overflow-hidden w-full max-w-3xl flex items-center justify-center relative"
         >
           {isDownloading && (
             <div className="flex items-center justify-center h-full bg-secondary/25">
@@ -882,13 +889,16 @@ export default function DesktopApp({
         </motion.div>
 
         <ButtonsChin
+          handleImageUpload={handleImageUpload}
+          backgroundImage={backgroundImage}
+          setBackgroundImage={setBackgroundImage}
           generateNewPalette={generateNewPalette}
           isGenerating={isGenerating}
           previousCircles={previousCircles}
           setCircles={setCircles}
           setPreviousCircles={setPreviousCircles}
         />
-      </section>
+      </motion.section>
     </main>
   );
 }

@@ -245,13 +245,40 @@ export default function Home() {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setBackgroundImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Check file size (e.g., 10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be smaller than 10MB");
+      return;
     }
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onerror = () => {
+      toast.error("Failed to read image file");
+    };
+
+    reader.onloadend = () => {
+      // Preload image to ensure it loads properly
+      const img = new Image();
+      img.onload = () => {
+        setBackgroundImage(reader.result as string);
+        toast.success("Image uploaded successfully");
+      };
+      img.onerror = () => {
+        toast.error("Failed to load image");
+      };
+      img.src = reader.result as string;
+    };
+
+    reader.readAsDataURL(file);
   };
 
   return (
