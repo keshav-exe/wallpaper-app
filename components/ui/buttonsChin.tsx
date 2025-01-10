@@ -30,16 +30,7 @@ export function ButtonsChin({
   setBlur: (blur: number) => void;
   blur: number;
 }) {
-  const [hoveredButton, setHoveredButton] = useState<
-    "theme" | "generate" | "undo" | "upload" | null
-  >("generate");
   const [isUploading, setIsUploading] = useState(false);
-
-  const handleMouseEnter = (
-    button: "theme" | "generate" | "undo" | "upload"
-  ) => {
-    setHoveredButton(button);
-  };
 
   return (
     <motion.div
@@ -54,12 +45,10 @@ export function ButtonsChin({
         mass: 0.5,
         delay: 0.5,
       }}
-      className="flex items-center gap-2 p-4 w-fit mx-auto fixed bottom-4 left-1/2 -translate-x-1/2 z-50 justify-center"
+      className="flex items-center gap-2 p-4 mx-auto justify-center"
     >
       <button
-        className={`w-full p-3 bg-primary rounded-2xl hover:text-primary-foreground/80 text-primary-foreground transition-all duration-300 z-50 flex items-center ${
-          hoveredButton === "generate" ? "gap-2" : ""
-        } justify-center disabled:opacity-50`}
+        className="w-full p-3 bg-primary rounded-2xl hover:text-primary-foreground/80 text-primary-foreground transition-all duration-300 z-50 flex items-center gap-2 justify-center disabled:opacity-50"
         onClick={() => {
           generateNewPalette();
           setBackgroundImage(null);
@@ -68,30 +57,16 @@ export function ButtonsChin({
           }
         }}
         disabled={isGenerating}
-        onMouseEnter={() => handleMouseEnter("generate")}
       >
         <WandSparklesIcon className="size-5" />
-        <motion.span
-          initial={{ width: 0, opacity: 0 }}
-          animate={{
-            width: hoveredButton === "generate" ? "auto" : 0,
-            opacity: hoveredButton === "generate" ? 1 : 0,
-          }}
-          transition={{ duration: 0.2 }}
-          className="text-sm  tracking-tight overflow-hidden whitespace-nowrap"
-        >
-          Generate Gradient
-        </motion.span>
+        <span className="text-sm tracking-tight">Generate Gradient</span>
       </button>
 
       <div className="flex items-center gap-2">
         <label
-          className={`w-full p-3 bg-primary rounded-2xl hover:text-primary-foreground/80 text-primary-foreground transition-all duration-300 z-50 flex items-center cursor-pointer ${
-            hoveredButton === "upload" ? "gap-2" : ""
-          } justify-center ${
+          className={`w-full p-3 bg-primary rounded-2xl hover:text-primary-foreground/80 text-primary-foreground transition-all duration-300 z-50 flex items-center gap-2 cursor-pointer justify-center ${
             isUploading ? "opacity-50 cursor-not-allowed" : ""
           }`}
-          onMouseEnter={() => handleMouseEnter("upload")}
         >
           <Input
             type="file"
@@ -115,25 +90,16 @@ export function ButtonsChin({
           ) : (
             <>
               <Image className="size-5" />
-              <motion.span
-                initial={{ width: 0, opacity: 0 }}
-                animate={{
-                  width: hoveredButton === "upload" ? "auto" : 0,
-                  opacity: hoveredButton === "upload" ? 1 : 0,
-                }}
-                transition={{ duration: 0.2 }}
-                className="text-sm  tracking-tight overflow-hidden whitespace-nowrap"
-              >
+
+              <span className="text-sm tracking-tight text-nowrap">
                 Background Image
-              </motion.span>
+              </span>
             </>
           )}
         </label>
 
         <button
-          className={`w-full p-3 bg-background rounded-2xl hover:text-primary/80 transition-colors duration-300 z-50 flex items-center ${
-            hoveredButton === "undo" ? "gap-2" : ""
-          }`}
+          className="w-full p-3 bg-background rounded-2xl hover:text-primary/80 transition-colors duration-300 z-50 flex items-center gap-2"
           onClick={() => {
             setBackgroundImage(null);
             if (previousCircles.length > 0) {
@@ -141,24 +107,15 @@ export function ButtonsChin({
               setPreviousCircles([]);
             }
           }}
-          onMouseEnter={() => handleMouseEnter("undo")}
         >
           {backgroundImage ? (
             <Trash2Icon className="size-5" />
           ) : (
-            <Undo className={`size-5 `} />
+            <Undo className="size-5" />
           )}
-          <motion.span
-            initial={{ width: 0, opacity: 0 }}
-            animate={{
-              width: hoveredButton === "undo" ? "auto" : 0,
-              opacity: hoveredButton === "undo" ? 1 : 0,
-            }}
-            transition={{ duration: 0.2 }}
-            className={`text-sm  tracking-tight overflow-hidden whitespace-nowrap`}
-          >
+          <span className="text-sm tracking-tight">
             {backgroundImage ? "Clear" : "Undo"}
-          </motion.span>
+          </span>
         </button>
       </div>
     </motion.div>

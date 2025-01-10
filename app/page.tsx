@@ -28,12 +28,12 @@ export default function Home() {
   );
   const [previousCircles, setPreviousCircles] = useState<CircleProps[]>([]);
   const [text, setText] = useState("KSHV.");
-  const [fontSize, setFontSize] = useState(36);
+  const [fontSize, setFontSizeState] = useState(36);
   const [blur, setBlur] = useState(200);
   const [fontWeight, setFontWeight] = useState(800);
   const [letterSpacing, setLetterSpacing] = useState(-0.02);
   const [opacity, setOpacity] = useState(100);
-  const [fontFamily, setFontFamily] = useState("Onest");
+  const [fontFamily, setFontFamilyState] = useState("Onest");
   const [activeTab, setActiveTab] = useState<"colors" | "text" | "effects">(
     "text"
   );
@@ -58,6 +58,9 @@ export default function Home() {
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
+  const [modifiedProperties, setModifiedProperties] = useState<Set<string>>(
+    new Set()
+  );
 
   const fonts: FontOption[] = FONTS;
 
@@ -173,41 +176,51 @@ export default function Home() {
         }))
       );
 
-      // Randomize filter settings
-      setFilterIntensity(Math.floor(Math.random() * (100 - 30) + 30));
-      const filterTypes: ("pastel" | "film" | "grain" | "static")[] = [
-        "pastel",
-        "film",
-        "grain",
-        "static",
-      ];
-      setFilterType(
-        filterTypes[Math.floor(Math.random() * filterTypes.length)]
-      );
+      if (!modifiedProperties.has("filterIntensity")) {
+        setFilterIntensity(Math.floor(Math.random() * (100 - 30) + 30));
+      }
 
-      // Randomize background color
-      const randomColor =
-        backgroundColors[Math.floor(Math.random() * backgroundColors.length)];
-      setBackgroundColor(randomColor);
+      if (!modifiedProperties.has("filterType")) {
+        const filterTypes: ("pastel" | "film" | "grain" | "static")[] = [
+          "pastel",
+          "film",
+          "grain",
+          "static",
+        ];
+        setFilterType(
+          filterTypes[Math.floor(Math.random() * filterTypes.length)]
+        );
+      }
 
-      // Randomize font family
-      const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
-      setFontFamily(randomFont.name);
+      if (!modifiedProperties.has("backgroundColor")) {
+        const randomColor =
+          backgroundColors[Math.floor(Math.random() * backgroundColors.length)];
+        setBackgroundColor(randomColor);
+      }
 
-      // Randomize font weight (between 100-900)
-      const availableWeights = randomFont.weights || [
-        100, 200, 300, 400, 500, 600, 700, 800, 900,
-      ];
-      setFontWeight(
-        availableWeights[Math.floor(Math.random() * availableWeights.length)]
-      );
+      if (!modifiedProperties.has("fontFamily")) {
+        const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
+        setFontFamily(randomFont.name);
+      }
 
-      //Randomize font size
-      const fontSizes = [24, 28, 32, 36, 40, 44, 48, 52, 56, 60];
-      setFontSize(fontSizes[Math.floor(Math.random() * fontSizes.length)]);
+      if (!modifiedProperties.has("fontWeight")) {
+        const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
+        const availableWeights = randomFont?.weights || [
+          100, 200, 300, 400, 500, 600, 700, 800, 900,
+        ];
+        setFontWeight(
+          availableWeights[Math.floor(Math.random() * availableWeights.length)]
+        );
+      }
 
-      // Randomize letter spacing (between -0.05 and 0.1)
-      setLetterSpacing(Number((Math.random() * 0.15 - 0.05).toFixed(2)));
+      if (!modifiedProperties.has("fontSize")) {
+        const fontSizes = [24, 28, 32, 36, 40, 44, 48, 52, 56, 60];
+        setFontSize(fontSizes[Math.floor(Math.random() * fontSizes.length)]);
+      }
+
+      if (!modifiedProperties.has("letterSpacing")) {
+        setLetterSpacing(Number((Math.random() * 0.15 - 0.05).toFixed(2)));
+      }
 
       toast.success("Generated new palette!");
     } catch (err) {
@@ -277,70 +290,25 @@ export default function Home() {
     reader.readAsDataURL(file);
   };
 
+  const trackPropertyModification = (property: string) => {
+    setModifiedProperties((prev) => new Set(prev).add(property));
+  };
+
+  // Modify the relevant setters
+  const setFontSize = (value: number) => {
+    trackPropertyModification("fontSize");
+    setFontSizeState(value);
+  };
+
+  const setFontFamily = (value: string) => {
+    trackPropertyModification("fontFamily");
+    setFontFamilyState(value);
+  };
+
   return (
     <>
       <div className="md:hidden">
-        <MobileApp
-          backgroundColor={backgroundColor}
-          blur={blur}
-          setBlur={setBlur}
-          activeTab={activeTab}
-          fontSize={fontSize}
-          fontWeight={fontWeight}
-          letterSpacing={letterSpacing}
-          fontFamily={fontFamily}
-          opacity={opacity}
-          lineHeight={lineHeight}
-          text={text}
-          circles={circles}
-          filterIntensity={filterIntensity}
-          filterStyle={filterStyle}
-          textColor={textColor}
-          generateNewPalette={generateNewPalette}
-          isGenerating={isGenerating}
-          downloadImage={downloadImage}
-          isDownloading={isDownloading}
-          fonts={fonts}
-          activeColorPicker={activeColorPicker}
-          filterType={filterType}
-          setFilterIntensity={setFilterIntensity}
-          setFilterType={setFilterType}
-          setTextColor={setTextColor}
-          setText={setText}
-          setFontFamily={setFontFamily}
-          setFontSize={setFontSize}
-          setFontWeight={setFontWeight}
-          setLetterSpacing={setLetterSpacing}
-          setOpacity={setOpacity}
-          setLineHeight={setLineHeight}
-          setBackgroundColor={setBackgroundColor}
-          setActiveColorPicker={setActiveColorPicker}
-          handleColorChange={handleColorChange}
-          setActiveColorType={setActiveColorType}
-          setActiveColor={setActiveColor}
-          updateColor={updateColor}
-          previousCircles={previousCircles}
-          setCircles={setCircles}
-          setPreviousCircles={setPreviousCircles}
-          setActiveTab={setActiveTab}
-          resolution={resolution}
-          setResolution={setResolution}
-          saturation={saturation}
-          setSaturation={setSaturation}
-          contrast={contrast}
-          setContrast={setContrast}
-          brightness={brightness}
-          setBrightness={setBrightness}
-          backgroundImage={backgroundImage}
-          handleImageUpload={handleImageUpload}
-          setBackgroundImage={setBackgroundImage}
-          isItalic={isItalic}
-          setIsItalic={setIsItalic}
-          isUnderline={isUnderline}
-          setIsUnderline={setIsUnderline}
-          isStrikethrough={isStrikethrough}
-          setIsStrikethrough={setIsStrikethrough}
-        />
+        <MobileApp />
       </div>
       <div className="hidden md:block">
         <DesktopApp

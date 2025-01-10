@@ -321,7 +321,6 @@ export default function DesktopApp({
                       key={tab}
                       value={tab}
                       className="flex-1 relative"
-                      disabled={tab === "colors" && !!backgroundImage}
                     >
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}
                       {activeTab === tab && (
@@ -531,39 +530,41 @@ export default function DesktopApp({
                   </div>
 
                   <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar p-4">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm text-muted-foreground">
-                        Gradient Colors
-                      </label>
-                      {circles.map((circle, i) => (
-                        <div
-                          key={i}
-                          className="flex items-start gap-2 relative w-full"
-                        >
+                    {!backgroundImage && (
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm text-muted-foreground">
+                          Gradient Colors
+                        </label>
+                        {circles.map((circle, i) => (
                           <div
-                            className="flex items-center gap-2 w-full"
-                            onClick={() => {
-                              setActiveColorType("gradient");
-                              setActiveColor(i);
-                              setActiveColorPicker(circle.color);
-                            }}
+                            key={i}
+                            className="flex items-start gap-2 relative w-full"
                           >
-                            <span
-                              className="size-5 rounded-xl cursor-pointer aspect-square"
-                              style={{
-                                backgroundColor: circle.color,
+                            <div
+                              className="flex items-center gap-2 w-full"
+                              onClick={() => {
+                                setActiveColorType("gradient");
+                                setActiveColor(i);
+                                setActiveColorPicker(circle.color);
                               }}
-                            />
-                            <Input
-                              type="text"
-                              value={circle.color}
-                              placeholder="Color"
-                              onChange={(e) => updateColor(e.target.value, i)}
-                            />
+                            >
+                              <span
+                                className="size-5 rounded-xl cursor-pointer aspect-square"
+                                style={{
+                                  backgroundColor: circle.color,
+                                }}
+                              />
+                              <Input
+                                type="text"
+                                value={circle.color}
+                                placeholder="Color"
+                                onChange={(e) => updateColor(e.target.value, i)}
+                              />
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
 
                     <div className="flex flex-col gap-2">
                       <label className="text-sm text-muted-foreground">

@@ -9,6 +9,7 @@ import {
   Inter,
   DM_Serif_Display,
   Lora,
+  Ms_Madi,
 } from "next/font/google";
 
 export const bricolage = Bricolage_Grotesque({
@@ -64,4 +65,10 @@ export const lora = Lora({
   subsets: ["latin"],
   variable: "--font-lora",
   weight: ["400", "500", "600", "700"],
+});
+
+export const msMadi = Ms_Madi({
+  subsets: ["latin"],
+  variable: "--font-ms-madi",
+  weight: ["400"],
 });

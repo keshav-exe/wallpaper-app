@@ -94,6 +94,11 @@ export const FONTS: FontOption[] = [
     variable: true,
     weights: [400, 500, 600, 700],
   },
+  {
+    name: "Ms Madi",
+    variable: false,
+    weights: [400],
+  },
 ];
 
 export const FILTER_SVG_PATTERNS = {
