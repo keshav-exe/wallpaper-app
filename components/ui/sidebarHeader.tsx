@@ -5,9 +5,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  ArrowRightIcon,
   BrushIcon,
   DownloadIcon,
+  InfoIcon,
   PaletteIcon,
   WandSparklesIcon,
 } from "lucide-react";
@@ -28,7 +28,7 @@ export function SidebarHeader() {
   useEffect(() => {
     // Clean up ALL old version keys
     const cleanupOldVersions = () => {
-      const oldVersions = ["0.1", "0.2"];
+      const oldVersions = ["0.1", "0.2", "0.3"];
       oldVersions.forEach((version) => {
         localStorage.removeItem(`gradiiLastSeenVersion_${version}`);
       });
@@ -53,24 +53,19 @@ export function SidebarHeader() {
               <Image
                 src={logo}
                 alt="logo"
-                className="size-7"
+                className="size-8"
                 priority
                 loading="eager"
               />
-              <p className="font-bold text-primary tracking-tighter text-2xl">
-                Gradii
-              </p>
+              <p className="text-lg font-bold tracking-tighter">Gradii</p>
             </div>
-            <span className="text-[10px] text-white font-bold border-white/25 border px-2 py-1 rounded-full tracking-tighter bg-gradient-to-b from-[#0A0A0A]/65 to-[#292929]/35">
-              v0.3 ALPHA
-            </span>
           </div>
           <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors duration-300 p-2">
-            <ArrowRightIcon className="size-4" />
+            <InfoIcon className="size-4" />
           </span>
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl border-none !rounded-3xl h-[95vh]">
+      <DialogContent className="max-w-3xl border-none !rounded-2xl h-[95vh]">
         <DialogTitle className="sr-only">Gradii</DialogTitle>
         <motion.div
           initial={{ opacity: 0, y: 100 }}
@@ -163,15 +158,12 @@ export function SidebarHeader() {
 
           <section className="flex flex-col gap-4 p-4 rounded-2xl bg-muted/50">
             <h2 className="text-lg font-semibold tracking-tighter">
-              What&apos;s New in v0.3 ALPHA
+              What&apos;s New in v0.4 ALPHA
             </h2>
             <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-4">
-              <li>Safari browser compatibility</li>
-              <li>Added more fonts to select from</li>
-              <li>Text decoration support (Underline, Strikethrough)</li>
-              <li>Multiple aspect ratio support (Desktop, Mobile, Square)</li>
-              <li>Upload background images to create gradients</li>
-              <li>Performance improvements</li>
+              <li>New UI</li>
+              <li>Cleaner codebase</li>
+              <li>New gradients</li>
             </ul>
           </section>
 

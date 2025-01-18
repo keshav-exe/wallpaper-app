@@ -16,7 +16,7 @@ export function ThemeSwitch() {
       onMouseEnter={() => handleMouseEnter("theme")}
       onMouseLeave={() => setHoveredButton(null)}
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className={`w-full p-3 bg-background rounded-2xl hover:text-primary/80 transition-colors duration-300 z-50 flex items-center ${
+      className={`w-full p-3 bg-background rounded-xl hover:text-primary/80 transition-colors duration-300 z-50 flex items-center ${
         hoveredButton === "theme" ? "gap-2" : ""
       } relative`}
     >

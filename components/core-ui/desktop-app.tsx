@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { CameraIcon, Download } from "lucide-react";
+import { ArrowDownIcon, Loader2Icon } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
@@ -22,9 +22,10 @@ import {
 } from "@/lib/constants";
 import { ButtonsChin } from "../ui/buttonsChin";
 import { cn } from "@/lib/utils";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { SidebarHeader } from "../ui/sidebarHeader";
 import { ThemeSwitch } from "../ui/themeSwitch";
+import { generateRandomShape, renderShape } from "@/lib/utils/shapes";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -241,24 +242,24 @@ export default function DesktopApp({
     }
   };
 
-  const memoizedCircles = useMemo(
+  const memoizedShapes = useMemo(
     () =>
-      circles.map((circle, i) => (
-        <circle
-          key={i}
-          cx={`${circle.cx}%`}
-          cy={`${circle.cy}%`}
-          r="30%"
-          fill={circle.color}
-          style={{
-            transform: "translate3d(0,0,0)",
-            backfaceVisibility: "hidden",
-            WebkitBackfaceVisibility: "hidden",
-            willChange: "transform",
-            contain: "strict",
-          }}
-        />
-      )),
+      circles.map((circle, i) => {
+        const shape = generateRandomShape(circle.color);
+        return (
+          <g
+            key={i}
+            style={{
+              transform: "translate3d(0,0,0)",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              willChange: "transform",
+              contain: "strict",
+            }}
+            dangerouslySetInnerHTML={{ __html: renderShape(shape) }}
+          />
+        );
+      }),
     [circles]
   );
 
@@ -280,6 +281,52 @@ export default function DesktopApp({
     ));
   }, [fonts, text]);
 
+  const getDynamicPreviewDimensions = (containerWidth: number) => {
+    const maxWidth = PREVIEW_DIMENSIONS[aspectRatio].width;
+    const maxHeight = PREVIEW_DIMENSIONS[aspectRatio].height;
+    const scale = Math.min(1, containerWidth / maxWidth);
+
+    return {
+      width: maxWidth * scale,
+      height: maxHeight * scale,
+    };
+  };
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [previewDimensions, setPreviewDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
+
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const availableWidth = entry.contentRect.width - 32;
+        setPreviewDimensions(getDynamicPreviewDimensions(availableWidth));
+      }
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [aspectRatio]);
+
+  const [showDownloadingOverlay, setShowDownloadingOverlay] = useState(false);
+
+  useEffect(() => {
+    if (isDownloading) {
+      setShowDownloadingOverlay(true);
+    } else {
+      // Keep showing overlay for 1.5s after download completes
+      const timeout = setTimeout(() => {
+        setShowDownloadingOverlay(false);
+      }, 1500);
+      return () => clearTimeout(timeout);
+    }
+  }, [isDownloading]);
+
   return (
     <main className="relative flex gap-2 items-center justify-center p-4 h-screen w-full">
       <div aria-hidden="true" className="sr-only">
@@ -296,45 +343,40 @@ export default function DesktopApp({
           stiffness: 100,
           mass: 0.5,
         }}
-        className="flex flex-col gap-2 w-full max-w-[40vw] lg:max-w-[30vw] xl:max-w-[20vw] h-full overflow-hidden"
+        className="flex flex-col gap-2 w-full max-w-[300px] min-w-[220px] h-full overflow-hidden"
       >
-        <div className="flex items-center gap-2 p-2 bg-secondary rounded-3xl w-full">
+        <div className="flex items-center gap-2 p-2 bg-secondary rounded-2xl w-full">
           <div className="flex items-center gap-2 justify-between w-full">
             <SidebarHeader />
           </div>
         </div>
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) =>
+            setActiveTab(value as "text" | "colors" | "effects")
+          }
+          className="flex flex-col items-center z-50 w-full bg-secondary rounded-2xl p-2"
+        >
+          <TabsList className="w-full flex items-center gap-1">
+            {["text", "colors", "effects"].map((tab) => (
+              <TabsTrigger key={tab} value={tab} className="flex-1 relative">
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {activeTab === tab && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 bg-primary/10 rounded-xl"
+                    transition={{ type: "spring", duration: 0.5 }}
+                  />
+                )}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
 
         {/* controls */}
-        <section className="w-full bg-secondary border-primary/20 rounded-3xl flex flex-col no-scrollbar overflow-hidden h-full">
+        <section className="w-full bg-secondary rounded-2xl flex flex-col no-scrollbar overflow-hidden h-full">
           <AnimatePresence custom={direction} mode="wait">
-            <motion.div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full">
-              <Tabs
-                value={activeTab}
-                onValueChange={(value) =>
-                  setActiveTab(value as "text" | "colors" | "effects")
-                }
-                className="sticky top-0 flex flex-col items-center z-50 w-full bg-gradient-to-t to-35% from-transparent to-secondary"
-              >
-                <TabsList className="w-full flex items-center gap-1">
-                  {["text", "colors", "effects"].map((tab) => (
-                    <TabsTrigger
-                      key={tab}
-                      value={tab}
-                      className="flex-1 relative"
-                    >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                      {activeTab === tab && (
-                        <motion.div
-                          layoutId="activeTab"
-                          className="absolute inset-0 bg-primary/10 rounded-2xl"
-                          transition={{ type: "spring", duration: 0.5 }}
-                        />
-                      )}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-
+            <motion.div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full gap-2 p-4">
               {activeTab === "text" && (
                 <motion.div
                   key={activeTab}
@@ -347,7 +389,7 @@ export default function DesktopApp({
                     x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.3 },
                   }}
-                  className="flex flex-col gap-4 p-4"
+                  className="flex flex-col gap-4"
                 >
                   <div className="flex flex-col gap-2 w-full">
                     <label className="text-sm text-muted-foreground">
@@ -519,7 +561,7 @@ export default function DesktopApp({
                   }}
                   className="flex flex-col relative"
                 >
-                  <div className="w-full flex justify-center bg-gradient-to-b from-secondary to-secondary/5 py-6 px-4 z-10">
+                  <div className="w-full flex justify-center bg-gradient-to-b from-secondary to-secondary/5 z-10 py-4">
                     <HexColorPicker
                       color={activeColorPicker}
                       onChange={(color) => {
@@ -529,7 +571,7 @@ export default function DesktopApp({
                     />
                   </div>
 
-                  <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar p-4">
+                  <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar">
                     {!backgroundImage && (
                       <div className="flex flex-col gap-2">
                         <label className="text-sm text-muted-foreground">
@@ -631,7 +673,7 @@ export default function DesktopApp({
                     x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.3 },
                   }}
-                  className="flex flex-col p-4 gap-4"
+                  className="flex flex-col gap-4"
                 >
                   <div className="flex flex-col gap-2">
                     <label className="text-sm text-muted-foreground">
@@ -745,74 +787,57 @@ export default function DesktopApp({
                   </div>
                 </motion.div>
               )}
-
-              <div className="sticky bottom-0 flex flex-col items-center z-50 w-full bg-gradient-to-b to-50% from-transparent to-secondary p-4">
-                <div className="flex w-full bg-primary rounded-2xl text-primary-foreground divide-x divide-primary-foreground/20 divide-dashed">
-                  <button
-                    onClick={downloadImage}
-                    className="w-full flex items-center justify-center gap-2 text-primary-foreground text-sm"
-                    disabled={isDownloading}
-                  >
-                    <Download className="size-5" />
-                    Download
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      const currentIndex = filteredResolutions.findIndex(
-                        (r) => r.width === resolution.width
-                      );
-                      const nextIndex =
-                        (currentIndex + 1) % filteredResolutions.length;
-                      setResolution(filteredResolutions[nextIndex]);
-                    }}
-                    className="w-14 h-12 px-4 py-2 relative items-center justify-center"
-                  >
-                    <AnimatePresence mode="sync">
-                      <motion.span
-                        key={resolution.scale}
-                        variants={scaleVariants}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        transition={{
-                          duration: 0.3,
-                          ease: "easeInOut",
-                        }}
-                        className="top-3 inset-0"
-                      >
-                        {resolution.scale}x
-                      </motion.span>
-                    </AnimatePresence>
-                  </button>
-                </div>
-
-                <Tabs
-                  value={aspectRatio}
-                  onValueChange={(v) => setAspectRatio(v as typeof aspectRatio)}
-                  className="w-full"
-                >
-                  <TabsList className="w-full">
-                    <TabsTrigger value="desktop" className="w-full">
-                      Desktop
-                    </TabsTrigger>
-                    <TabsTrigger value="mobile" className="w-full">
-                      Mobile
-                    </TabsTrigger>
-                    <TabsTrigger value="square" className="w-full">
-                      Square
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
             </motion.div>
           </AnimatePresence>
         </section>
+
+        <div className="flex flex-col items-center rounded-2xl w-full gap-4">
+          <div className="flex w-full gap-2">
+            <button
+              onClick={downloadImage}
+              className="w-full flex items-center justify-center gap-2 text-primary-foreground text-sm bg-primary rounded-xl"
+              disabled={isDownloading}
+            >
+              <ArrowDownIcon className="size-4" />
+              Export
+            </button>
+
+            <button
+              onClick={() => {
+                const currentIndex = filteredResolutions.findIndex(
+                  (r) => r.width === resolution.width
+                );
+                const nextIndex =
+                  (currentIndex + 1) % filteredResolutions.length;
+                setResolution(filteredResolutions[nextIndex]);
+              }}
+              className="w-12 h-10 px-4 py-2 relative items-center justify-center bg-primary rounded-xl text-primary-foreground"
+            >
+              <AnimatePresence mode="sync">
+                <motion.span
+                  key={resolution.scale}
+                  variants={scaleVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{
+                    duration: 0.3,
+                    ease: "easeInOut",
+                  }}
+                  className="top-2 inset-0"
+                >
+                  {resolution.scale}x
+                </motion.span>
+              </AnimatePresence>
+            </button>
+          </div>
+        </div>
       </motion.aside>
 
-      {/* preview */}
+      {/* preview section */}
       <motion.section
-        className="flex flex-col gap-4 w-full h-full items-center justify-center relative bg-secondary rounded-3xl"
+        ref={containerRef}
+        className="flex flex-col gap-4 w-full h-full items-center justify-center relative bg-secondary rounded-2xl"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{
@@ -838,18 +863,17 @@ export default function DesktopApp({
             stiffness: 100,
             mass: 0.5,
           }}
-          className="rounded-3xl overflow-hidden w-full max-w-3xl flex items-center justify-center relative"
+          className="rounded-2xl overflow-hidden w-full max-w-3xl flex items-center justify-center relative"
         >
-          {isDownloading && (
-            <div className="flex items-center justify-center h-full bg-secondary/25">
-              <CameraIcon className="size-4 " />
-            </div>
-          )}
           <div
-            className="relative w-full overflow-hidden rounded-3xl max-h-[95vh]"
+            className="relative w-full overflow-hidden rounded-2xl max-h-[95vh]"
             style={{
-              width: PREVIEW_DIMENSIONS[aspectRatio].width,
-              height: PREVIEW_DIMENSIONS[aspectRatio].height,
+              width:
+                previewDimensions.width ||
+                PREVIEW_DIMENSIONS[aspectRatio].width,
+              height:
+                previewDimensions.height ||
+                PREVIEW_DIMENSIONS[aspectRatio].height,
             }}
           >
             <div
@@ -896,7 +920,7 @@ export default function DesktopApp({
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 100 100"
                   >
-                    {memoizedCircles}
+                    {memoizedShapes}
                   </svg>
                 </div>
               ) : (
@@ -946,10 +970,18 @@ export default function DesktopApp({
                 </p>
               </div>
             </div>
+            {/* Downloading Overlay */}
+            {showDownloadingOverlay && (
+              <div className="absolute inset-0 bg-background z-50 flex items-center justify-center">
+                <Loader2Icon className="size-8 text-primary animate-spin" />
+              </div>
+            )}
           </div>
         </motion.div>
 
         <ButtonsChin
+          aspectRatio={aspectRatio}
+          setAspectRatio={setAspectRatio}
           handleImageUpload={handleImageUpload}
           backgroundImage={backgroundImage}
           setBackgroundImage={setBackgroundImage}
