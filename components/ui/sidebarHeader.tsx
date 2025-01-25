@@ -47,7 +47,7 @@ export function SidebarHeader() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="flex items-center justify-between w-full outline-none focus:outline-none group">
+        <button className="flex items-center justify-between w-full outline-hidden focus:outline-hidden group">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
               <Image
@@ -65,7 +65,7 @@ export function SidebarHeader() {
           </span>
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl border-none !rounded-2xl h-[95vh]">
+      <DialogContent className="max-w-3xl border-none rounded-2xl! h-[95vh]">
         <DialogTitle className="sr-only">Gradii</DialogTitle>
         <motion.div
           initial={{ opacity: 0, y: 100 }}
@@ -140,7 +140,7 @@ export function SidebarHeader() {
             </div>
           </section>
 
-          <section className="relative flex w-full h-[250px] items-center justify-center overflow-hidden rounded-2xl flex-shrink-0">
+          <section className="relative flex w-full h-[250px] items-center justify-center overflow-hidden rounded-2xl shrink-0">
             <Marquee className="[--duration:20s]">
               {[IMAGES.tweet1, IMAGES.tweet2, IMAGES.tweet3, IMAGES.tweet4].map(
                 (image, i) => (

@@ -550,7 +550,7 @@ export default function DesktopApp({
                   }}
                   className="flex flex-col relative"
                 >
-                  <div className="w-full flex justify-center bg-gradient-to-b from-secondary to-secondary/5 z-10 py-4">
+                  <div className="w-full flex justify-center bg-linear-to-b from-secondary to-secondary/5 z-10 py-4">
                     <HexColorPicker
                       color={activeColorPicker}
                       onChange={(color) => {
