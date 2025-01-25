@@ -1,11 +1,34 @@
 "use client";
 
 import * as React from "react";
-import { WandSparklesIcon, Undo, Trash2Icon, Image } from "lucide-react";
-import { motion } from "motion/react";
+import {
+  WandSparklesIcon,
+  Undo,
+  Trash2Icon,
+  Image,
+  MonitorIcon,
+  SmartphoneIcon,
+  SquareIcon,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { CircleProps } from "@/lib/constants";
 import { useState } from "react";
 import { Input } from "./input";
+
+interface ButtonsChinProps {
+  generateNewPalette: () => void;
+  isGenerating: boolean;
+  previousCircles: CircleProps[];
+  setCircles: (circles: CircleProps[]) => void;
+  setPreviousCircles: (circles: CircleProps[]) => void;
+  handleImageUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  backgroundImage: string | null;
+  setBackgroundImage: (image: string | null) => void;
+  setBlur: (blur: number) => void;
+  blur: number;
+  aspectRatio: "desktop" | "mobile" | "square";
+  setAspectRatio: (ratio: "desktop" | "mobile" | "square") => void;
+}
 
 export function ButtonsChin({
   generateNewPalette,
@@ -18,19 +41,16 @@ export function ButtonsChin({
   setBackgroundImage,
   setBlur,
   blur,
-}: {
-  generateNewPalette: () => void;
-  isGenerating: boolean;
-  previousCircles: CircleProps[];
-  setCircles: (circles: CircleProps[]) => void;
-  setPreviousCircles: (circles: CircleProps[]) => void;
-  handleImageUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  backgroundImage: string | null;
-  setBackgroundImage: (image: string | null) => void;
-  setBlur: (blur: number) => void;
-  blur: number;
-}) {
+  aspectRatio,
+  setAspectRatio,
+}: ButtonsChinProps) {
   const [isUploading, setIsUploading] = useState(false);
+
+  const ASPECT_OPTIONS = [
+    { value: "desktop", icon: MonitorIcon },
+    { value: "mobile", icon: SmartphoneIcon },
+    { value: "square", icon: SquareIcon },
+  ] as const;
 
   return (
     <motion.div
@@ -45,10 +65,43 @@ export function ButtonsChin({
         mass: 0.5,
         delay: 0.5,
       }}
-      className="flex items-center gap-2 p-4 mx-auto justify-center"
+      className="flex items-center gap-2 p-4 mx-auto justify-start lg:justify-center overflow-x-auto no-scrollbar w-fit"
     >
       <button
-        className="w-full p-3 bg-primary rounded-2xl hover:text-primary-foreground/80 text-primary-foreground transition-all duration-300 z-50 flex items-center gap-2 justify-center disabled:opacity-50"
+        onClick={() => {
+          const currentIndex = ASPECT_OPTIONS.findIndex(
+            (opt) => opt.value === aspectRatio
+          );
+          const nextIndex = (currentIndex + 1) % ASPECT_OPTIONS.length;
+          setAspectRatio(ASPECT_OPTIONS[nextIndex].value);
+        }}
+        className="size-10 bg-primary rounded-xl text-primary-foreground relative flex items-center justify-center"
+      >
+        <AnimatePresence mode="sync">
+          <motion.div
+            key={aspectRatio}
+            variants={scaleVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{
+              duration: 0.3,
+              ease: "easeInOut",
+            }}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            {(() => {
+              const Icon =
+                ASPECT_OPTIONS.find((opt) => opt.value === aspectRatio)?.icon ||
+                MonitorIcon;
+              return <Icon className="size-4" />;
+            })()}
+          </motion.div>
+        </AnimatePresence>
+      </button>
+
+      <button
+        className="px-4 py-3 bg-primary rounded-xl hover:text-primary-foreground/80 text-primary-foreground transition-all duration-300 z-50 flex items-center gap-2 justify-center disabled:opacity-50 text-nowrap "
         onClick={() => {
           generateNewPalette();
           setBackgroundImage(null);
@@ -58,13 +111,13 @@ export function ButtonsChin({
         }}
         disabled={isGenerating}
       >
-        <WandSparklesIcon className="size-5" />
-        <span className="text-sm tracking-tight">Generate Gradient</span>
+        <WandSparklesIcon className="size-4" />
+        <span className="text-xs tracking-tight">Generate Gradient</span>
       </button>
 
       <div className="flex items-center gap-2">
         <label
-          className={`w-full p-3 bg-primary rounded-2xl hover:text-primary-foreground/80 text-primary-foreground transition-all duration-300 z-50 flex items-center gap-2 cursor-pointer justify-center ${
+          className={`px-4 py-3 bg-primary rounded-xl hover:text-primary-foreground/80 text-primary-foreground transition-all duration-300 z-50 flex items-center gap-2 cursor-pointer justify-center ${
             isUploading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
@@ -89,35 +142,50 @@ export function ButtonsChin({
             <span className="animate-pulse">Uploading...</span>
           ) : (
             <>
-              <Image className="size-5" />
+              <Image className="size-4" />
 
-              <span className="text-sm tracking-tight text-nowrap">
+              <span className="text-xs tracking-tight text-nowrap">
                 Background Image
               </span>
             </>
           )}
         </label>
-
-        <button
-          className="w-full p-3 bg-background rounded-2xl hover:text-primary/80 transition-colors duration-300 z-50 flex items-center gap-2"
-          onClick={() => {
-            setBackgroundImage(null);
-            if (previousCircles.length > 0) {
-              setCircles(previousCircles);
-              setPreviousCircles([]);
-            }
-          }}
-        >
-          {backgroundImage ? (
-            <Trash2Icon className="size-5" />
-          ) : (
-            <Undo className="size-5" />
-          )}
-          <span className="text-sm tracking-tight">
-            {backgroundImage ? "Clear" : "Undo"}
-          </span>
-        </button>
       </div>
+
+      <button
+        className="size-10 bg-primary rounded-xl text-primary-foreground relative flex items-center justify-center"
+        onClick={() => {
+          setBackgroundImage(null);
+          if (previousCircles.length > 0) {
+            setCircles(previousCircles);
+            setPreviousCircles([]);
+          }
+        }}
+      >
+        {backgroundImage ? (
+          <Trash2Icon className="size-4" />
+        ) : (
+          <Undo className="size-4" />
+        )}
+      </button>
     </motion.div>
   );
 }
+
+const scaleVariants = {
+  initial: {
+    y: 20,
+    opacity: 0,
+    position: "absolute",
+  },
+  animate: {
+    y: 0,
+    opacity: 1,
+    position: "absolute",
+  },
+  exit: {
+    y: -20,
+    opacity: 0,
+    position: "absolute",
+  },
+} as const;
