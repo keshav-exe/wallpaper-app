@@ -334,7 +334,7 @@ export default function DesktopApp({
         }}
         className="flex flex-col gap-2 w-full max-w-[300px] min-w-[220px] h-full overflow-hidden"
       >
-        <div className="flex items-center gap-2 p-2 bg-secondary rounded-2xl w-full">
+        <div className="flex items-center gap-2 p-2 bg-secondary rounded-2xl w-full border border-primary/10">
           <div className="flex items-center gap-2 justify-between w-full">
             <SidebarHeader />
           </div>
@@ -344,7 +344,7 @@ export default function DesktopApp({
           onValueChange={(value) =>
             setActiveTab(value as "text" | "colors" | "effects")
           }
-          className="flex flex-col items-center z-50 w-full bg-secondary rounded-2xl p-2"
+          className="flex flex-col items-center z-50 w-full bg-secondary rounded-2xl p-2 border border-primary/10"
         >
           <TabsList className="w-full flex items-center gap-1">
             {["text", "colors", "effects"].map((tab) => (
@@ -363,7 +363,7 @@ export default function DesktopApp({
         </Tabs>
 
         {/* controls */}
-        <section className="w-full bg-secondary rounded-2xl flex flex-col no-scrollbar overflow-hidden h-full">
+        <section className="w-full bg-secondary rounded-2xl flex flex-col no-scrollbar overflow-hidden h-full  border border-primary/10">
           <AnimatePresence custom={direction} mode="wait">
             <motion.div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full gap-2 p-4">
               {activeTab === "text" && (
@@ -784,21 +784,21 @@ export default function DesktopApp({
           <div className="flex w-full gap-2">
             <button
               onClick={downloadImage}
-              className="w-full flex items-center justify-between gap-2 text-primary-foreground text-sm bg-primary rounded-2xl relative p-4"
+              className="w-full flex items-center justify-between gap-2 text-primary-foreground text-sm bg-primary rounded-2xl relative p-4 cursor-pointer border border-primary/10"
               disabled={isDownloading}
             >
               <div className="flex items-center gap-2">
                 <DownloadIcon className="size-4" />
                 <span className="">Export</span>
               </div>
-              <span className="text-neutral-700 text-sm w-fit">
+              <span className="text-secondary text-sm w-fit">
                 {resolution.scale}x
               </span>
             </button>
 
             <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
               <DropdownMenuTrigger asChild>
-                <button className="p-4 relative items-center justify-center bg-primary rounded-2xl text-primary-foreground">
+                <button className="p-4 relative items-center justify-center bg-primary rounded-2xl text-primary-foreground border border-primary/10">
                   <motion.span
                     animate={{ rotate: isOpen ? 45 : 0 }}
                     transition={{ duration: 0.2 }}
@@ -852,7 +852,7 @@ export default function DesktopApp({
       {/* preview section */}
       <motion.section
         ref={containerRef}
-        className="flex flex-col gap-4 w-full h-full items-center justify-center relative bg-secondary rounded-2xl"
+        className="flex flex-col gap-4 w-full h-full items-center justify-center relative bg-secondary rounded-2xl border border-primary/10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{
@@ -881,7 +881,7 @@ export default function DesktopApp({
           className="rounded-2xl overflow-hidden w-full max-w-3xl flex items-center justify-center relative"
         >
           <div
-            className="relative w-full overflow-hidden rounded-2xl max-h-[95vh]"
+            className="relative w-full overflow-hidden rounded-2xl max-h-[95vh] border border-primary/20"
             style={{
               width:
                 previewDimensions.width ||
