@@ -157,23 +157,17 @@ export function SidebarHeader() {
           </section>
 
           <section className="flex flex-col gap-4 p-4 rounded-2xl bg-muted/50">
-            <h2 className="text-lg font-semibold tracking-tighter">
-              What&apos;s New in v0.4 ALPHA
-            </h2>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-lg font-semibold tracking-tighter">
+                What&apos;s New in v0.4 ALPHA 👀 ✨
+              </h2>
+            </div>
             <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-4">
-              <li>New UI</li>
+              <li>Upgraded to Tailwind v4</li>
+              <li>Better UX</li>
               <li>Cleaner codebase</li>
-              <li>New gradients</li>
             </ul>
           </section>
-
-          <div className="bg-muted/50 p-4 rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold">Note:</span> Gradii is currently
-              in alpha (v0.3) and only supports desktop. I&apos;m actively
-              working on expanding compatibility to mobile devices.
-            </p>
-          </div>
 
           <p className="text-sm text-muted-foreground mx-auto">
             Found a bug or have feedback? Feel free to{" "}

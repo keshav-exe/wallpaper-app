@@ -23,7 +23,7 @@ import {
 import { ButtonsChin } from "../ui/buttonsChin";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo, useRef } from "react";
-import { SidebarHeader } from "../ui/sidebarHeader";
+import logo from "@/public/logo.svg";
 import { ThemeSwitch } from "../ui/themeSwitch";
 import { generateRandomShape, renderShape } from "@/lib/utils/shapes";
 import {
@@ -31,6 +31,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import Image from "next/image";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -336,7 +337,20 @@ export default function DesktopApp({
       >
         <div className="flex items-center gap-2 p-2 bg-secondary rounded-2xl w-full border border-primary/10">
           <div className="flex items-center gap-2 justify-between w-full">
-            <SidebarHeader />
+            <div className="flex items-center justify-between w-full outline-hidden focus:outline-hidden group">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Image
+                    src={logo}
+                    alt="logo"
+                    className="size-8"
+                    priority
+                    loading="eager"
+                  />
+                  <p className="text-lg font-bold tracking-tighter">Gradii</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <Tabs
@@ -749,7 +763,7 @@ export default function DesktopApp({
                       Contrast
                     </label>
                     <Slider
-                      min={0}
+                      min={5}
                       max={200}
                       step={1}
                       value={[contrast]}
@@ -764,7 +778,7 @@ export default function DesktopApp({
                       Brightness
                     </label>
                     <Slider
-                      min={0}
+                      min={10}
                       max={200}
                       step={1}
                       value={[brightness]}
@@ -881,7 +895,7 @@ export default function DesktopApp({
           className="rounded-2xl overflow-hidden w-full max-w-3xl flex items-center justify-center relative"
         >
           <div
-            className="relative w-full overflow-hidden rounded-2xl max-h-[95vh] border border-primary/20"
+            className="relative w-full overflow-hidden rounded-2xl max-h-[95vh] border border-primary/10"
             style={{
               width:
                 previewDimensions.width ||
