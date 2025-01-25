@@ -192,14 +192,14 @@ export const RESOLUTIONS = [
   { name: "4K", width: 3840, height: 2160, scale: "3", ratio: "desktop" },
 
   // Mobile (9:16)
-  { name: "Mobile HD", width: 1080, height: 1920, scale: "1", ratio: "mobile" },
-  { name: "Mobile 2K", width: 1440, height: 2560, scale: "2", ratio: "mobile" },
-  { name: "Mobile 4K", width: 2160, height: 3840, scale: "3", ratio: "mobile" },
+  { name: "HD", width: 1080, height: 1920, scale: "1", ratio: "mobile" },
+  { name: "2K", width: 1440, height: 2560, scale: "2", ratio: "mobile" },
+  { name: "4K", width: 2160, height: 3840, scale: "3", ratio: "mobile" },
 
   // Square (1:1)
-  { name: "Square HD", width: 1080, height: 1080, scale: "1", ratio: "square" },
-  { name: "Square 2K", width: 1440, height: 1440, scale: "2", ratio: "square" },
-  { name: "Square 4K", width: 2160, height: 2160, scale: "3", ratio: "square" },
+  { name: "HD", width: 1080, height: 1080, scale: "1", ratio: "square" },
+  { name: "2K", width: 1440, height: 1440, scale: "2", ratio: "square" },
+  { name: "4K", width: 2160, height: 2160, scale: "3", ratio: "square" },
 ] as const;
 
 export const BLUR_OPTIONS = [

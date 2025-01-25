@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { ArrowDownIcon, Loader2Icon } from "lucide-react";
+import { DownloadIcon, Loader2Icon, SettingsIcon } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
@@ -26,6 +26,11 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { SidebarHeader } from "../ui/sidebarHeader";
 import { ThemeSwitch } from "../ui/themeSwitch";
 import { generateRandomShape, renderShape } from "@/lib/utils/shapes";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -181,24 +186,6 @@ export default function DesktopApp({
     }),
   };
 
-  const scaleVariants: Variants = {
-    initial: {
-      y: 20,
-      opacity: 0,
-      position: "absolute",
-    },
-    animate: {
-      y: 0,
-      opacity: 1,
-      position: "absolute",
-    },
-    exit: {
-      y: -20,
-      opacity: 0,
-      position: "absolute",
-    },
-  };
-
   const [[page, direction], setPage] = useState([0, 0]);
   const tabIndex = ["text", "colors", "effects"].indexOf(activeTab);
 
@@ -326,6 +313,8 @@ export default function DesktopApp({
       return () => clearTimeout(timeout);
     }
   }, [isDownloading]);
+
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <main className="relative flex gap-2 items-center justify-center p-4 h-screen w-full">
@@ -795,41 +784,67 @@ export default function DesktopApp({
           <div className="flex w-full gap-2">
             <button
               onClick={downloadImage}
-              className="w-full flex items-center justify-center gap-2 text-primary-foreground text-sm bg-primary rounded-xl"
+              className="w-full flex items-center justify-between gap-2 text-primary-foreground text-sm bg-primary rounded-2xl relative p-4"
               disabled={isDownloading}
             >
-              <ArrowDownIcon className="size-4" />
-              Export
+              <div className="flex items-center gap-2">
+                <DownloadIcon className="size-4" />
+                <span className="">Export</span>
+              </div>
+              <span className="text-neutral-700 text-sm w-fit">
+                {resolution.scale}x
+              </span>
             </button>
 
-            <button
-              onClick={() => {
-                const currentIndex = filteredResolutions.findIndex(
-                  (r) => r.width === resolution.width
-                );
-                const nextIndex =
-                  (currentIndex + 1) % filteredResolutions.length;
-                setResolution(filteredResolutions[nextIndex]);
-              }}
-              className="w-12 h-10 px-4 py-2 relative items-center justify-center bg-primary rounded-xl text-primary-foreground"
-            >
-              <AnimatePresence mode="sync">
-                <motion.span
-                  key={resolution.scale}
-                  variants={scaleVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{
-                    duration: 0.3,
-                    ease: "easeInOut",
-                  }}
-                  className="top-2 inset-0"
-                >
-                  {resolution.scale}x
-                </motion.span>
-              </AnimatePresence>
-            </button>
+            <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+              <DropdownMenuTrigger asChild>
+                <button className="p-4 relative items-center justify-center bg-primary rounded-2xl text-primary-foreground">
+                  <motion.span
+                    animate={{ rotate: isOpen ? 45 : 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <SettingsIcon className="size-4" />
+                  </motion.span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="rounded-2xl p-3 bg-background/50 backdrop-blur-md"
+              >
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs text-muted-foreground">
+                    Image Resolution
+                  </label>
+                  <Tabs
+                    defaultValue={resolution.scale.toString()}
+                    className="flex flex-col items-center w-full  rounded-xl"
+                  >
+                    <TabsList className="w-full flex items-center gap-1">
+                      {filteredResolutions.map((res) => (
+                        <TabsTrigger
+                          key={res.width}
+                          value={res.scale.toString()}
+                          onClick={() => setResolution(res)}
+                          className="flex-1 relative rounded-md text-xl flex flex-col items-center justify-center w-full bg-secondary hover:bg-background/50 transition-colors duration-200"
+                        >
+                          {res.name}
+                          {resolution.scale === res.scale && (
+                            <motion.div
+                              layoutId="activeResolution"
+                              className="absolute inset-0 bg-primary/10 rounded-md"
+                              transition={{ type: "spring", duration: 0.5 }}
+                            />
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {res.scale}x
+                          </span>
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </motion.aside>
@@ -971,11 +986,21 @@ export default function DesktopApp({
               </div>
             </div>
             {/* Downloading Overlay */}
-            {showDownloadingOverlay && (
-              <div className="absolute inset-0 bg-background z-50 flex items-center justify-center">
-                <Loader2Icon className="size-8 text-primary animate-spin" />
-              </div>
-            )}
+            <motion.div
+              animate={{ opacity: showDownloadingOverlay ? 1 : 0 }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: 0.3,
+                ease: "easeInOut",
+                type: "spring",
+                damping: 20,
+                stiffness: 100,
+                mass: 0.5,
+              }}
+              className="absolute inset-0 bg-background z-50 flex items-center justify-center"
+            >
+              <Loader2Icon className="size-8 text-primary animate-spin" />
+            </motion.div>
           </div>
         </motion.div>
 
