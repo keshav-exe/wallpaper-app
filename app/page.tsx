@@ -11,7 +11,7 @@ import {
   RESOLUTIONS,
   INITIAL_COLORS,
 } from "@/lib/constants";
-
+import { useSafariCheck } from "@/hooks/use-safari-check";
 export default function Home() {
   const [colors] = useState(INITIAL_COLORS);
   const [backgroundColors] = useState(INITIAL_BACKGROUND_COLORS);
@@ -34,9 +34,9 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"colors" | "text" | "effects">(
     "text"
   );
-  const isSafari =
-    typeof window !== "undefined" &&
-    /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const [grainIntensity, setGrainIntensity] = useState(0);
+  const [vignetteIntensity, setVignetteIntensity] = useState(0);
+  const isSafari = useSafariCheck();
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [lineHeight, setLineHeight] = useState(1.2);
   const [textColor, setTextColor] = useState("#ffffff");
@@ -66,7 +66,7 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [textShadow, setTextShadow] = useState({
     color: "#000000",
-    blur: 0,
+    blur: 40,
     offsetX: 0,
     offsetY: 0,
   });
@@ -318,6 +318,10 @@ export default function Home() {
           setIsStrikethrough={setIsStrikethrough}
           textShadow={textShadow}
           setTextShadow={setTextShadow}
+          grainIntensity={grainIntensity}
+          setGrainIntensity={setGrainIntensity}
+          vignetteIntensity={vignetteIntensity}
+          setVignetteIntensity={setVignetteIntensity}
         />
       </div>
     </>

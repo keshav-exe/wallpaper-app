@@ -41,6 +41,8 @@ import { Textarea } from "../ui/textarea";
 import { CanvasPreview } from "./canvas-preview";
 import Link from "next/link";
 import { IMAGES } from "@/assets";
+import { toast } from "sonner";
+import { Separator } from "../ui/separator";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -107,6 +109,10 @@ interface DesktopAppProps {
     offsetX: number;
     offsetY: number;
   };
+  grainIntensity: number;
+  setGrainIntensity: (value: number) => void;
+  vignetteIntensity: number;
+  setVignetteIntensity: (value: number) => void;
   setTextShadow: React.Dispatch<
     React.SetStateAction<{
       color: string;
@@ -192,6 +198,10 @@ export default function DesktopApp({
   isSafari,
   textShadow,
   setTextShadow,
+  grainIntensity,
+  setGrainIntensity,
+  vignetteIntensity,
+  setVignetteIntensity,
 }: DesktopAppProps) {
   const slideVariants: Variants = {
     enter: (direction: number) => ({
@@ -754,7 +764,43 @@ export default function DesktopApp({
                 >
                   <div className="flex flex-col gap-2">
                     <label className="text-sm text-muted-foreground">
-                      Text Glow
+                      Blur
+                    </label>
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
+                      {(isSafari ? SAFARI_BLUR_OPTIONS : BLUR_OPTIONS).map(
+                        (blurOption: { name: string; value: number }) => (
+                          <button
+                            key={blurOption.value}
+                            onClick={() => setBlur(blurOption.value)}
+                            disabled={
+                              !backgroundImage && blurOption.value === 0
+                            }
+                            className={cn(
+                              "w-full rounded-xl px-4 py-2 text-sm relative",
+                              "transition-colors duration-200 bg-background",
+                              !backgroundImage &&
+                                blurOption.value === 0 &&
+                                "opacity-50 cursor-not-allowed"
+                            )}
+                          >
+                            <span>{blurOption.name}</span>
+                            {blur === blurOption.value && (
+                              <motion.div
+                                className="absolute inset-0 bg-primary/20 rounded-xl z-10"
+                                layoutId="blur-background"
+                              />
+                            )}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <Separator className="my-2" />
+
+                  <div className="flex flex-col gap-4">
+                    <label className="text-sm text-muted-foreground">
+                      Text Shadow
                     </label>
                     <div className="flex items-center gap-2">
                       <Popover>
@@ -787,7 +833,7 @@ export default function DesktopApp({
                     </div>
                     <div className="flex flex-col gap-2">
                       <label className="text-xs text-muted-foreground">
-                        Glow Intensity
+                        Intensity
                       </label>
                       <Slider
                         min={0}
@@ -819,6 +865,7 @@ export default function DesktopApp({
                         {textShadow.offsetX}px
                       </span>
                     </div>
+
                     <div className="flex flex-col gap-2">
                       <label className="text-xs text-muted-foreground">
                         Offset Y
@@ -837,39 +884,9 @@ export default function DesktopApp({
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Blur
-                    </label>
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
-                      {(isSafari ? SAFARI_BLUR_OPTIONS : BLUR_OPTIONS).map(
-                        (blurOption: { name: string; value: number }) => (
-                          <button
-                            key={blurOption.value}
-                            onClick={() => setBlur(blurOption.value)}
-                            disabled={
-                              !backgroundImage && blurOption.value === 0
-                            }
-                            className={cn(
-                              "w-full rounded-xl px-4 py-2 text-sm relative",
-                              "transition-colors duration-200 bg-background",
-                              !backgroundImage &&
-                                blurOption.value === 0 &&
-                                "opacity-50 cursor-not-allowed"
-                            )}
-                          >
-                            <span>{blurOption.name}</span>
-                            {blur === blurOption.value && (
-                              <motion.div
-                                className="absolute inset-0 bg-primary/20 rounded-xl z-10"
-                                layoutId="blur-background"
-                              />
-                            )}
-                          </button>
-                        )
-                      )}
-                    </div>
-                  </div>
+
+                  <Separator className="my-2" />
+
                   <div className="flex flex-col gap-2">
                     <label className="text-sm text-muted-foreground">
                       Saturation
@@ -914,6 +931,55 @@ export default function DesktopApp({
                     <span className="text-xs text-muted-foreground">
                       {brightness}%
                     </span>
+                  </div>
+
+                  <Separator className="my-2" />
+
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm text-muted-foreground">
+                        Grain
+                      </label>
+                      <Slider
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={[grainIntensity]}
+                        onValueChange={([value]) => {
+                          setGrainIntensity(value);
+                          if (isSafari && value > 0) {
+                            toast.warning(
+                              "Effects may appear different in Safari due to browser limitations"
+                            );
+                          }
+                        }}
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {grainIntensity}%
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm text-muted-foreground">
+                        Vignette
+                      </label>
+                      <Slider
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={[vignetteIntensity]}
+                        onValueChange={([value]) => {
+                          setVignetteIntensity(value);
+                          if (isSafari && value > 0) {
+                            toast.warning(
+                              "Effects may appear different in Safari due to browser limitations"
+                            );
+                          }
+                        }}
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {vignetteIntensity}%
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -1069,6 +1135,10 @@ export default function DesktopApp({
                   brightness: brightness,
                   contrast: contrast,
                   saturation: saturation,
+                }}
+                effects={{
+                  grain: grainIntensity,
+                  vignette: vignetteIntensity,
                 }}
                 backgroundImage={backgroundImage}
               />

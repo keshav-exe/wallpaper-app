@@ -3,6 +3,7 @@ import { CircleProps } from "@/lib/constants";
 import { generateRandomShape } from "@/lib/utils/shapes";
 import "context-filter-polyfill";
 import { debounce } from "@/lib/utils";
+import { applyGrainEffect, applyVignetteEffect } from "@/lib/utils/effects";
 
 interface CanvasPreviewProps {
   width: number;
@@ -33,6 +34,10 @@ interface CanvasPreviewProps {
     brightness: number;
     contrast: number;
     saturation: number;
+  };
+  effects: {
+    grain: number;
+    vignette: number;
   };
   backgroundImage: string | null;
 }
@@ -86,6 +91,7 @@ export function CanvasPreview({
   textStyle,
   filters,
   backgroundImage,
+  effects,
 }: CanvasPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -259,10 +265,20 @@ export function CanvasPreview({
     ctx.filter = cssFilters;
     ctx.drawImage(backgroundLayerRef.current, 0, 0);
 
-    // 3. Draw text on top without filters
+    // 3. Apply film grain
+    if (effects.grain > 0) {
+      applyGrainEffect(ctx, effects.grain / 100);
+    }
+
+    // 4. Draw text
     ctx.filter = "none";
     ctx.drawImage(textLayerRef.current, 0, 0);
-  }, [filters, width, height, backgroundColor]);
+
+    // 5. Apply vignette
+    if (effects.vignette > 0) {
+      applyVignetteEffect(ctx, effects.vignette / 100);
+    }
+  }, [filters, width, height, backgroundColor, effects]);
 
   return (
     <canvas
