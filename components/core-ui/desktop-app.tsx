@@ -39,6 +39,8 @@ import {
 import Image from "next/image";
 import { Textarea } from "../ui/textarea";
 import { CanvasPreview } from "./canvas-preview";
+import Link from "next/link";
+import { IMAGES } from "@/assets";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -99,6 +101,20 @@ interface DesktopAppProps {
   setNumCircles: (num: number) => void;
   colors: string[];
   isSafari: boolean;
+  textShadow: {
+    color: string;
+    blur: number;
+    offsetX: number;
+    offsetY: number;
+  };
+  setTextShadow: React.Dispatch<
+    React.SetStateAction<{
+      color: string;
+      blur: number;
+      offsetX: number;
+      offsetY: number;
+    }>
+  >;
 }
 
 const PREVIEW_DIMENSIONS = {
@@ -174,6 +190,8 @@ export default function DesktopApp({
   setNumCircles,
   colors,
   isSafari,
+  textShadow,
+  setTextShadow,
 }: DesktopAppProps) {
   const slideVariants: Variants = {
     enter: (direction: number) => ({
@@ -334,6 +352,19 @@ export default function DesktopApp({
                   <p className="text-lg font-bold tracking-tighter">Gradii</p>
                 </div>
               </div>
+              <Link
+                href="https://x.com/kshvbgde"
+                target="_blank"
+                className="hover:scale-110 transition-all duration-300"
+              >
+                <Image
+                  src={IMAGES.x}
+                  alt="Follow @kshvbgde on X"
+                  className="size-8"
+                  priority
+                  loading="eager"
+                />
+              </Link>
             </div>
           </div>
         </div>
@@ -723,6 +754,91 @@ export default function DesktopApp({
                 >
                   <div className="flex flex-col gap-2">
                     <label className="text-sm text-muted-foreground">
+                      Text Glow
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <span
+                            className="size-5 rounded-xl cursor-pointer aspect-square border border-primary/60"
+                            style={{ backgroundColor: textShadow.color }}
+                          />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-3" align="start">
+                          <HexColorPicker
+                            color={textShadow.color}
+                            onChange={(color) =>
+                              setTextShadow((prev) => ({ ...prev, color }))
+                            }
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <Input
+                        type="text"
+                        value={textShadow.color}
+                        placeholder="Glow Color"
+                        onChange={(e) =>
+                          setTextShadow((prev) => ({
+                            ...prev,
+                            color: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs text-muted-foreground">
+                        Glow Intensity
+                      </label>
+                      <Slider
+                        min={0}
+                        max={80}
+                        step={1}
+                        value={[textShadow.blur]}
+                        onValueChange={([value]) =>
+                          setTextShadow((prev) => ({ ...prev, blur: value }))
+                        }
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {textShadow.blur}px
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs text-muted-foreground">
+                        Offset X
+                      </label>
+                      <Slider
+                        min={-20}
+                        max={20}
+                        step={1}
+                        value={[textShadow.offsetX]}
+                        onValueChange={([value]) =>
+                          setTextShadow((prev) => ({ ...prev, offsetX: value }))
+                        }
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {textShadow.offsetX}px
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs text-muted-foreground">
+                        Offset Y
+                      </label>
+                      <Slider
+                        min={-20}
+                        max={20}
+                        step={1}
+                        value={[textShadow.offsetY]}
+                        onValueChange={([value]) =>
+                          setTextShadow((prev) => ({ ...prev, offsetY: value }))
+                        }
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {textShadow.offsetY}px
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm text-muted-foreground">
                       Blur
                     </label>
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
@@ -946,6 +1062,7 @@ export default function DesktopApp({
                   isItalic: isItalic,
                   isUnderline: isUnderline,
                   isStrikethrough: isStrikethrough,
+                  textShadow: textShadow,
                 }}
                 filters={{
                   blur: blur,

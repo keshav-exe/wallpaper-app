@@ -21,6 +21,12 @@ interface CanvasPreviewProps {
     isItalic: boolean;
     isUnderline: boolean;
     isStrikethrough: boolean;
+    textShadow: {
+      color: string;
+      blur: number;
+      offsetX: number;
+      offsetY: number;
+    };
   };
   filters: {
     blur: number;
@@ -165,19 +171,40 @@ export function CanvasPreview({
       ctx.font = `${style.isItalic ? "italic" : ""} ${style.fontWeight} ${
         style.fontSize
       }px ${style.fontFamily}`;
-      ctx.fillStyle = style.color;
-      ctx.globalAlpha = style.opacity / 100;
       ctx.textAlign = "center";
 
       const lines = text.split("\n");
       const lineHeight = style.fontSize * style.lineHeight;
       const y = height / 2;
 
+      // Draw shadow/glow first
+      if (style.textShadow.blur > 0) {
+        ctx.shadowColor = style.textShadow.color;
+        ctx.shadowBlur = style.textShadow.blur;
+        ctx.shadowOffsetX = style.textShadow.offsetX;
+        ctx.shadowOffsetY = style.textShadow.offsetY;
+        ctx.globalAlpha = style.opacity / 100;
+
+        lines.forEach((line, i) => {
+          const x = width / 2;
+          const yPos =
+            y - ((lines.length - 1) * lineHeight) / 2 + i * lineHeight;
+          ctx.fillStyle = style.textShadow.color;
+          ctx.fillText(line, x, yPos);
+        });
+      }
+
+      // Reset shadow and draw main text
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.fillStyle = style.color;
+
       lines.forEach((line, i) => {
         const metrics = ctx.measureText(line);
         const x = width / 2;
         const yPos = y - ((lines.length - 1) * lineHeight) / 2 + i * lineHeight;
-
         ctx.fillText(line, x, yPos);
 
         if (style.isUnderline || style.isStrikethrough) {

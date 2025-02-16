@@ -64,6 +64,12 @@ export default function Home() {
 
   const [isDownloading, setIsDownloading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [textShadow, setTextShadow] = useState({
+    color: "#000000",
+    blur: 0,
+    offsetX: 0,
+    offsetY: 0,
+  });
 
   useEffect(() => {
     const currentFont = fonts.find((f) => f.name === fontFamily);
@@ -310,6 +316,8 @@ export default function Home() {
           setIsUnderline={setIsUnderline}
           isStrikethrough={isStrikethrough}
           setIsStrikethrough={setIsStrikethrough}
+          textShadow={textShadow}
+          setTextShadow={setTextShadow}
         />
       </div>
     </>
