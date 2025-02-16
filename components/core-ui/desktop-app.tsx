@@ -13,25 +13,32 @@ import {
 import { motion, AnimatePresence, Variants } from "motion/react";
 import { HexColorPicker } from "react-colorful";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 import {
   BLUR_OPTIONS,
   CircleProps,
   FontOption,
   RESOLUTIONS,
+  SAFARI_BLUR_OPTIONS,
 } from "@/lib/constants";
 import { ButtonsChin } from "../ui/buttonsChin";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo, useRef } from "react";
 import logo from "@/public/logo.svg";
 import { ThemeSwitch } from "../ui/themeSwitch";
-import { generateRandomShape, renderShape } from "@/lib/utils/shapes";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import Image from "next/image";
+import { Textarea } from "../ui/textarea";
+import { CanvasPreview } from "./canvas-preview";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -43,8 +50,6 @@ interface DesktopAppProps {
   lineHeight: number;
   text: string;
   circles: CircleProps[];
-  filterIntensity: number;
-  filterStyle: React.CSSProperties;
   textColor: string;
   generateNewPalette: () => void;
   isGenerating: boolean;
@@ -70,9 +75,6 @@ interface DesktopAppProps {
   updateColor: (color: string, index: number) => void;
   fonts: FontOption[];
   activeColorPicker: string;
-  filterType: "pastel" | "film" | "grain" | "static";
-  setFilterIntensity: (filterIntensity: number) => void;
-  setFilterType: (filterType: "pastel" | "film" | "grain" | "static") => void;
   setTextColor: (textColor: string) => void;
   resolution: (typeof RESOLUTIONS)[number];
   setResolution: (res: (typeof RESOLUTIONS)[number]) => void;
@@ -93,6 +95,10 @@ interface DesktopAppProps {
   setIsItalic: (value: boolean) => void;
   setIsUnderline: (value: boolean) => void;
   setIsStrikethrough: (value: boolean) => void;
+  numCircles: number;
+  setNumCircles: (num: number) => void;
+  colors: string[];
+  isSafari: boolean;
 }
 
 const PREVIEW_DIMENSIONS = {
@@ -122,8 +128,6 @@ export default function DesktopApp({
   lineHeight,
   text,
   circles,
-  filterIntensity,
-  filterStyle,
   textColor,
   generateNewPalette,
   isGenerating,
@@ -149,9 +153,6 @@ export default function DesktopApp({
   updateColor,
   fonts,
   activeColorPicker,
-  filterType,
-  setFilterIntensity,
-  setFilterType,
   setTextColor,
   resolution,
   setResolution,
@@ -169,6 +170,10 @@ export default function DesktopApp({
   setIsItalic,
   setIsUnderline,
   setIsStrikethrough,
+  numCircles,
+  setNumCircles,
+  colors,
+  isSafari,
 }: DesktopAppProps) {
   const slideVariants: Variants = {
     enter: (direction: number) => ({
@@ -229,27 +234,6 @@ export default function DesktopApp({
       reader.readAsDataURL(file);
     }
   };
-
-  const memoizedShapes = useMemo(
-    () =>
-      circles.map((circle, i) => {
-        const shape = generateRandomShape(circle.color);
-        return (
-          <g
-            key={i}
-            style={{
-              transform: "translate3d(0,0,0)",
-              backfaceVisibility: "hidden",
-              WebkitBackfaceVisibility: "hidden",
-              willChange: "transform",
-              contain: "strict",
-            }}
-            dangerouslySetInnerHTML={{ __html: renderShape(shape) }}
-          />
-        );
-      }),
-    [circles]
-  );
 
   const fontPreloadText = useMemo(() => {
     return fonts.map((font) => (
@@ -398,8 +382,8 @@ export default function DesktopApp({
                     <label className="text-sm text-muted-foreground">
                       Text
                     </label>
-                    <Input
-                      type="text"
+                    <Textarea
+                      className="resize-none whitespace-pre-wrap"
                       value={text}
                       onChange={(e) => setText(e.target.value)}
                       placeholder="Enter text"
@@ -564,51 +548,91 @@ export default function DesktopApp({
                   }}
                   className="flex flex-col relative"
                 >
-                  <div className="w-full flex justify-center bg-linear-to-b from-secondary to-secondary/5 z-10 py-4">
-                    <HexColorPicker
-                      color={activeColorPicker}
-                      onChange={(color) => {
-                        setActiveColorPicker(color);
-                        handleColorChange(color);
-                      }}
-                    />
-                  </div>
-
                   <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar">
                     {!backgroundImage && (
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm text-muted-foreground">
-                          Gradient Colors
-                        </label>
-                        {circles.map((circle, i) => (
-                          <div
-                            key={i}
-                            className="flex items-start gap-2 relative w-full"
-                          >
+                      <>
+                        <div className="flex flex-col gap-2">
+                          <label className="text-sm text-muted-foreground">
+                            Number of Blobs
+                          </label>
+                          <Slider
+                            min={1}
+                            max={10}
+                            step={1}
+                            value={[numCircles]}
+                            onValueChange={([value]) => {
+                              setNumCircles(value);
+                              const newCircles = [...circles];
+                              if (value > circles.length) {
+                                // Add new circles
+                                for (let i = circles.length; i < value; i++) {
+                                  newCircles.push({
+                                    color: colors[i % colors.length],
+                                    cx: Math.random() * 100,
+                                    cy: Math.random() * 100,
+                                  });
+                                }
+                              } else {
+                                // Remove circles
+                                newCircles.splice(value);
+                              }
+                              setCircles(newCircles);
+                            }}
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {numCircles}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label className="text-sm text-muted-foreground">
+                            Colors
+                          </label>
+                          {circles.map((circle, i) => (
                             <div
-                              className="flex items-center gap-2 w-full"
-                              onClick={() => {
-                                setActiveColorType("gradient");
-                                setActiveColor(i);
-                                setActiveColorPicker(circle.color);
-                              }}
+                              key={i}
+                              className="flex items-start gap-2 relative w-full"
                             >
-                              <span
-                                className="size-5 rounded-xl cursor-pointer aspect-square"
-                                style={{
-                                  backgroundColor: circle.color,
+                              <div
+                                className="flex items-center gap-2"
+                                onClick={() => {
+                                  setActiveColorType("gradient");
+                                  setActiveColor(i);
+                                  setActiveColorPicker(circle.color);
                                 }}
-                              />
-                              <Input
-                                type="text"
-                                value={circle.color}
-                                placeholder="Color"
-                                onChange={(e) => updateColor(e.target.value, i)}
-                              />
+                              >
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <span
+                                      className="size-5 rounded-xl cursor-pointer aspect-square border border-primary/60"
+                                      style={{ backgroundColor: circle.color }}
+                                    />
+                                  </PopoverTrigger>
+                                  <PopoverContent
+                                    className="w-auto p-3"
+                                    align="start"
+                                  >
+                                    <HexColorPicker
+                                      color={activeColorPicker}
+                                      onChange={(color) => {
+                                        setActiveColorPicker(color);
+                                        handleColorChange(color);
+                                      }}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                                <Input
+                                  type="text"
+                                  value={circle.color}
+                                  placeholder="Color"
+                                  onChange={(e) =>
+                                    updateColor(e.target.value, i)
+                                  }
+                                />
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      </>
                     )}
 
                     <div className="flex flex-col gap-2">
@@ -622,10 +646,23 @@ export default function DesktopApp({
                           setActiveColorPicker(backgroundColor);
                         }}
                       >
-                        <span
-                          className="size-5 rounded-xl cursor-pointer aspect-square border border-primary/60"
-                          style={{ backgroundColor: backgroundColor }}
-                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <span
+                              className="size-5 rounded-xl cursor-pointer aspect-square border border-primary/60"
+                              style={{ backgroundColor: backgroundColor }}
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-3" align="start">
+                            <HexColorPicker
+                              color={activeColorPicker}
+                              onChange={(color) => {
+                                setActiveColorPicker(color);
+                                setBackgroundColor(color);
+                              }}
+                            />
+                          </PopoverContent>
+                        </Popover>
                         <Input
                           type="text"
                           value={backgroundColor}
@@ -639,19 +676,25 @@ export default function DesktopApp({
                       <label className="text-sm text-muted-foreground">
                         Text Color
                       </label>
-                      <div
-                        className="flex  items-center gap-2"
-                        onClick={() => {
-                          setActiveColorType("text");
-                          setActiveColorPicker(textColor);
-                        }}
-                      >
-                        <span
-                          className="size-5 rounded-xl cursor-pointer aspect-square border border-primary/60"
-                          style={{
-                            backgroundColor: textColor,
-                          }}
-                        />
+                      <div className="flex items-center gap-2">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <span
+                              className="size-5 rounded-xl cursor-pointer aspect-square border border-primary/60"
+                              style={{ backgroundColor: textColor }}
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-3" align="start">
+                            <HexColorPicker
+                              color={activeColorPicker}
+                              onChange={(color) => {
+                                setActiveColorType("text");
+                                setActiveColorPicker(color);
+                                handleColorChange(color);
+                              }}
+                            />
+                          </PopoverContent>
+                        </Popover>
                         <Input
                           type="text"
                           value={textColor}
@@ -680,67 +723,35 @@ export default function DesktopApp({
                 >
                   <div className="flex flex-col gap-2">
                     <label className="text-sm text-muted-foreground">
-                      Filter Type
-                    </label>
-                    <Select
-                      value={filterType}
-                      onValueChange={(
-                        value: "pastel" | "film" | "grain" | "static"
-                      ) => setFilterType(value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select filter type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pastel">Pastel</SelectItem>
-                        <SelectItem value="film">Film Grain</SelectItem>
-                        <SelectItem value="grain">Grain</SelectItem>
-                        <SelectItem value="static">Static</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Filter Intensity
-                    </label>
-                    <Slider
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={[filterIntensity]}
-                      onValueChange={([value]) => setFilterIntensity(value)}
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {filterIntensity}%
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
                       Blur
                     </label>
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
-                      {BLUR_OPTIONS.map((blurOption) => (
-                        <button
-                          key={blurOption.value}
-                          onClick={() => setBlur(blurOption.value)}
-                          disabled={!backgroundImage && blurOption.value === 0}
-                          className={cn(
-                            "w-full rounded-xl px-4 py-2 text-sm relative",
-                            "transition-colors duration-200 bg-background",
-                            !backgroundImage &&
-                              blurOption.value === 0 &&
-                              "opacity-50 cursor-not-allowed"
-                          )}
-                        >
-                          <span>{blurOption.name}</span>
-                          {blur === blurOption.value && (
-                            <motion.div
-                              className="absolute inset-0 bg-primary/20 rounded-xl z-10"
-                              layoutId="blur-background"
-                            />
-                          )}
-                        </button>
-                      ))}
+                      {(isSafari ? SAFARI_BLUR_OPTIONS : BLUR_OPTIONS).map(
+                        (blurOption: { name: string; value: number }) => (
+                          <button
+                            key={blurOption.value}
+                            onClick={() => setBlur(blurOption.value)}
+                            disabled={
+                              !backgroundImage && blurOption.value === 0
+                            }
+                            className={cn(
+                              "w-full rounded-xl px-4 py-2 text-sm relative",
+                              "transition-colors duration-200 bg-background",
+                              !backgroundImage &&
+                                blurOption.value === 0 &&
+                                "opacity-50 cursor-not-allowed"
+                            )}
+                          >
+                            <span>{blurOption.name}</span>
+                            {blur === blurOption.value && (
+                              <motion.div
+                                className="absolute inset-0 bg-primary/20 rounded-xl z-10"
+                                layoutId="blur-background"
+                              />
+                            )}
+                          </button>
+                        )
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
@@ -918,88 +929,35 @@ export default function DesktopApp({
               }}
             >
               {/* Background Layer */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundColor: backgroundImage
-                    ? "transparent"
-                    : backgroundColor,
+              <CanvasPreview
+                width={resolution.width}
+                height={resolution.height}
+                backgroundColor={backgroundColor}
+                circles={circles}
+                text={text}
+                textStyle={{
+                  fontSize: fontSize,
+                  fontWeight: fontWeight,
+                  letterSpacing: letterSpacing,
+                  fontFamily: fontFamily,
+                  opacity: opacity,
+                  lineHeight: lineHeight,
+                  color: textColor,
+                  isItalic: isItalic,
+                  isUnderline: isUnderline,
+                  isStrikethrough: isStrikethrough,
                 }}
+                filters={{
+                  blur: blur,
+                  brightness: brightness,
+                  contrast: contrast,
+                  saturation: saturation,
+                }}
+                backgroundImage={backgroundImage}
               />
-
-              {/* Image/Gradient Layer */}
-              {!backgroundImage ? (
-                <div
-                  className="absolute inset-0"
-                  style={{ contain: "paint layout" }}
-                >
-                  <svg
-                    className="w-full h-full"
-                    style={{
-                      filter: `blur(${
-                        (blur * resolution.width) / 1920
-                      }px) brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`,
-                      transform: "translate3d(0,0,0)",
-                      backfaceVisibility: "hidden",
-                      WebkitBackfaceVisibility: "hidden",
-                      willChange: "transform filter",
-                      contain: "strict",
-                    }}
-                    preserveAspectRatio="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 100 100"
-                  >
-                    {memoizedShapes}
-                  </svg>
-                </div>
-              ) : (
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage: `url(${backgroundImage})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    filter: `blur(${
-                      (blur * resolution.width) / 1920
-                    }px) brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`,
-                    transform: "translate3d(0,0,0)",
-                    backfaceVisibility: "hidden",
-                    WebkitBackfaceVisibility: "hidden",
-                    willChange: "transform filter",
-                    contain: "paint layout",
-                  }}
-                />
-              )}
-
-              {/* Filter Effects Layer */}
-              <div className="absolute inset-0" style={filterStyle} />
-
-              {/* Text Layer */}
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                <p
-                  style={{
-                    fontSize: `${(fontSize * resolution.width) / 1920}px`,
-                    fontWeight,
-                    letterSpacing: `${
-                      (letterSpacing * resolution.width) / 1920
-                    }em`,
-                    fontFamily,
-                    opacity: opacity / 100,
-                    lineHeight: `${(lineHeight * resolution.width) / 1920}em`,
-                    color: textColor,
-                    textAlign: "center",
-                    maxWidth: "90%",
-                    fontStyle: isItalic ? "italic" : "normal",
-                    textDecoration: `${isUnderline ? "underline" : ""} ${
-                      isStrikethrough ? "line-through" : ""
-                    }`.trim(),
-                  }}
-                >
-                  {text}
-                </p>
-              </div>
             </div>
             {/* Downloading Overlay */}
+
             <motion.div
               animate={{ opacity: showDownloadingOverlay ? 1 : 0 }}
               exit={{ opacity: 0 }}

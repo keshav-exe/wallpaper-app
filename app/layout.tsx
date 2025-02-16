@@ -2,6 +2,7 @@ import "./globals.css";
 import { onest } from "@/lib/fonts";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata = {
   title: "Gradii - Generate your own gradient wallpapers",
@@ -66,6 +67,7 @@ export default function RootLayout({
       <body
         className={`${onest.variable} antialiased min-h-screen bg-background`}
       >
+        <Analytics />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

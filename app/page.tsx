@@ -1,14 +1,11 @@
 "use client";
 import DesktopApp from "@/components/core-ui/desktop-app";
 import MobileApp from "@/components/core-ui/mobile-app";
-
 import { useState, useEffect } from "react";
-import { toPng } from "html-to-image";
 import { toast } from "sonner";
 import {
   INITIAL_BACKGROUND_COLORS,
   FONTS,
-  FILTER_SVG_PATTERNS,
   type CircleProps,
   type FontOption,
   RESOLUTIONS,
@@ -27,23 +24,23 @@ export default function Home() {
     }))
   );
   const [previousCircles, setPreviousCircles] = useState<CircleProps[]>([]);
-  const [text, setText] = useState("KSHV.");
+  const [text, setText] = useState("Gradii.");
   const [fontSize, setFontSizeState] = useState(36);
-  const [blur, setBlur] = useState(200);
-  const [fontWeight, setFontWeight] = useState(800);
+  const [blur, setBlur] = useState(500);
+  const [fontWeight, setFontWeight] = useState(600);
   const [letterSpacing, setLetterSpacing] = useState(-0.02);
   const [opacity, setOpacity] = useState(100);
   const [fontFamily, setFontFamilyState] = useState("Onest");
   const [activeTab, setActiveTab] = useState<"colors" | "text" | "effects">(
     "text"
   );
-  const [filterIntensity, setFilterIntensity] = useState(0);
+  const isSafari =
+    typeof window !== "undefined" &&
+    /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [lineHeight, setLineHeight] = useState(1.2);
   const [textColor, setTextColor] = useState("#ffffff");
-  const [filterType, setFilterType] = useState<
-    "pastel" | "film" | "grain" | "static"
-  >("pastel");
+
   const [activeColorPicker, setActiveColorPicker] = useState<string>(textColor);
   const [activeColorType, setActiveColorType] = useState<
     "text" | "background" | "gradient"
@@ -61,22 +58,9 @@ export default function Home() {
   const [modifiedProperties, setModifiedProperties] = useState<Set<string>>(
     new Set()
   );
+  const [numCircles, setNumCircles] = useState(5);
 
   const fonts: FontOption[] = FONTS;
-
-  const svgToBase64 = (svg: string) => `data:image/svg+xml;base64,${btoa(svg)}`;
-
-  const filterStyle = {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundImage: `url("${svgToBase64(FILTER_SVG_PATTERNS[filterType])}")`,
-    opacity: filterIntensity / 100,
-    mixBlendMode: filterType === "film" ? "multiply" : "soft-light",
-    pointerEvents: "none",
-  } as const;
 
   const [isDownloading, setIsDownloading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -107,44 +91,16 @@ export default function Home() {
   };
 
   const downloadImage = async () => {
-    const wallpaper = document.getElementById("wallpaper");
-    if (!wallpaper) return;
+    const canvas = document.querySelector(
+      "#wallpaper canvas"
+    ) as HTMLCanvasElement;
+    if (!canvas) return;
 
     setIsDownloading(true);
     try {
-      // Store ALL original styles
-      const svgElement = wallpaper.querySelector("svg");
-      const originalSvgStyle = svgElement?.getAttribute("style");
-      const originalTransform = wallpaper.style.transform;
-      const originalWidth = wallpaper.style.width;
-      const originalHeight = wallpaper.style.height;
-
-      // Set download styles
-      wallpaper.style.transform = "none";
-      wallpaper.style.width = `${resolution.width}px`;
-      wallpaper.style.height = `${resolution.height}px`;
-
-      const dataUrl = await toPng(wallpaper, {
-        width: resolution.width,
-        height: resolution.height,
-        pixelRatio: 1,
-        style: {
-          transform: "none",
-          transformOrigin: "top left",
-        },
-      });
-
-      // Restore ALL original styles
-      wallpaper.style.transform = originalTransform;
-      wallpaper.style.width = originalWidth;
-      wallpaper.style.height = originalHeight;
-      if (svgElement && originalSvgStyle) {
-        svgElement.setAttribute("style", originalSvgStyle);
-      }
-
       const link = document.createElement("a");
       link.download = `gradii-${resolution.width}x${resolution.height}.png`;
-      link.href = dataUrl;
+      link.href = canvas.toDataURL("image/png");
 
       const downloadPromise = new Promise((resolve) => {
         link.click();
@@ -175,22 +131,6 @@ export default function Home() {
           cy: Math.random() * 100,
         }))
       );
-
-      if (!modifiedProperties.has("filterIntensity")) {
-        setFilterIntensity(Math.floor(Math.random() * (100 - 30) + 30));
-      }
-
-      if (!modifiedProperties.has("filterType")) {
-        const filterTypes: ("pastel" | "film" | "grain" | "static")[] = [
-          "pastel",
-          "film",
-          "grain",
-          "static",
-        ];
-        setFilterType(
-          filterTypes[Math.floor(Math.random() * filterTypes.length)]
-        );
-      }
 
       if (!modifiedProperties.has("backgroundColor")) {
         const randomColor =
@@ -312,6 +252,10 @@ export default function Home() {
       </div>
       <div className="hidden md:block">
         <DesktopApp
+          numCircles={numCircles}
+          isSafari={isSafari}
+          setNumCircles={setNumCircles}
+          colors={colors}
           backgroundColor={backgroundColor}
           blur={blur}
           setBlur={setBlur}
@@ -324,8 +268,6 @@ export default function Home() {
           lineHeight={lineHeight}
           text={text}
           circles={circles}
-          filterIntensity={filterIntensity}
-          filterStyle={filterStyle}
           textColor={textColor}
           generateNewPalette={generateNewPalette}
           isGenerating={isGenerating}
@@ -333,9 +275,6 @@ export default function Home() {
           isDownloading={isDownloading}
           fonts={fonts}
           activeColorPicker={activeColorPicker}
-          filterType={filterType}
-          setFilterIntensity={setFilterIntensity}
-          setFilterType={setFilterType}
           setTextColor={setTextColor}
           setText={setText}
           setFontFamily={setFontFamily}
