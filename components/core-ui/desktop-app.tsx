@@ -323,7 +323,7 @@ export default function DesktopApp({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <main className="relative flex gap-2 items-center justify-center p-4 h-screen w-full">
+    <main className="relative flex gap-2 items-center justify-center p-2 h-screen w-full">
       <div aria-hidden="true" className="sr-only">
         {fontPreloadText}
       </div>
