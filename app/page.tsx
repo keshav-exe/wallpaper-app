@@ -34,7 +34,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<
     "colors" | "text" | "effects" | "background"
   >("text");
-  const [grainIntensity, setGrainIntensity] = useState(0);
+  const [grainIntensity, setGrainIntensity] = useState(25);
   const [vignetteIntensity, setVignetteIntensity] = useState(0);
   const isSafari = useSafariCheck();
   const [backgroundColor, setBackgroundColor] = useState("#0D1319");
