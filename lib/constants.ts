@@ -29,16 +29,16 @@ export const INITIAL_COLORS = [
 ];
 
 export const INITIAL_BACKGROUND_COLORS = [
-  // Ultra Light variants (95% lightness)
-  "#F0F7FF", // Ultra Light Dark Blue
-  "#F0F8FF", // Ultra Light Navy Blue
-  "#F0F9FF", // Ultra Light Medium Blue
-  "#F0FAFF", // Ultra Light Bright Blue
-  "#F7FBFF", // Ultra Light Light Blue
-  "#FFF8F0", // Ultra Light Light Orange
-  "#FFF4F0", // Ultra Light Orange
-  "#FFF2F0", // Ultra Light Dark Orange
-  "#F0F0F0", // Ultra Light Black
+  // // Ultra Light variants (95% lightness)
+  // "#F0F7FF", // Ultra Light Dark Blue
+  // "#F0F8FF", // Ultra Light Navy Blue
+  // "#F0F9FF", // Ultra Light Medium Blue
+  // "#F0FAFF", // Ultra Light Bright Blue
+  // "#F7FBFF", // Ultra Light Light Blue
+  // "#FFF8F0", // Ultra Light Light Orange
+  // "#FFF4F0", // Ultra Light Orange
+  // "#FFF2F0", // Ultra Light Dark Orange
+  // "#F0F0F0", // Ultra Light Black
 
   // Dark variants (5% lightness)
   "#0D1319", // Dark Blue
@@ -228,15 +228,15 @@ export const RESOLUTIONS = [
 
 export const BLUR_OPTIONS = [
   { name: "None", value: 0 },
-  { name: "Low", value: 500 },
-  { name: "Medium", value: 1000 },
-  { name: "High", value: 1500 },
+  { name: "Low", value: 600 },
+  { name: "Medium", value: 800 },
+  { name: "High", value: 1000 },
 ] as const;
 
 export const SAFARI_BLUR_OPTIONS = [
   { name: "None", value: 0 },
-  { name: "Low", value: 400 },
-  { name: "Medium", value: 500 },
+  { name: "Low", value: 500 },
+  { name: "Medium", value: 600 },
   { name: "High", value: 800 },
 ] as const;
 

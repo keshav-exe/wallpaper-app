@@ -31,15 +31,15 @@ export default function Home() {
   const [letterSpacing, setLetterSpacing] = useState(-0.02);
   const [opacity, setOpacity] = useState(100);
   const [fontFamily, setFontFamilyState] = useState("Onest");
-  const [activeTab, setActiveTab] = useState<"colors" | "text" | "effects">(
-    "text"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "colors" | "text" | "effects" | "background"
+  >("text");
   const [grainIntensity, setGrainIntensity] = useState(0);
   const [vignetteIntensity, setVignetteIntensity] = useState(0);
   const isSafari = useSafariCheck();
-  const [backgroundColor, setBackgroundColor] = useState("#ffffff");
-  const [lineHeight, setLineHeight] = useState(1.2);
-  const [textColor, setTextColor] = useState("#ffffff");
+  const [backgroundColor, setBackgroundColor] = useState("#0D1319");
+  const [lineHeight, setLineHeight] = useState(1);
+  const [textColor, setTextColor] = useState("#f1f1f1");
 
   const [activeColorPicker, setActiveColorPicker] = useState<string>(textColor);
   const [activeColorType, setActiveColorType] = useState<
@@ -59,14 +59,14 @@ export default function Home() {
     new Set()
   );
   const [numCircles, setNumCircles] = useState(5);
+  const [isUploading, setIsUploading] = useState(false);
 
   const fonts: FontOption[] = FONTS;
-
   const [isDownloading, setIsDownloading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [textShadow, setTextShadow] = useState({
-    color: "#000000",
-    blur: 40,
+    color: "#f5f5f5",
+    blur: 24,
     offsetX: 0,
     offsetY: 0,
   });
@@ -322,6 +322,8 @@ export default function Home() {
           setGrainIntensity={setGrainIntensity}
           vignetteIntensity={vignetteIntensity}
           setVignetteIntensity={setVignetteIntensity}
+          isUploading={isUploading}
+          setIsUploading={setIsUploading}
         />
       </div>
     </>

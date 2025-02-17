@@ -1,7 +1,20 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { DownloadIcon, Loader2Icon, SettingsIcon } from "lucide-react";
+import {
+  DownloadIcon,
+  Loader2Icon,
+  SettingsIcon,
+  Trash2Icon,
+  UploadIcon,
+  PaintbrushIcon,
+  PaletteIcon,
+  SparklesIcon,
+  TypeIcon,
+  ItalicIcon,
+  UnderlineIcon,
+  StrikethroughIcon,
+} from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
@@ -10,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { motion, AnimatePresence, Variants } from "motion/react";
+import { motion } from "motion/react";
 import { HexColorPicker } from "react-colorful";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -43,6 +56,7 @@ import Link from "next/link";
 import { IMAGES } from "@/assets";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
+import { Button } from "../ui/button";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -62,8 +76,8 @@ interface DesktopAppProps {
   previousCircles: CircleProps[];
   setCircles: (circles: CircleProps[]) => void;
   setPreviousCircles: (circles: CircleProps[]) => void;
-  setActiveTab: (tab: "text" | "colors" | "effects") => void;
-  activeTab: "text" | "colors" | "effects";
+  setActiveTab: (tab: "text" | "colors" | "effects" | "background") => void;
+  activeTab: "text" | "colors" | "effects" | "background";
   setText: (text: string) => void;
   setFontFamily: (fontFamily: string) => void;
   setFontSize: (fontSize: number) => void;
@@ -121,6 +135,8 @@ interface DesktopAppProps {
       offsetY: number;
     }>
   >;
+  isUploading: boolean;
+  setIsUploading: (isUploading: boolean) => void;
 }
 
 const PREVIEW_DIMENSIONS = {
@@ -202,32 +218,9 @@ export default function DesktopApp({
   setGrainIntensity,
   vignetteIntensity,
   setVignetteIntensity,
+  isUploading,
+  setIsUploading,
 }: DesktopAppProps) {
-  const slideVariants: Variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 1000 : -1000,
-      opacity: 0,
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      zIndex: 0,
-      x: direction < 0 ? 1000 : -1000,
-      opacity: 0,
-    }),
-  };
-
-  const [[page, direction], setPage] = useState([0, 0]);
-  const tabIndex = ["text", "colors", "effects"].indexOf(activeTab);
-
-  useEffect(() => {
-    const newDirection = tabIndex > page ? 1 : -1;
-    setPage([tabIndex, newDirection]);
-  }, [tabIndex]);
-
   const getPreviewScale = (resolution: (typeof RESOLUTIONS)[number]) => {
     const container = PREVIEW_DIMENSIONS[aspectRatio];
     const scaleX = container.width / resolution.width;
@@ -381,392 +374,425 @@ export default function DesktopApp({
         <Tabs
           value={activeTab}
           onValueChange={(value) =>
-            setActiveTab(value as "text" | "colors" | "effects")
+            setActiveTab(value as "text" | "background" | "colors" | "effects")
           }
           className="flex flex-col items-center z-50 w-full bg-secondary rounded-2xl p-2 border border-primary/10"
         >
           <TabsList className="w-full flex items-center gap-1">
-            {["text", "colors", "effects"].map((tab) => (
-              <TabsTrigger key={tab} value={tab} className="flex-1 relative">
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                {activeTab === tab && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-primary/10 rounded-xl"
-                    transition={{ type: "spring", duration: 0.5 }}
-                  />
-                )}
-              </TabsTrigger>
-            ))}
+            <div className="flex items-center gap-2 min-w-full">
+              {[
+                { id: "text", icon: TypeIcon },
+                { id: "background", icon: PaintbrushIcon },
+                { id: "colors", icon: PaletteIcon },
+                { id: "effects", icon: SparklesIcon },
+              ].map(({ id, icon: Icon }) => (
+                <TabsTrigger
+                  key={id}
+                  value={id}
+                  className="flex-1 relative w-full p-2 cursor-pointer hover:bg-primary/10 transition-all duration-300 bg-background"
+                >
+                  <Icon className="size-4" />
+                  {activeTab === id && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-primary/10 rounded-xl z-10"
+                      transition={{
+                        duration: 0.3,
+                      }}
+                    />
+                  )}
+                </TabsTrigger>
+              ))}
+            </div>
           </TabsList>
         </Tabs>
 
         {/* controls */}
         <section className="w-full bg-secondary rounded-2xl flex flex-col no-scrollbar overflow-hidden h-full  border border-primary/10">
-          <AnimatePresence custom={direction} mode="wait">
-            <motion.div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full gap-2 p-4">
-              {activeTab === "text" && (
-                <motion.div
-                  key={activeTab}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.3 },
-                  }}
-                  className="flex flex-col gap-4"
-                >
-                  <div className="flex flex-col gap-2 w-full">
-                    <label className="text-sm text-muted-foreground">
-                      Text
-                    </label>
-                    <Textarea
-                      className="resize-none whitespace-pre-wrap"
-                      value={text}
-                      onChange={(e) => setText(e.target.value)}
-                      placeholder="Enter text"
+          <div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full gap-2 p-4">
+            {activeTab === "text" && (
+              <div key={activeTab} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="text-sm text-muted-foreground">Text</label>
+                  <Textarea
+                    className="resize-none whitespace-pre-wrap"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="Enter text"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="text-sm text-muted-foreground">
+                    Font Family
+                  </label>
+                  <Select value={fontFamily} onValueChange={setFontFamily}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select font" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {fonts.map((font) => (
+                        <SelectItem key={font.name} value={font.name}>
+                          {font.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm text-muted-foreground">
+                    Text Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <span
+                          className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
+                          style={{ backgroundColor: textColor }}
+                        />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-3" align="start">
+                        <HexColorPicker
+                          color={activeColorPicker}
+                          onChange={(color) => {
+                            setActiveColorType("text");
+                            setActiveColorPicker(color);
+                            handleColorChange(color);
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <Input
+                      type="text"
+                      value={textColor}
+                      placeholder="Color"
+                      onChange={(e) => setTextColor(e.target.value)}
                     />
                   </div>
+                </div>
 
-                  <div className="flex flex-col gap-2 w-full">
-                    <label className="text-sm text-muted-foreground">
-                      Font Family
-                    </label>
-                    <Select value={fontFamily} onValueChange={setFontFamily}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select font" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {fonts.map((font) => (
-                          <SelectItem key={font.name} value={font.name}>
-                            {font.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="text-sm text-muted-foreground">
+                    Font Size
+                  </label>
+                  <Slider
+                    min={12}
+                    max={180}
+                    step={2}
+                    value={[fontSize]}
+                    onValueChange={([value]) => setFontSize(value)}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {fontSize}px
+                  </span>
+                </div>
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="text-sm text-muted-foreground">
+                    Font Weight
+                  </label>
+                  <Slider
+                    min={100}
+                    max={900}
+                    step={100}
+                    value={[fontWeight]}
+                    onValueChange={([value]) => setFontWeight(value)}
+                    disabled={
+                      !fonts.find((f) => f.name === fontFamily)?.variable
+                    }
+                    className={cn(
+                      !fonts.find((f) => f.name === fontFamily)?.variable &&
+                        "cursor-not-allowed"
+                    )}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {fontWeight}
+                  </span>
+                </div>
 
-                  <div className="flex flex-col gap-2 w-full">
-                    <label className="text-sm text-muted-foreground">
-                      Font Size
-                    </label>
-                    <Slider
-                      min={12}
-                      max={180}
-                      step={2}
-                      value={[fontSize]}
-                      onValueChange={([value]) => setFontSize(value)}
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {fontSize}px
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-2 w-full">
-                    <label className="text-sm text-muted-foreground">
-                      Font Weight
-                    </label>
-                    <Slider
-                      min={100}
-                      max={900}
-                      step={100}
-                      value={[fontWeight]}
-                      onValueChange={([value]) => setFontWeight(value)}
-                      disabled={
-                        !fonts.find((f) => f.name === fontFamily)?.variable
-                      }
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="text-sm text-muted-foreground">
+                    Letter Spacing
+                  </label>
+                  <Slider
+                    min={-0.1}
+                    max={0.1}
+                    step={0.01}
+                    value={[letterSpacing]}
+                    onValueChange={([value]) => setLetterSpacing(value)}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {letterSpacing}em
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="text-sm text-muted-foreground">
+                    Line Height
+                  </label>
+                  <Slider
+                    min={0.5}
+                    max={2}
+                    step={0.1}
+                    value={[lineHeight]}
+                    onValueChange={([value]) => setLineHeight(value)}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {lineHeight}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="text-sm text-muted-foreground">
+                    Text Decoration
+                  </label>
+                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
+                    <button
+                      onClick={() => setIsItalic(!isItalic)}
                       className={cn(
-                        !fonts.find((f) => f.name === fontFamily)?.variable &&
-                          "cursor-not-allowed"
+                        "w-full rounded-xl px-4 py-2 text-sm relative flex items-center justify-center",
+                        "text-primary transition-all duration-300 hover:bg-primary/10 cursor-pointer border border-primary/10",
+                        isItalic ? "bg-primary/20 " : "bg-background"
                       )}
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {fontWeight}
-                    </span>
+                    >
+                      <ItalicIcon className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => setIsUnderline(!isUnderline)}
+                      className={cn(
+                        "w-full rounded-xl px-4 py-2 text-sm relative flex items-center justify-center",
+                        "transition-all duration-300 text-primary hover:bg-primary/10 cursor-pointer border border-primary/10",
+                        isUnderline ? "bg-primary/20" : "bg-background"
+                      )}
+                    >
+                      <UnderlineIcon className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => setIsStrikethrough(!isStrikethrough)}
+                      className={cn(
+                        "w-full rounded-xl px-4 py-2 text-sm relative flex items-center justify-center",
+                        "transition-all duration-300 text-primary hover:bg-primary/10 cursor-pointer border border-primary/10",
+                        isStrikethrough ? "bg-primary/20" : "bg-background"
+                      )}
+                    >
+                      <StrikethroughIcon className="size-4" />
+                    </button>
                   </div>
+                </div>
 
-                  <div className="flex flex-col gap-2 w-full">
-                    <label className="text-sm text-muted-foreground">
-                      Letter Spacing
-                    </label>
-                    <Slider
-                      min={-0.1}
-                      max={0.1}
-                      step={0.01}
-                      value={[letterSpacing]}
-                      onValueChange={([value]) => setLetterSpacing(value)}
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="text-sm text-muted-foreground">
+                    Text Opacity
+                  </label>
+                  <Slider
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={[opacity]}
+                    onValueChange={([value]) => setOpacity(value)}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {opacity}%
+                  </span>
+                </div>
+
+                <Separator className="my-2" />
+
+                <div className="flex flex-col gap-4">
+                  <label className="text-sm text-muted-foreground">
+                    Text Shadow
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <span
+                          className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
+                          style={{ backgroundColor: textShadow.color }}
+                        />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-3" align="start">
+                        <HexColorPicker
+                          color={textShadow.color}
+                          onChange={(color) =>
+                            setTextShadow((prev) => ({ ...prev, color }))
+                          }
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <Input
+                      type="text"
+                      value={textShadow.color}
+                      placeholder="Glow Color"
+                      onChange={(e) =>
+                        setTextShadow((prev) => ({
+                          ...prev,
+                          color: e.target.value,
+                        }))
+                      }
                     />
-                    <span className="text-xs text-muted-foreground">
-                      {letterSpacing}em
-                    </span>
                   </div>
-
-                  <div className="flex flex-col gap-2 w-full">
-                    <label className="text-sm text-muted-foreground">
-                      Text Opacity
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs text-muted-foreground">
+                      Intensity
                     </label>
                     <Slider
                       min={0}
-                      max={100}
+                      max={80}
                       step={1}
-                      value={[opacity]}
-                      onValueChange={([value]) => setOpacity(value)}
+                      value={[textShadow.blur]}
+                      onValueChange={([value]) =>
+                        setTextShadow((prev) => ({ ...prev, blur: value }))
+                      }
                     />
                     <span className="text-xs text-muted-foreground">
-                      {opacity}%
+                      {textShadow.blur}px
                     </span>
                   </div>
-
-                  <div className="flex flex-col gap-2 w-full">
-                    <label className="text-sm text-muted-foreground">
-                      Line Height
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs text-muted-foreground">
+                      Offset X
                     </label>
                     <Slider
-                      min={0.5}
-                      max={2}
-                      step={0.1}
-                      value={[lineHeight]}
-                      onValueChange={([value]) => setLineHeight(value)}
+                      min={-20}
+                      max={20}
+                      step={1}
+                      value={[textShadow.offsetX]}
+                      onValueChange={([value]) =>
+                        setTextShadow((prev) => ({ ...prev, offsetX: value }))
+                      }
                     />
                     <span className="text-xs text-muted-foreground">
-                      {lineHeight}
+                      {textShadow.offsetX}px
                     </span>
                   </div>
 
-                  <div className="flex flex-col gap-2 w-full">
-                    <label className="text-sm text-muted-foreground">
-                      Text Decoration
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs text-muted-foreground">
+                      Offset Y
                     </label>
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
-                      <button
-                        onClick={() => setIsItalic(!isItalic)}
-                        className={cn(
-                          "w-full rounded-xl px-4 py-2 text-sm relative",
-                          "text-primary transition-all duration-300",
-                          isItalic ? "bg-primary/20 " : "bg-background"
-                        )}
-                      >
-                        <span className="italic">Italic</span>
-                      </button>
-                      <button
-                        onClick={() => setIsUnderline(!isUnderline)}
-                        className={cn(
-                          "w-full rounded-xl px-4 py-2 text-sm relative",
-                          "transition-all duration-300 text-primary",
-                          isUnderline ? "bg-primary/20" : "bg-background"
-                        )}
-                      >
-                        <span className="underline">Underline</span>
-                      </button>
-                      <button
-                        onClick={() => setIsStrikethrough(!isStrikethrough)}
-                        className={cn(
-                          "w-full rounded-xl px-4 py-2 text-sm relative",
-                          "transition-all duration-300 text-primary",
-                          isStrikethrough ? "bg-primary/20" : "bg-background"
-                        )}
-                      >
-                        <span className="line-through">Strikethrough</span>
-                      </button>
-                    </div>
+                    <Slider
+                      min={-20}
+                      max={20}
+                      step={1}
+                      value={[textShadow.offsetY]}
+                      onValueChange={([value]) =>
+                        setTextShadow((prev) => ({ ...prev, offsetY: value }))
+                      }
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {textShadow.offsetY}px
+                    </span>
                   </div>
-                </motion.div>
-              )}
+                </div>
+              </div>
+            )}
 
-              {activeTab === "colors" && (
-                <motion.div
-                  key={activeTab}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.3 },
-                  }}
-                  className="flex flex-col relative"
-                >
-                  <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar">
-                    {!backgroundImage && (
-                      <>
-                        <div className="flex flex-col gap-2">
-                          <label className="text-sm text-muted-foreground">
-                            Number of Blobs
-                          </label>
-                          <Slider
-                            min={1}
-                            max={10}
-                            step={1}
-                            value={[numCircles]}
-                            onValueChange={([value]) => {
-                              setNumCircles(value);
-                              const newCircles = [...circles];
-                              if (value > circles.length) {
-                                // Add new circles
-                                for (let i = circles.length; i < value; i++) {
-                                  newCircles.push({
-                                    color: colors[i % colors.length],
-                                    cx: Math.random() * 100,
-                                    cy: Math.random() * 100,
-                                  });
-                                }
-                              } else {
-                                // Remove circles
-                                newCircles.splice(value);
-                              }
-                              setCircles(newCircles);
+            {activeTab === "background" && (
+              <div key={activeTab} className="flex flex-col relative">
+                <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm text-muted-foreground">
+                      Background Color
+                    </label>
+                    <div
+                      className="flex items-center gap-2"
+                      onClick={() => {
+                        setActiveColorType("background");
+                        setActiveColorPicker(backgroundColor);
+                      }}
+                    >
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <span
+                            className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
+                            style={{ backgroundColor: backgroundColor }}
+                          />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-3" align="start">
+                          <HexColorPicker
+                            color={activeColorPicker}
+                            onChange={(color) => {
+                              setActiveColorPicker(color);
+                              setBackgroundColor(color);
                             }}
                           />
-                          <span className="text-xs text-muted-foreground">
-                            {numCircles}
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <label className="text-sm text-muted-foreground">
-                            Colors
-                          </label>
-                          {circles.map((circle, i) => (
-                            <div
-                              key={i}
-                              className="flex items-start gap-2 relative w-full"
-                            >
-                              <div
-                                className="flex items-center gap-2"
-                                onClick={() => {
-                                  setActiveColorType("gradient");
-                                  setActiveColor(i);
-                                  setActiveColorPicker(circle.color);
-                                }}
-                              >
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <span
-                                      className="size-5 rounded-xl cursor-pointer aspect-square border border-primary/60"
-                                      style={{ backgroundColor: circle.color }}
-                                    />
-                                  </PopoverTrigger>
-                                  <PopoverContent
-                                    className="w-auto p-3"
-                                    align="start"
-                                  >
-                                    <HexColorPicker
-                                      color={activeColorPicker}
-                                      onChange={(color) => {
-                                        setActiveColorPicker(color);
-                                        handleColorChange(color);
-                                      }}
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                                <Input
-                                  type="text"
-                                  value={circle.color}
-                                  placeholder="Color"
-                                  onChange={(e) =>
-                                    updateColor(e.target.value, i)
-                                  }
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm text-muted-foreground">
-                        Background Color
-                      </label>
-                      <div
-                        className="flex items-center gap-2"
-                        onClick={() => {
-                          setActiveColorType("background");
-                          setActiveColorPicker(backgroundColor);
-                        }}
-                      >
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <span
-                              className="size-5 rounded-xl cursor-pointer aspect-square border border-primary/60"
-                              style={{ backgroundColor: backgroundColor }}
-                            />
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-3" align="start">
-                            <HexColorPicker
-                              color={activeColorPicker}
-                              onChange={(color) => {
-                                setActiveColorPicker(color);
-                                setBackgroundColor(color);
-                              }}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <Input
-                          type="text"
-                          value={backgroundColor}
-                          placeholder="Color"
-                          onChange={(e) => setBackgroundColor(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm text-muted-foreground">
-                        Text Color
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <span
-                              className="size-5 rounded-xl cursor-pointer aspect-square border border-primary/60"
-                              style={{ backgroundColor: textColor }}
-                            />
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-3" align="start">
-                            <HexColorPicker
-                              color={activeColorPicker}
-                              onChange={(color) => {
-                                setActiveColorType("text");
-                                setActiveColorPicker(color);
-                                handleColorChange(color);
-                              }}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <Input
-                          type="text"
-                          value={textColor}
-                          placeholder="Color"
-                          onChange={(e) => setTextColor(e.target.value)}
-                        />
-                      </div>
+                        </PopoverContent>
+                      </Popover>
+                      <Input
+                        type="text"
+                        value={backgroundColor}
+                        placeholder="Color"
+                        onChange={(e) => setBackgroundColor(e.target.value)}
+                      />
                     </div>
                   </div>
-                </motion.div>
-              )}
 
-              {activeTab === "effects" && (
-                <motion.div
-                  key={activeTab}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.3 },
-                  }}
-                  className="flex flex-col gap-4"
-                >
+                  <Separator className="my-2" />
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm text-muted-foreground">
+                      Background Image
+                    </label>
+                    <label
+                      className={`px-4 py-3 bg-background rounded-xl hover:text-foreground/80 text-primary transition-all duration-300 flex items-center gap-2 cursor-pointer justify-center border border-primary/10 ${
+                        isUploading ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        key={backgroundImage ? "has-image" : "no-image"}
+                        onChange={async (e) => {
+                          if (isUploading) return;
+                          setIsUploading(true);
+                          try {
+                            await handleImageUpload(e);
+                          } finally {
+                            setIsUploading(false);
+                            e.target.value = "";
+                          }
+                        }}
+                        className="hidden"
+                        disabled={isUploading}
+                      />
+                      {isUploading ? (
+                        <span className="animate-pulse">Uploading...</span>
+                      ) : (
+                        <>
+                          <UploadIcon className="size-4" />
+                          <span className="text-xs tracking-tight">
+                            {backgroundImage ? "Change Image" : "Upload Image"}
+                          </span>
+                        </>
+                      )}
+                    </label>
+
+                    {backgroundImage && (
+                      <Button
+                        onClick={() => {
+                          setBackgroundImage(null);
+                          if (blur === 0) {
+                            setBlur(600);
+                          }
+                        }}
+                        className="rounded-xl"
+                        variant="destructive"
+                      >
+                        <Trash2Icon className="size-4" />
+                        <span className="text-xs tracking-tight">
+                          Remove Image
+                        </span>
+                      </Button>
+                    )}
+                  </div>
+
+                  <Separator className="my-2" />
+
                   <div className="flex flex-col gap-2">
                     <label className="text-sm text-muted-foreground">
                       Blur
                     </label>
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
+                    <div className="grid grid-cols-2 gap-2 rounded-xl">
                       {(isSafari ? SAFARI_BLUR_OPTIONS : BLUR_OPTIONS).map(
                         (blurOption: { name: string; value: number }) => (
                           <button
@@ -776,222 +802,219 @@ export default function DesktopApp({
                               !backgroundImage && blurOption.value === 0
                             }
                             className={cn(
-                              "w-full rounded-xl px-4 py-2 text-sm relative",
-                              "transition-colors duration-200 bg-background",
+                              "w-full rounded-xl px-4 py-2 text-sm relative cursor-pointer",
+                              "transition-10 hover:bg-primary/10 duration-300 bg-background border border-primary/10",
                               !backgroundImage &&
                                 blurOption.value === 0 &&
-                                "opacity-50 cursor-not-allowed"
+                                "opacity-50 cursor-not-allowed",
+                              blur === blurOption.value && "bg-primary/10"
                             )}
                           >
                             <span>{blurOption.name}</span>
-                            {blur === blurOption.value && (
-                              <motion.div
-                                className="absolute inset-0 bg-primary/20 rounded-xl z-10"
-                                layoutId="blur-background"
-                              />
-                            )}
                           </button>
                         )
                       )}
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
 
-                  <Separator className="my-2" />
-
-                  <div className="flex flex-col gap-4">
-                    <label className="text-sm text-muted-foreground">
-                      Text Shadow
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <span
-                            className="size-5 rounded-xl cursor-pointer aspect-square border border-primary/60"
-                            style={{ backgroundColor: textShadow.color }}
-                          />
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-3" align="start">
-                          <HexColorPicker
-                            color={textShadow.color}
-                            onChange={(color) =>
-                              setTextShadow((prev) => ({ ...prev, color }))
+            {activeTab === "colors" && (
+              <div key={activeTab} className="flex flex-col relative">
+                <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar">
+                  {!backgroundImage && (
+                    <>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm text-muted-foreground">
+                          Blobs
+                        </label>
+                        <Slider
+                          min={1}
+                          max={10}
+                          step={1}
+                          value={[numCircles]}
+                          onValueChange={([value]) => {
+                            setNumCircles(value);
+                            const newCircles = [...circles];
+                            if (value > circles.length) {
+                              // Add new circles
+                              for (let i = circles.length; i < value; i++) {
+                                newCircles.push({
+                                  color: colors[i % colors.length],
+                                  cx: Math.random() * 100,
+                                  cy: Math.random() * 100,
+                                });
+                              }
+                            } else {
+                              // Remove circles
+                              newCircles.splice(value);
                             }
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <Input
-                        type="text"
-                        value={textShadow.color}
-                        placeholder="Glow Color"
-                        onChange={(e) =>
-                          setTextShadow((prev) => ({
-                            ...prev,
-                            color: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs text-muted-foreground">
-                        Intensity
-                      </label>
-                      <Slider
-                        min={0}
-                        max={80}
-                        step={1}
-                        value={[textShadow.blur]}
-                        onValueChange={([value]) =>
-                          setTextShadow((prev) => ({ ...prev, blur: value }))
-                        }
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        {textShadow.blur}px
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs text-muted-foreground">
-                        Offset X
-                      </label>
-                      <Slider
-                        min={-20}
-                        max={20}
-                        step={1}
-                        value={[textShadow.offsetX]}
-                        onValueChange={([value]) =>
-                          setTextShadow((prev) => ({ ...prev, offsetX: value }))
-                        }
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        {textShadow.offsetX}px
-                      </span>
-                    </div>
+                            setCircles(newCircles);
+                          }}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          {numCircles}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm text-muted-foreground">
+                          Colors
+                        </label>
+                        {circles.map((circle, i) => (
+                          <div
+                            key={i}
+                            className="flex items-start gap-2 relative w-full"
+                          >
+                            <div
+                              className="flex items-center gap-2 w-full"
+                              onClick={() => {
+                                setActiveColorType("gradient");
+                                setActiveColor(i);
+                                setActiveColorPicker(circle.color);
+                              }}
+                            >
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <span
+                                    className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
+                                    style={{ backgroundColor: circle.color }}
+                                  />
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-auto p-3"
+                                  align="start"
+                                >
+                                  <HexColorPicker
+                                    color={activeColorPicker}
+                                    onChange={(color) => {
+                                      setActiveColorPicker(color);
+                                      handleColorChange(color);
+                                    }}
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <Input
+                                type="text"
+                                value={circle.color}
+                                className="w-full"
+                                placeholder="Color"
+                                onChange={(e) => updateColor(e.target.value, i)}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
 
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs text-muted-foreground">
-                        Offset Y
-                      </label>
-                      <Slider
-                        min={-20}
-                        max={20}
-                        step={1}
-                        value={[textShadow.offsetY]}
-                        onValueChange={([value]) =>
-                          setTextShadow((prev) => ({ ...prev, offsetY: value }))
-                        }
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        {textShadow.offsetY}px
-                      </span>
-                    </div>
-                  </div>
-
-                  <Separator className="my-2" />
-
+            {activeTab === "effects" && (
+              <div key={activeTab} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
                   <div className="flex flex-col gap-2">
                     <label className="text-sm text-muted-foreground">
-                      Saturation
+                      Grain
                     </label>
                     <Slider
                       min={0}
-                      max={200}
+                      max={100}
                       step={1}
-                      value={[saturation]}
-                      onValueChange={([value]) => setSaturation(value)}
+                      value={[grainIntensity]}
+                      onValueChange={([value]) => {
+                        setGrainIntensity(value);
+                        if (isSafari && value > 0) {
+                          toast.warning(
+                            "Effects may appear different in Safari due to browser limitations"
+                          );
+                        }
+                      }}
                     />
                     <span className="text-xs text-muted-foreground">
-                      {saturation}%
+                      {grainIntensity}%
                     </span>
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-sm text-muted-foreground">
-                      Contrast
+                      Vignette
                     </label>
                     <Slider
-                      min={5}
-                      max={200}
+                      min={0}
+                      max={100}
                       step={1}
-                      value={[contrast]}
-                      onValueChange={([value]) => setContrast(value)}
+                      value={[vignetteIntensity]}
+                      onValueChange={([value]) => {
+                        setVignetteIntensity(value);
+                        if (isSafari && value > 0) {
+                          toast.warning(
+                            "Effects may appear different in Safari due to browser limitations"
+                          );
+                        }
+                      }}
                     />
                     <span className="text-xs text-muted-foreground">
-                      {contrast}%
+                      {vignetteIntensity}%
                     </span>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Brightness
-                    </label>
-                    <Slider
-                      min={10}
-                      max={200}
-                      step={1}
-                      value={[brightness]}
-                      onValueChange={([value]) => setBrightness(value)}
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {brightness}%
-                    </span>
-                  </div>
-
-                  <Separator className="my-2" />
-
-                  <div className="flex flex-col gap-2">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm text-muted-foreground">
-                        Grain
-                      </label>
-                      <Slider
-                        min={0}
-                        max={100}
-                        step={1}
-                        value={[grainIntensity]}
-                        onValueChange={([value]) => {
-                          setGrainIntensity(value);
-                          if (isSafari && value > 0) {
-                            toast.warning(
-                              "Effects may appear different in Safari due to browser limitations"
-                            );
-                          }
-                        }}
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        {grainIntensity}%
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm text-muted-foreground">
-                        Vignette
-                      </label>
-                      <Slider
-                        min={0}
-                        max={100}
-                        step={1}
-                        value={[vignetteIntensity]}
-                        onValueChange={([value]) => {
-                          setVignetteIntensity(value);
-                          if (isSafari && value > 0) {
-                            toast.warning(
-                              "Effects may appear different in Safari due to browser limitations"
-                            );
-                          }
-                        }}
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        {vignetteIntensity}%
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
-          </AnimatePresence>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm text-muted-foreground">
+                    Saturation
+                  </label>
+                  <Slider
+                    min={0}
+                    max={200}
+                    step={1}
+                    value={[saturation]}
+                    onValueChange={([value]) => setSaturation(value)}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {saturation}%
+                  </span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm text-muted-foreground">
+                    Contrast
+                  </label>
+                  <Slider
+                    min={5}
+                    max={200}
+                    step={1}
+                    value={[contrast]}
+                    onValueChange={([value]) => setContrast(value)}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {contrast}%
+                  </span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm text-muted-foreground">
+                    Brightness
+                  </label>
+                  <Slider
+                    min={10}
+                    max={200}
+                    step={1}
+                    value={[brightness]}
+                    onValueChange={([value]) => setBrightness(value)}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {brightness}%
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </section>
 
         <div className="flex flex-col items-center rounded-2xl w-full gap-4">
           <div className="flex w-full gap-2">
             <button
               onClick={downloadImage}
-              className="w-full flex items-center justify-between gap-2 text-primary-foreground text-sm bg-primary rounded-2xl relative p-4 cursor-pointer border border-primary/10"
+              className="w-full flex items-center justify-between gap-2 text-primary-foreground text-sm bg-primary rounded-2xl relative p-4 cursor-pointer border border-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isDownloading}
             >
               <div className="flex items-center gap-2">
@@ -1005,7 +1028,7 @@ export default function DesktopApp({
 
             <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
               <DropdownMenuTrigger asChild>
-                <button className="p-4 relative items-center justify-center bg-primary rounded-2xl text-primary-foreground border border-primary/10">
+                <button className="p-4 relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary">
                   <motion.span
                     animate={{ rotate: isOpen ? 45 : 0 }}
                     transition={{ duration: 0.2 }}
@@ -1024,7 +1047,7 @@ export default function DesktopApp({
                   </label>
                   <Tabs
                     defaultValue={resolution.scale.toString()}
-                    className="flex flex-col items-center w-full  rounded-xl"
+                    className="flex flex-col items-center w-full rounded-xl"
                   >
                     <TabsList className="w-full flex items-center gap-1">
                       {filteredResolutions.map((res) => (
