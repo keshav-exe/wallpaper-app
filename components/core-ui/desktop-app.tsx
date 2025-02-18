@@ -1039,7 +1039,7 @@ export default function DesktopApp({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="rounded-2xl p-3 bg-background/50 backdrop-blur-md"
+                className="rounded-2xl p-3 bg-background/50 backdrop-blur-md border border-primary/10"
               >
                 <div className="flex flex-col gap-2">
                   <label className="text-xs text-muted-foreground">

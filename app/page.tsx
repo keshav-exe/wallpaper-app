@@ -58,7 +58,6 @@ export default function Home() {
   const [modifiedProperties, setModifiedProperties] = useState<Set<string>>(
     new Set()
   );
-  const [numCircles, setNumCircles] = useState(5);
   const [isUploading, setIsUploading] = useState(false);
 
   const fonts: FontOption[] = FONTS;
@@ -95,6 +94,7 @@ export default function Home() {
     };
     setCircles(newCircles);
   };
+  const [numCircles, setNumCircles] = useState(circles.length);
 
   const downloadImage = async () => {
     const canvas = document.querySelector(
