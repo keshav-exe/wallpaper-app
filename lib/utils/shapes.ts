@@ -5,6 +5,7 @@ interface ShapeProps {
   color: string;
   x: number;
   y: number;
+  size: number;
 }
 
 export function generateRandomShape(color: string): ShapeProps {
@@ -16,6 +17,7 @@ export function generateRandomShape(color: string): ShapeProps {
     color,
     x: Math.random() * 100,
     y: Math.random() * 100,
+    size: 30,
   };
 }
 
@@ -87,7 +89,7 @@ export function renderShape(shape: ShapeProps): string {
 
   switch (shape.type) {
     case "circle":
-      return `<circle cx="${shape.x}" cy="${shape.y}" r="30" fill="${shape.color}" opacity="0.8"/>`;
+      return `<circle cx="${shape.x}" cy="${shape.y}" r="${shape.size}" fill="${shape.color}" opacity="0.8"/>`;
     case "blob":
       return `<path d="${generateBlobPath()}" fill="${
         shape.color
