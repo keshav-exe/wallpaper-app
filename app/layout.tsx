@@ -8,7 +8,7 @@ export const metadata = {
   title: "Gradii - Generate Beautiful Gradients",
   description:
     "A simple gradient generator tool made by designer for designers to create stunning gradients with customizable colors, text, and effects. Use it for your designs, wallpapers, presentations, or mockups or just for fun.",
-  metadataBase: new URL("https://gradii.keshavbagaade.com"),
+  metadataBase: new URL("https://gradii.fun"),
   keywords: [
     // Core Features
     "gradient generator",
@@ -78,7 +78,7 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://gradii.keshavbagaade.com",
+    url: "https://gradii.fun",
     title: "Gradii - Generate Beautiful Gradients",
     description:
       "A simple gradient generator tool made by designer for designers to create stunning gradients with customizable colors, text, and effects. Use it for your designs, wallpapers, presentations, or mockups or just for fun.",
@@ -115,7 +115,7 @@ export const metadata = {
     google: "your-google-site-verification", // Add your verification code
   },
   alternates: {
-    canonical: "https://gradii.keshavbagaade.com",
+    canonical: "https://gradii.fun",
   },
   category: "Design Tools",
   applicationName: "Gradii",
@@ -139,7 +139,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <Toaster richColors closeButton />
+          <Toaster
+            richColors
+            position="top-center"
+            style={{ borderRadius: "24px" }}
+          />
           {/* <Footer /> */}
         </ThemeProvider>
       </body>

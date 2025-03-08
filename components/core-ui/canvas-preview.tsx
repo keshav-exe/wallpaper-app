@@ -178,10 +178,16 @@ export function CanvasPreview({
         style.fontSize
       }px ${style.fontFamily}`;
       ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
 
       const lines = text.split("\n");
       const lineHeight = style.fontSize * style.lineHeight;
-      const y = height / 2;
+
+      // Calculate the total height of all lines
+      const totalTextHeight = lines.length * lineHeight;
+
+      // Start y position to center all text vertically in the canvas
+      const startY = height / 2 - totalTextHeight / 2 + lineHeight / 2;
 
       // Draw shadow/glow first
       if (style.textShadow.blur > 0) {
@@ -192,11 +198,36 @@ export function CanvasPreview({
         ctx.globalAlpha = style.opacity / 100;
 
         lines.forEach((line, i) => {
-          const x = width / 2;
-          const yPos =
-            y - ((lines.length - 1) * lineHeight) / 2 + i * lineHeight;
-          ctx.fillStyle = style.textShadow.color;
-          ctx.fillText(line, x, yPos);
+          const yPos = startY + i * lineHeight;
+
+          // Apply letter spacing
+          if (style.letterSpacing !== 0) {
+            let totalWidth = 0;
+            // First measure the total width with letter spacing
+            for (let j = 0; j < line.length; j++) {
+              const char = line[j];
+              const metrics = ctx.measureText(char);
+              totalWidth +=
+                metrics.width + style.letterSpacing * style.fontSize;
+            }
+            // Adjust for the extra spacing after the last character
+            totalWidth -= style.letterSpacing * style.fontSize;
+
+            // Now draw each character with spacing
+            let xPos = width / 2 - totalWidth / 2;
+            for (let j = 0; j < line.length; j++) {
+              const char = line[j];
+              const metrics = ctx.measureText(char);
+              ctx.fillStyle = style.textShadow.color;
+              ctx.fillText(char, xPos + metrics.width / 2, yPos);
+              xPos += metrics.width + style.letterSpacing * style.fontSize;
+            }
+          } else {
+            // No letter spacing, draw the whole line at once
+            const x = width / 2;
+            ctx.fillStyle = style.textShadow.color;
+            ctx.fillText(line, x, yPos);
+          }
         });
       }
 
@@ -206,25 +237,65 @@ export function CanvasPreview({
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
       ctx.fillStyle = style.color;
+      ctx.globalAlpha = style.opacity / 100;
 
       lines.forEach((line, i) => {
-        const metrics = ctx.measureText(line);
-        const x = width / 2;
-        const yPos = y - ((lines.length - 1) * lineHeight) / 2 + i * lineHeight;
-        ctx.fillText(line, x, yPos);
+        const yPos = startY + i * lineHeight;
 
-        if (style.isUnderline || style.isStrikethrough) {
-          ctx.beginPath();
-          if (style.isUnderline) {
-            ctx.moveTo(x - metrics.width / 2, yPos + 3);
-            ctx.lineTo(x + metrics.width / 2, yPos + 3);
+        // Apply letter spacing
+        if (style.letterSpacing !== 0) {
+          let totalWidth = 0;
+          // First measure the total width with letter spacing
+          for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+            const metrics = ctx.measureText(char);
+            totalWidth += metrics.width + style.letterSpacing * style.fontSize;
           }
-          if (style.isStrikethrough) {
-            ctx.moveTo(x - metrics.width / 2, yPos - style.fontSize / 4);
-            ctx.lineTo(x + metrics.width / 2, yPos - style.fontSize / 4);
+          // Adjust for the extra spacing after the last character
+          totalWidth -= style.letterSpacing * style.fontSize;
+
+          // Now draw each character with spacing
+          let xPos = width / 2 - totalWidth / 2;
+          for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+            const metrics = ctx.measureText(char);
+            ctx.fillText(char, xPos + metrics.width / 2, yPos);
+            xPos += metrics.width + style.letterSpacing * style.fontSize;
           }
-          ctx.strokeStyle = style.color;
-          ctx.stroke();
+
+          // Handle underline and strikethrough
+          if (style.isUnderline || style.isStrikethrough) {
+            ctx.beginPath();
+            if (style.isUnderline) {
+              ctx.moveTo(width / 2 - totalWidth / 2, yPos + style.fontSize / 4);
+              ctx.lineTo(width / 2 + totalWidth / 2, yPos + style.fontSize / 4);
+            }
+            if (style.isStrikethrough) {
+              ctx.moveTo(width / 2 - totalWidth / 2, yPos);
+              ctx.lineTo(width / 2 + totalWidth / 2, yPos);
+            }
+            ctx.strokeStyle = style.color;
+            ctx.stroke();
+          }
+        } else {
+          // No letter spacing, draw the whole line at once
+          const metrics = ctx.measureText(line);
+          const x = width / 2;
+          ctx.fillText(line, x, yPos);
+
+          if (style.isUnderline || style.isStrikethrough) {
+            ctx.beginPath();
+            if (style.isUnderline) {
+              ctx.moveTo(x - metrics.width / 2, yPos + style.fontSize / 4);
+              ctx.lineTo(x + metrics.width / 2, yPos + style.fontSize / 4);
+            }
+            if (style.isStrikethrough) {
+              ctx.moveTo(x - metrics.width / 2, yPos);
+              ctx.lineTo(x + metrics.width / 2, yPos);
+            }
+            ctx.strokeStyle = style.color;
+            ctx.stroke();
+          }
         }
       });
       ctx.restore();
