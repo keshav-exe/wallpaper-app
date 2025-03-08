@@ -18,14 +18,14 @@ export interface Position {
 
 export const INITIAL_COLORS = [
   "#001220", // Dark Blue
-  "#002B50", // Navy Blue
-  "#004080", // Medium Blue
-  "#0066CC", // Bright Blue
-  "#66A3FF", // Light Blue
-  "#FFB366", // Light Orange
-  "#FF8000", // Orange
   "#FF6600", // Dark Orange
+  "#002B50", // Navy Blue
+  "#FFB366", // Light Orange
+  "#004080", // Medium Blue
+  "#FF8000", // Orange
+  "#0066CC", // Bright Blue
   "#000000", // Black
+  "#66A3FF", // Light Blue
 ];
 
 export const INITIAL_BACKGROUND_COLORS = [
