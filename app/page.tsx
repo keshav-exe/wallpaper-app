@@ -126,7 +126,7 @@ export default function Home() {
   };
 
   const generateNewPalette = () => {
-    setIsGenerating(true);
+    // Update the image first
     try {
       setPreviousCircles(circles);
       setCircles(
@@ -169,9 +169,14 @@ export default function Home() {
     } catch (err) {
       console.error("Failed to generate new palette:", err);
       toast.error("Failed to generate new palette");
-    } finally {
-      setIsGenerating(false);
+      return;
     }
+
+    // Then show loading state
+    setIsGenerating(true);
+    setTimeout(() => {
+      setIsGenerating(false);
+    }, 1000);
   };
 
   const handleColorChange = (color: string) => {

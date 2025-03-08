@@ -151,8 +151,8 @@ const PREVIEW_DIMENSIONS = {
     height: 240,
   },
   square: {
-    width: 200,
-    height: 200, // 1:1
+    width: 300,
+    height: 300, // 1:1
   },
 } as const;
 
@@ -238,12 +238,19 @@ export default function MobileApp({
     (r) => r.ratio === aspectRatio
   );
 
+  const [isAspectRatioChanging, setIsAspectRatioChanging] = useState(false);
+
   useEffect(() => {
     const resolutionsForRatio = RESOLUTIONS.filter(
       (r) => r.ratio === aspectRatio
     );
     if (resolutionsForRatio.length > 0) {
       setResolution(resolutionsForRatio[0]);
+      setIsAspectRatioChanging(true);
+      const timeout = setTimeout(() => {
+        setIsAspectRatioChanging(false);
+      }, 1000);
+      return () => clearTimeout(timeout);
     }
   }, [aspectRatio]);
 
@@ -307,20 +314,6 @@ export default function MobileApp({
 
     return () => resizeObserver.disconnect();
   }, [aspectRatio]);
-
-  const [showDownloadingOverlay, setShowDownloadingOverlay] = useState(false);
-
-  useEffect(() => {
-    if (isDownloading) {
-      setShowDownloadingOverlay(true);
-    } else {
-      // Keep showing overlay for 1.5s after download completes
-      const timeout = setTimeout(() => {
-        setShowDownloadingOverlay(false);
-      }, 1500);
-      return () => clearTimeout(timeout);
-    }
-  }, [isDownloading]);
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -439,122 +432,74 @@ export default function MobileApp({
       </div>
 
       {/* preview section */}
-      <motion.section
+      <section
         ref={containerRef}
         className="flex flex-col gap-4 w-full h-full items-center justify-center relative"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{
-          duration: 1,
-          ease: "easeInOut",
-          type: "spring",
-          damping: 20,
-          stiffness: 100,
-          mass: 0.5,
-        }}
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{
-            duration: 1,
-            ease: "easeInOut",
-            type: "spring",
-            damping: 20,
-            stiffness: 100,
-            mass: 0.5,
+        <div
+          className="relative w-full overflow-hidden rounded-2xl border border-primary/10 transition-all duration-300"
+          style={{
+            width:
+              previewDimensions.width || PREVIEW_DIMENSIONS[aspectRatio].width,
+            height:
+              previewDimensions.height ||
+              PREVIEW_DIMENSIONS[aspectRatio].height,
           }}
         >
+          {(isAspectRatioChanging || isGenerating) && (
+            <div className="absolute inset-0 bg-background z-50 flex items-center justify-center">
+              <Loader2Icon className="size-8 text-primary animate-spin" />
+            </div>
+          )}
           <div
-            className="relative w-full overflow-hidden rounded-2xl border border-primary/10"
+            className=""
+            id="wallpaper"
             style={{
-              width:
-                previewDimensions.width ||
-                PREVIEW_DIMENSIONS[aspectRatio].width,
-              height:
-                previewDimensions.height ||
-                PREVIEW_DIMENSIONS[aspectRatio].height,
+              width: `${resolution.width}px`,
+              height: `${resolution.height}px`,
+              transform: `scale(${getPreviewScale(resolution)})`,
+              transformOrigin: "top left",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
             }}
           >
-            <div
-              className=""
-              id="wallpaper"
-              style={{
-                width: `${resolution.width}px`,
-                height: `${resolution.height}px`,
-                transform: `scale(${getPreviewScale(resolution)})`,
-                transformOrigin: "top left",
-                backfaceVisibility: "hidden",
-                WebkitBackfaceVisibility: "hidden",
+            {/* Background Layer */}
+            <CanvasPreview
+              width={resolution.width}
+              height={resolution.height}
+              backgroundColor={backgroundColor}
+              circles={circles}
+              text={text}
+              textStyle={{
+                fontSize: fontSize,
+                fontWeight: fontWeight,
+                letterSpacing: letterSpacing,
+                fontFamily: fontFamily,
+                opacity: opacity,
+                lineHeight: lineHeight,
+                color: textColor,
+                isItalic: isItalic,
+                isUnderline: isUnderline,
+                isStrikethrough: isStrikethrough,
+                textShadow: textShadow,
               }}
-            >
-              {/* Background Layer */}
-              <CanvasPreview
-                width={resolution.width}
-                height={resolution.height}
-                backgroundColor={backgroundColor}
-                circles={circles}
-                text={text}
-                textStyle={{
-                  fontSize: fontSize,
-                  fontWeight: fontWeight,
-                  letterSpacing: letterSpacing,
-                  fontFamily: fontFamily,
-                  opacity: opacity,
-                  lineHeight: lineHeight,
-                  color: textColor,
-                  isItalic: isItalic,
-                  isUnderline: isUnderline,
-                  isStrikethrough: isStrikethrough,
-                  textShadow: textShadow,
-                }}
-                filters={{
-                  blur: blur,
-                  brightness: brightness,
-                  contrast: contrast,
-                  saturation: saturation,
-                }}
-                effects={{
-                  grain: grainIntensity,
-                  vignette: vignetteIntensity,
-                }}
-                backgroundImage={backgroundImage}
-              />
-            </div>
-            {/* Downloading Overlay */}
-
-            <motion.div
-              animate={{ opacity: showDownloadingOverlay ? 1 : 0 }}
-              exit={{ opacity: 0 }}
-              transition={{
-                duration: 0.3,
-                ease: "easeInOut",
-                type: "spring",
-                damping: 20,
-                stiffness: 100,
-                mass: 0.5,
+              filters={{
+                blur: blur,
+                brightness: brightness,
+                contrast: contrast,
+                saturation: saturation,
               }}
-              className="absolute inset-0 bg-background z-50 flex items-center justify-center"
-            >
-              <Loader2Icon className="size-8 text-primary animate-spin" />
-            </motion.div>
+              effects={{
+                grain: grainIntensity,
+                vignette: vignetteIntensity,
+              }}
+              backgroundImage={backgroundImage}
+            />
           </div>
-        </motion.div>
-      </motion.section>
+        </div>
+      </section>
 
-      <motion.aside
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{
-          duration: 1,
-          ease: "easeInOut",
-          type: "spring",
-          damping: 20,
-          stiffness: 100,
-          mass: 0.5,
-        }}
-        className="flex flex-col gap-2 w-full pb-8"
-      >
+      <aside className="flex flex-col gap-2 w-full pb-8">
         {/* controls */}
         <section className="w-full flex flex-col max-h-[240px] min-h-[180px] rounded-2xl bg-secondary">
           <div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full gap-2 p-4">
@@ -1210,7 +1155,7 @@ export default function MobileApp({
           setBlur={setBlur}
           blur={blur}
         />
-      </motion.aside>
+      </aside>
     </main>
   );
 }

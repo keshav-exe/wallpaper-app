@@ -3,6 +3,7 @@ import { onest } from "@/lib/fonts";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/react";
+import { SplashScreenWrapper } from "@/app/components/splash-screen-wrapper";
 
 export const metadata = {
   title: "Gradii - Generate Beautiful Gradients",
@@ -120,10 +121,14 @@ export const metadata = {
   category: "Design Tools",
   applicationName: "Gradii",
   manifest: "/manifest.json",
-  themeColor: "#000000",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+  ],
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
+    themeColor: "transparent",
     title: "Gradii",
   },
   formatDetection: {
@@ -140,13 +145,26 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="application-name" content="Gradii" />
+
+        <meta
+          name="theme-color"
+          content="#ffffff"
+          media="(prefers-color-scheme: light)"
+        />
+        <meta
+          name="theme-color"
+          content="#09090b"
+          media="(prefers-color-scheme: dark)"
+        />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
         <meta name="apple-mobile-web-app-title" content="Gradii" />
         <meta name="format-detection" content="telephone=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#000000" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body
@@ -159,7 +177,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <SplashScreenWrapper>{children}</SplashScreenWrapper>
           <Toaster position="top-center" />
           {/* <Footer /> */}
         </ThemeProvider>
