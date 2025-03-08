@@ -7,14 +7,13 @@ Create beautiful gradient wallpapers with customizable colors, text, and effects
 - Next.js 15
 - TypeScript
 - Tailwind CSS
-- Radix UI
-- Motion One
+- Framer Motion
 
 ## Development
 
 ```bash
-git clone https://github.com/yourusername/gradii.git
-cd gradii
+git clone https://github.com/yourusername/wallpaper-app
+cd wallpaper-app
 pnpm install
 pnpm dev
 ```
@@ -22,6 +21,13 @@ pnpm dev
 Open [http://localhost:3000](http://localhost:3000) to start creating.
 
 ## Changelog/Features
+
+### v0.6 BETA
+
+- Mobile responsive UI
+- Added PWA support
+- Improved UI
+- Looks fucking sick
 
 ### v0.5 BETA
 
