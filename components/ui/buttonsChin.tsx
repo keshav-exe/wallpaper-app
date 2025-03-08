@@ -50,20 +50,7 @@ export function ButtonsChin({
 
   if (isMobile) {
     return (
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{
-          duration: 1,
-          ease: "easeInOut",
-          type: "spring",
-          damping: 20,
-          stiffness: 100,
-          mass: 0.5,
-          delay: 0.5,
-        }}
-        className="flex items-center gap-2"
-      >
+      <div className="flex items-center gap-2 justify-center">
         <button
           onClick={() => {
             const currentIndex = ASPECT_OPTIONS.findIndex(
@@ -72,7 +59,7 @@ export function ButtonsChin({
             const nextIndex = (currentIndex + 1) % ASPECT_OPTIONS.length;
             setAspectRatio(ASPECT_OPTIONS[nextIndex].value);
           }}
-          className="p-4 bg-primary rounded-2xl text-primary-foreground relative flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-3 min-w-[120px] relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer flex gap-2"
         >
           {(() => {
             const Icon =
@@ -80,10 +67,17 @@ export function ButtonsChin({
               MonitorIcon;
             return <Icon className="size-4" />;
           })()}
+          <span className="text-sm">
+            {aspectRatio === "desktop"
+              ? "Desktop"
+              : aspectRatio === "mobile"
+              ? "Mobile"
+              : "Square"}
+          </span>
         </button>
 
         <button
-          className="flex items-center justify-between gap-2 text-primary-foreground text-sm bg-primary rounded-2xl relative p-4 cursor-pointer border border-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-between gap-2 text-primary-foreground text-sm bg-primary rounded-2xl relative px-4 py-3 cursor-pointer border border-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => {
             generateNewPalette();
             setBackgroundImage(null);
@@ -94,26 +88,9 @@ export function ButtonsChin({
           disabled={isGenerating}
         >
           <WandSparklesIcon className="size-4" />
+          <span className="text-sm">Generate</span>
         </button>
-
-        <button
-          className="p-4 relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer  disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={previousCircles.length === 0}
-          onClick={() => {
-            setBackgroundImage(null);
-            if (previousCircles.length > 0) {
-              setCircles(previousCircles);
-              setPreviousCircles([]);
-            }
-          }}
-        >
-          {backgroundImage ? (
-            <Trash2Icon className="size-4" />
-          ) : (
-            <Undo className="size-4" />
-          )}
-        </button>
-      </motion.div>
+      </div>
     );
   }
 

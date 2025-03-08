@@ -119,6 +119,16 @@ export const metadata = {
   },
   category: "Design Tools",
   applicationName: "Gradii",
+  manifest: "/manifest.json",
+  themeColor: "#000000",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Gradii",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -128,6 +138,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="application-name" content="Gradii" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Gradii" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#000000" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+      </head>
       <body
         className={`${onest.variable} antialiased min-h-screen bg-background`}
       >
@@ -139,11 +160,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <Toaster
-            richColors
-            position="top-center"
-            style={{ borderRadius: "24px" }}
-          />
+          <Toaster position="top-center" />
           {/* <Footer /> */}
         </ThemeProvider>
       </body>

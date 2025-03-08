@@ -14,6 +14,7 @@ import {
   ItalicIcon,
   UnderlineIcon,
   StrikethroughIcon,
+  Undo,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -51,12 +52,13 @@ import {
 } from "../ui/dropdown-menu";
 import Image from "next/image";
 import { Textarea } from "../ui/textarea";
-import { CanvasPreview } from "./canvas-preview";
+
 import Link from "next/link";
 import { IMAGES } from "@/assets";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
+import { CanvasPreview } from "./canvas-preview";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -347,6 +349,23 @@ export default function MobileApp({
 
         <div className="flex gap-2 items-center">
           <button
+            className="p-4 relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer  disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={previousCircles.length === 0}
+            onClick={() => {
+              setBackgroundImage(null);
+              if (previousCircles.length > 0) {
+                setCircles(previousCircles);
+                setPreviousCircles([]);
+              }
+            }}
+          >
+            {backgroundImage ? (
+              <Trash2Icon className="size-4" />
+            ) : (
+              <Undo className="size-4" />
+            )}
+          </button>
+          <button
             onClick={downloadImage}
             className="flex items-center justify-between gap-2 text-primary-foreground text-sm bg-primary rounded-2xl relative p-4 cursor-pointer border border-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isDownloading}
@@ -418,6 +437,7 @@ export default function MobileApp({
           </DropdownMenu>
         </div>
       </div>
+
       {/* preview section */}
       <motion.section
         ref={containerRef}
@@ -523,8 +543,8 @@ export default function MobileApp({
       </motion.section>
 
       <motion.aside
-        initial={{ x: -100, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{
           duration: 1,
           ease: "easeInOut",
@@ -533,67 +553,10 @@ export default function MobileApp({
           stiffness: 100,
           mass: 0.5,
         }}
-        className="flex flex-col gap-2 w-full"
+        className="flex flex-col gap-2 w-full pb-8"
       >
-        <div className="flex gap-2">
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) =>
-              setActiveTab(
-                value as "text" | "background" | "colors" | "effects"
-              )
-            }
-            className="flex flex-col items-center w-full overflow-scroll no-scrollbar"
-          >
-            <TabsList className="w-full flex items-center gap-1">
-              <div className="flex items-center gap-2 min-w-full">
-                {[
-                  { id: "text", icon: TypeIcon },
-                  { id: "background", icon: PaintbrushIcon },
-                  { id: "colors", icon: PaletteIcon },
-                  { id: "effects", icon: SparklesIcon },
-                ].map(({ id, icon: Icon }) => (
-                  <TabsTrigger
-                    key={id}
-                    value={id}
-                    className="flex-1 relative w-full px-9 py-4 cursor-pointer hover:bg-primary/10 transition-all duration-300 bg-secondary"
-                  >
-                    <Icon className="size-4" />
-                    {activeTab === id && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute inset-0 bg-primary/10 rounded-xl z-10"
-                        transition={{
-                          duration: 0.3,
-                        }}
-                      />
-                    )}
-                  </TabsTrigger>
-                ))}
-              </div>
-            </TabsList>
-          </Tabs>
-
-          <Separator orientation="vertical" className="h-full" />
-
-          <ButtonsChin
-            isMobile={true}
-            aspectRatio={aspectRatio}
-            setAspectRatio={setAspectRatio}
-            handleImageUpload={handleImageUpload}
-            backgroundImage={backgroundImage}
-            setBackgroundImage={setBackgroundImage}
-            generateNewPalette={generateNewPalette}
-            isGenerating={isGenerating}
-            previousCircles={previousCircles}
-            setCircles={setCircles}
-            setPreviousCircles={setPreviousCircles}
-            setBlur={setBlur}
-            blur={blur}
-          />
-        </div>
         {/* controls */}
-        <section className="w-full flex flex-col max-h-[320px] min-h-[220px] rounded-2xl bg-secondary border border-primary/10">
+        <section className="w-full flex flex-col max-h-[240px] min-h-[180px] rounded-2xl bg-secondary">
           <div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full gap-2 p-4">
             {activeTab === "text" && (
               <div key={activeTab} className="flex flex-col gap-4">
@@ -1194,6 +1157,59 @@ export default function MobileApp({
             )}
           </div>
         </section>
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) =>
+            setActiveTab(value as "text" | "background" | "colors" | "effects")
+          }
+          className="flex flex-col items-center w-full"
+        >
+          <TabsList className="w-full flex items-center gap-1">
+            <div className="flex items-center gap-2 min-w-full">
+              {[
+                { id: "text", icon: TypeIcon },
+                { id: "background", icon: PaintbrushIcon },
+                { id: "colors", icon: PaletteIcon },
+                { id: "effects", icon: SparklesIcon },
+              ].map(({ id, icon: Icon }) => (
+                <TabsTrigger
+                  key={id}
+                  value={id}
+                  className={cn(
+                    "flex-1 relative w-full px-4 py-4 cursor-pointer hover:bg-primary/10 transition-all duration-300 rounded-2xl bg-secondary"
+                  )}
+                >
+                  {activeTab === id && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-primary/10 rounded-xl z-10"
+                      transition={{
+                        duration: 0.3,
+                      }}
+                    />
+                  )}
+                  <Icon className="size-4" />
+                </TabsTrigger>
+              ))}
+            </div>
+          </TabsList>
+        </Tabs>
+
+        <ButtonsChin
+          isMobile={true}
+          aspectRatio={aspectRatio}
+          setAspectRatio={setAspectRatio}
+          handleImageUpload={handleImageUpload}
+          backgroundImage={backgroundImage}
+          setBackgroundImage={setBackgroundImage}
+          generateNewPalette={generateNewPalette}
+          isGenerating={isGenerating}
+          previousCircles={previousCircles}
+          setCircles={setCircles}
+          setPreviousCircles={setPreviousCircles}
+          setBlur={setBlur}
+          blur={blur}
+        />
       </motion.aside>
     </main>
   );

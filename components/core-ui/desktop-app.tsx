@@ -1019,7 +1019,7 @@ export default function DesktopApp({
             >
               <div className="flex items-center gap-2">
                 <DownloadIcon className="size-4" />
-                <span className="">Export</span>
+                <span className="text-sm">Download</span>
               </div>
               <span className="text-secondary text-sm w-fit">
                 {resolution.scale}x

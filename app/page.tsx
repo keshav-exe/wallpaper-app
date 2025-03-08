@@ -114,8 +114,7 @@ export default function Home() {
       });
 
       toast.promise(downloadPromise, {
-        loading: "Downloading image...",
-        success: "Downloaded image successfully",
+        success: "Download started",
         error: "Failed to download image",
       });
     } catch (err) {
@@ -167,8 +166,6 @@ export default function Home() {
       if (!modifiedProperties.has("letterSpacing")) {
         setLetterSpacing(Number((Math.random() * 0.15 - 0.05).toFixed(2)));
       }
-
-      toast.success("Generated new palette!");
     } catch (err) {
       console.error("Failed to generate new palette:", err);
       toast.error("Failed to generate new palette");
