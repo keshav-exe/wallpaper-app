@@ -121,10 +121,7 @@ export const metadata = {
   category: "Design Tools",
   applicationName: "Gradii",
   manifest: "/manifest.json",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
-  ],
+
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

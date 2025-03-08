@@ -1,9 +1,6 @@
-"use client";
-
 import { Input } from "@/components/ui/input";
 import {
   DownloadIcon,
-  Loader2Icon,
   SettingsIcon,
   Trash2Icon,
   UploadIcon,
@@ -14,6 +11,7 @@ import {
   ItalicIcon,
   UnderlineIcon,
   StrikethroughIcon,
+  WandSparklesIcon,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -346,11 +344,7 @@ export default function DesktopApp({
                   <p className="text-lg font-bold tracking-tighter">Gradii</p>
                 </div>
               </div>
-              <Link
-                href="https://x.com/kshvbgde"
-                target="_blank"
-                className="hover:scale-110 transition-all duration-300"
-              >
+              <Link href="https://x.com/kshvbgde" target="_blank">
                 <Image
                   src={IMAGES.x}
                   alt="Follow @kshvbgde on X"
@@ -367,10 +361,10 @@ export default function DesktopApp({
           onValueChange={(value) =>
             setActiveTab(value as "text" | "background" | "colors" | "effects")
           }
-          className="flex flex-col items-center z-50 w-full bg-secondary rounded-2xl p-2 border border-primary/10"
+          className="flex flex-col items-center w-full"
         >
           <TabsList className="w-full flex items-center gap-1">
-            <div className="flex items-center gap-2 min-w-full">
+            <div className="flex items-center gap-2 w-full">
               {[
                 { id: "text", icon: TypeIcon },
                 { id: "background", icon: PaintbrushIcon },
@@ -380,18 +374,12 @@ export default function DesktopApp({
                 <TabsTrigger
                   key={id}
                   value={id}
-                  className="flex-1 relative w-full p-2 cursor-pointer hover:bg-primary/10 transition-all duration-300 bg-background"
+                  className={cn(
+                    "flex-1 relative w-full px-4 py-3 cursor-pointer hover:bg-primary/10 transition-all duration-300 rounded-2xl bg-secondary border",
+                    activeTab === id ? "border-primary/50" : "border-primary/10"
+                  )}
                 >
                   <Icon className="size-4" />
-                  {activeTab === id && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-primary/10 rounded-xl z-10"
-                      transition={{
-                        duration: 0.3,
-                      }}
-                    />
-                  )}
                 </TabsTrigger>
               ))}
             </div>
@@ -1012,10 +1000,12 @@ export default function DesktopApp({
                 <DownloadIcon className="size-4" />
                 <span className="text-sm">Download</span>
               </div>
-              <span className="text-secondary text-sm w-fit">
+              <span className="text-secondary text-sm">
                 {resolution.scale}x
               </span>
             </button>
+
+            <ThemeSwitch />
 
             <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
               <DropdownMenuTrigger asChild>
@@ -1075,9 +1065,6 @@ export default function DesktopApp({
         ref={containerRef}
         className="flex flex-col gap-4 w-full h-full items-center justify-center relative bg-secondary rounded-2xl border border-primary/10"
       >
-        <div className="absolute top-2 right-2">
-          <ThemeSwitch />
-        </div>
         <div className="rounded-2xl overflow-hidden w-full max-w-3xl flex items-center justify-center relative">
           <div
             className="relative w-full overflow-hidden rounded-2xl max-h-[95vh] border border-primary/10"
@@ -1104,7 +1091,7 @@ export default function DesktopApp({
             >
               {(isAspectRatioChanging || isGenerating) && (
                 <div className="absolute inset-0 bg-background z-50 flex items-center justify-center">
-                  <Loader2Icon className="size-16 text-primary animate-spin" />
+                  <WandSparklesIcon className="size-16 text-primary animate-ping" />
                 </div>
               )}
               {/* Background Layer */}

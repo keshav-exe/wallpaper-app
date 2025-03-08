@@ -59,7 +59,7 @@ export function ButtonsChin({
             const nextIndex = (currentIndex + 1) % ASPECT_OPTIONS.length;
             setAspectRatio(ASPECT_OPTIONS[nextIndex].value);
           }}
-          className="px-4 py-3 min-w-[120px] relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer flex gap-2"
+          className="px-4 py-3 min-w-[120px] relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer flex gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {(() => {
             const Icon =
@@ -77,7 +77,7 @@ export function ButtonsChin({
         </button>
 
         <button
-          className="flex items-center justify-between gap-2 text-primary-foreground text-sm bg-primary rounded-2xl relative px-4 py-3 cursor-pointer border border-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-between gap-2 text-primary-foreground bg-primary rounded-2xl relative px-4 py-3 cursor-pointer border border-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => {
             generateNewPalette();
             setBackgroundImage(null);
@@ -117,7 +117,7 @@ export function ButtonsChin({
           const nextIndex = (currentIndex + 1) % ASPECT_OPTIONS.length;
           setAspectRatio(ASPECT_OPTIONS[nextIndex].value);
         }}
-        className="px-4 py-3 bg-primary rounded-xl text-primary-foreground relative flex items-center justify-center cursor-pointer"
+        className="px-4 py-3 min-w-[120px] relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer flex gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow"
       >
         {(() => {
           const Icon =
@@ -125,10 +125,17 @@ export function ButtonsChin({
             MonitorIcon;
           return <Icon className="size-4" />;
         })()}
+        <span className="text-sm">
+          {aspectRatio === "desktop"
+            ? "Desktop"
+            : aspectRatio === "mobile"
+            ? "Mobile"
+            : "Square"}
+        </span>
       </button>
 
       <button
-        className="px-4 py-3 bg-primary rounded-xl hover:text-primary-foreground/80 text-primary-foreground transition-all duration-300 z-50 flex items-center gap-2 justify-center disabled:opacity-50 text-nowrap cursor-pointer"
+        className="px-4 py-3 bg-primary rounded-2xl hover:text-primary-foreground/80 text-primary-foreground transition-all duration-300 z-50 flex items-center gap-2 justify-center disabled:opacity-50 text-nowrap cursor-pointer disabled:cursor-not-allowed shadow border border-primary/10"
         onClick={() => {
           generateNewPalette();
           setBackgroundImage(null);
@@ -139,11 +146,11 @@ export function ButtonsChin({
         disabled={isGenerating}
       >
         <WandSparklesIcon className="size-4" />
-        <span className="text-xs tracking-tight">Generate Gradient</span>
+        <span className="text-sm tracking-tight">Generate</span>
       </button>
 
       <button
-        className="size-10 bg-primary rounded-xl text-primary-foreground relative flex items-center justify-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-4 py-3 relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer flex gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow h-full"
         disabled={previousCircles.length === 0}
         onClick={() => {
           setBackgroundImage(null);

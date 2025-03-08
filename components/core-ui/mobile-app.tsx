@@ -1,9 +1,6 @@
-"use client";
-
 import { Input } from "@/components/ui/input";
 import {
   DownloadIcon,
-  Loader2Icon,
   SettingsIcon,
   Trash2Icon,
   UploadIcon,
@@ -15,6 +12,7 @@ import {
   UnderlineIcon,
   StrikethroughIcon,
   Undo,
+  WandSparklesIcon,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -151,8 +149,8 @@ const PREVIEW_DIMENSIONS = {
     height: 240,
   },
   square: {
-    width: 300,
-    height: 300, // 1:1
+    width: 240,
+    height: 240, // 1:1
   },
 } as const;
 
@@ -358,13 +356,6 @@ export default function MobileApp({
               <Undo className="size-4" />
             )}
           </button>
-          <button
-            onClick={downloadImage}
-            className="flex items-center justify-between gap-2 text-primary-foreground text-sm bg-primary rounded-2xl relative p-4 cursor-pointer border border-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isDownloading}
-          >
-            <DownloadIcon className="size-4" />
-          </button>
 
           <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
@@ -428,6 +419,14 @@ export default function MobileApp({
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <button
+            onClick={downloadImage}
+            className="flex items-center justify-between gap-2 text-primary-foreground text-sm bg-primary rounded-2xl relative p-4 cursor-pointer border border-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isDownloading}
+          >
+            <DownloadIcon className="size-4" />
+          </button>
         </div>
       </div>
 
@@ -448,7 +447,7 @@ export default function MobileApp({
         >
           {(isAspectRatioChanging || isGenerating) && (
             <div className="absolute inset-0 bg-background z-50 flex items-center justify-center">
-              <Loader2Icon className="size-8 text-primary animate-spin" />
+              <WandSparklesIcon className="size-8 text-primary animate-ping" />
             </div>
           )}
           <div
@@ -501,7 +500,7 @@ export default function MobileApp({
 
       <aside className="flex flex-col gap-2 w-full pb-8">
         {/* controls */}
-        <section className="w-full flex flex-col max-h-[240px] min-h-[180px] rounded-2xl bg-secondary">
+        <section className="w-full flex flex-col max-h-[240px] min-h-[180px] rounded-2xl bg-secondary border border-primary/10">
           <div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full gap-2 p-4">
             {activeTab === "text" && (
               <div key={activeTab} className="flex flex-col gap-4">
@@ -1121,18 +1120,19 @@ export default function MobileApp({
                   key={id}
                   value={id}
                   className={cn(
-                    "flex-1 relative w-full px-4 py-4 cursor-pointer hover:bg-primary/10 transition-all duration-300 rounded-2xl bg-secondary"
+                    "flex-1 relative w-full px-4 py-4 cursor-pointer hover:bg-primary/10 transition-all duration-300 rounded-2xl bg-secondary border",
+                    activeTab === id ? "border-primary/50" : "border-primary/10"
                   )}
                 >
-                  {activeTab === id && (
+                  {/* {activeTab === id && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 bg-primary/10 rounded-xl z-10"
+                      className="absolute inset-0 border border-primary/20 rounded-2xl z-10"
                       transition={{
                         duration: 0.3,
                       }}
                     />
-                  )}
+                  )} */}
                   <Icon className="size-4" />
                 </TabsTrigger>
               ))}
