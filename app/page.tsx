@@ -114,8 +114,7 @@ export default function Home() {
       });
 
       toast.promise(downloadPromise, {
-        loading: "Downloading image...",
-        success: "Downloaded image successfully",
+        success: "Download started",
         error: "Failed to download image",
       });
     } catch (err) {
@@ -127,7 +126,7 @@ export default function Home() {
   };
 
   const generateNewPalette = () => {
-    setIsGenerating(true);
+    // Update the image first
     try {
       setPreviousCircles(circles);
       setCircles(
@@ -167,14 +166,17 @@ export default function Home() {
       if (!modifiedProperties.has("letterSpacing")) {
         setLetterSpacing(Number((Math.random() * 0.15 - 0.05).toFixed(2)));
       }
-
-      toast.success("Generated new palette!");
     } catch (err) {
       console.error("Failed to generate new palette:", err);
       toast.error("Failed to generate new palette");
-    } finally {
-      setIsGenerating(false);
+      return;
     }
+
+    // Then show loading state
+    setIsGenerating(true);
+    setTimeout(() => {
+      setIsGenerating(false);
+    }, 1000);
   };
 
   const handleColorChange = (color: string) => {
@@ -254,7 +256,74 @@ export default function Home() {
   return (
     <>
       <div className="md:hidden">
-        <MobileApp />
+        <MobileApp
+          numCircles={numCircles}
+          isSafari={isSafari}
+          setNumCircles={setNumCircles}
+          colors={colors}
+          backgroundColor={backgroundColor}
+          blur={blur}
+          setBlur={setBlur}
+          activeTab={activeTab}
+          fontSize={fontSize}
+          fontWeight={fontWeight}
+          letterSpacing={letterSpacing}
+          fontFamily={fontFamily}
+          opacity={opacity}
+          lineHeight={lineHeight}
+          text={text}
+          circles={circles}
+          textColor={textColor}
+          generateNewPalette={generateNewPalette}
+          isGenerating={isGenerating}
+          downloadImage={downloadImage}
+          isDownloading={isDownloading}
+          fonts={fonts}
+          activeColorPicker={activeColorPicker}
+          setTextColor={setTextColor}
+          setText={setText}
+          setFontFamily={setFontFamily}
+          setFontSize={setFontSize}
+          setFontWeight={setFontWeight}
+          setLetterSpacing={setLetterSpacing}
+          setOpacity={setOpacity}
+          setLineHeight={setLineHeight}
+          setBackgroundColor={setBackgroundColor}
+          setActiveColorPicker={setActiveColorPicker}
+          handleColorChange={handleColorChange}
+          setActiveColorType={setActiveColorType}
+          setActiveColor={setActiveColor}
+          updateColor={updateColor}
+          previousCircles={previousCircles}
+          setCircles={setCircles}
+          setPreviousCircles={setPreviousCircles}
+          setActiveTab={setActiveTab}
+          resolution={resolution}
+          setResolution={setResolution}
+          saturation={saturation}
+          setSaturation={setSaturation}
+          contrast={contrast}
+          setContrast={setContrast}
+          brightness={brightness}
+          setBrightness={setBrightness}
+          backgroundImage={backgroundImage}
+          handleImageUpload={handleImageUpload}
+          setBackgroundImage={setBackgroundImage}
+          isItalic={isItalic}
+          setIsItalic={setIsItalic}
+          isUnderline={isUnderline}
+          setIsUnderline={setIsUnderline}
+          isStrikethrough={isStrikethrough}
+          setIsStrikethrough={setIsStrikethrough}
+          textShadow={textShadow}
+          setTextShadow={setTextShadow}
+          grainIntensity={grainIntensity}
+          setGrainIntensity={setGrainIntensity}
+          vignetteIntensity={vignetteIntensity}
+          setVignetteIntensity={setVignetteIntensity}
+          isUploading={isUploading}
+          setIsUploading={setIsUploading}
+        />
       </div>
       <div className="hidden md:block">
         <DesktopApp

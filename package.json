@@ -1,6 +1,6 @@
 {
   "name": "wallpaper-app",
-  "version": "0.3.0",
+  "version": "0.6.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -38,7 +38,8 @@
     "simplex-noise": "^4.0.3",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

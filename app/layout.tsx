@@ -3,12 +3,13 @@ import { onest } from "@/lib/fonts";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/react";
+import { SplashScreenWrapper } from "@/app/components/splash-screen-wrapper";
 
 export const metadata = {
   title: "Gradii - Generate Beautiful Gradients",
   description:
     "A simple gradient generator tool made by designer for designers to create stunning gradients with customizable colors, text, and effects. Use it for your designs, wallpapers, presentations, or mockups or just for fun.",
-  metadataBase: new URL("https://gradii.keshavbagaade.com"),
+  metadataBase: new URL("https://gradii.fun"),
   keywords: [
     // Core Features
     "gradient generator",
@@ -78,7 +79,7 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://gradii.keshavbagaade.com",
+    url: "https://gradii.fun",
     title: "Gradii - Generate Beautiful Gradients",
     description:
       "A simple gradient generator tool made by designer for designers to create stunning gradients with customizable colors, text, and effects. Use it for your designs, wallpapers, presentations, or mockups or just for fun.",
@@ -115,10 +116,21 @@ export const metadata = {
     google: "your-google-site-verification", // Add your verification code
   },
   alternates: {
-    canonical: "https://gradii.keshavbagaade.com",
+    canonical: "https://gradii.fun",
   },
   category: "Design Tools",
   applicationName: "Gradii",
+  manifest: "/manifest.json",
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    themeColor: "transparent",
+    title: "Gradii",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -128,6 +140,30 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+
+        <meta
+          name="theme-color"
+          content="#ffffff"
+          media="(prefers-color-scheme: light)"
+        />
+        <meta
+          name="theme-color"
+          content="#09090b"
+          media="(prefers-color-scheme: dark)"
+        />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
+        <meta name="apple-mobile-web-app-title" content="Gradii" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+      </head>
       <body
         className={`${onest.variable} antialiased min-h-screen bg-background`}
       >
@@ -138,8 +174,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster richColors closeButton />
+          <SplashScreenWrapper>{children}</SplashScreenWrapper>
+          <Toaster position="top-center" />
           {/* <Footer /> */}
         </ThemeProvider>
       </body>
