@@ -30,6 +30,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import VaulDrawer from "@/components/ui/drawer";
 
 import {
   BLUR_OPTIONS,
@@ -43,11 +44,6 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo, useRef } from "react";
 import logo from "@/public/logo.svg";
 import { ThemeSwitch } from "../ui/themeSwitch";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
 import Image from "next/image";
 import { Textarea } from "../ui/textarea";
 
@@ -313,8 +309,6 @@ export default function MobileApp({
     return () => resizeObserver.disconnect();
   }, [aspectRatio]);
 
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
     <main className="relative flex flex-col gap-2 items-center justify-center p-2 h-screen w-full">
       <div aria-hidden="true" className="sr-only">
@@ -357,68 +351,65 @@ export default function MobileApp({
             )}
           </button>
 
-          <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuTrigger asChild>
+          <VaulDrawer
+            title="Settings"
+            trigger={
               <button className="p-4 relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer">
                 <SettingsIcon className="size-4" />
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="rounded-2xl p-3 bg-background border border-primary/10"
-            >
+            }
+          >
+            <div className="flex flex-col gap-2">
               <div className="flex flex-col gap-2">
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs text-muted-foreground">
-                    Image Resolution
-                  </label>
-                  <Tabs
-                    defaultValue={resolution.scale.toString()}
-                    className="flex flex-col items-center w-full rounded-xl"
-                  >
-                    <TabsList className="w-full flex flex-col gap-2">
-                      {filteredResolutions.map((res) => (
-                        <TabsTrigger
-                          key={res.width}
-                          value={res.scale.toString()}
-                          onClick={() => setResolution(res)}
-                          className="flex-1 relative rounded-lg text-xl flex justify-between w-full bg-secondary hover:bg-secondary/50 transition-colors duration-200 cursor-pointer"
-                        >
-                          {res.name}
-                          {resolution.scale === res.scale && (
-                            <motion.div
-                              layoutId="activeResolution"
-                              className="absolute inset-0 bg-primary/10 rounded-lg"
-                              transition={{ type: "spring", duration: 0.5 }}
-                            />
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            {res.scale}x
-                          </span>
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ThemeSwitch />
-                  <Link
-                    href="https://x.com/kshvbgde"
-                    target="_blank"
-                    className="transition-all duration-300 shrink-0 rounded-2xl overflow-hidden bg-black border border-primary/10 p-0.5"
-                  >
-                    <Image
-                      src={IMAGES.x}
-                      alt="Follow @kshvbgde on X"
-                      className="size-12"
-                      priority
-                      loading="eager"
-                    />
-                  </Link>
-                </div>
+                <label className="text-xs text-muted-foreground">
+                  Image Resolution
+                </label>
+                <Tabs
+                  defaultValue={resolution.scale.toString()}
+                  className="flex flex-col items-center w-full rounded-xl"
+                >
+                  <TabsList className="w-full flex flex-col gap-2">
+                    {filteredResolutions.map((res) => (
+                      <TabsTrigger
+                        key={res.width}
+                        value={res.scale.toString()}
+                        onClick={() => setResolution(res)}
+                        className="flex-1 relative rounded-lg text-xl flex justify-between w-full bg-secondary hover:bg-secondary/50 transition-colors duration-200 cursor-pointer"
+                      >
+                        {res.name}
+                        {resolution.scale === res.scale && (
+                          <motion.div
+                            layoutId="activeResolution"
+                            className="absolute inset-0 bg-primary/10 rounded-lg"
+                            transition={{ type: "spring", duration: 0.5 }}
+                          />
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {res.scale}x
+                        </span>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
               </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <div className="flex items-center gap-2">
+                <ThemeSwitch />
+                <Link
+                  href="https://x.com/kshvbgde"
+                  target="_blank"
+                  className="transition-all duration-300 shrink-0 rounded-2xl overflow-hidden bg-black border border-primary/10 p-0.5"
+                >
+                  <Image
+                    src={IMAGES.x}
+                    alt="Follow @kshvbgde on X"
+                    className="size-12"
+                    priority
+                    loading="eager"
+                  />
+                </Link>
+              </div>
+            </div>
+          </VaulDrawer>
 
           <button
             onClick={downloadImage}

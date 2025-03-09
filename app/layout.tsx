@@ -121,7 +121,6 @@ export const metadata = {
   category: "Design Tools",
   applicationName: "Gradii",
   manifest: "/manifest.json",
-
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -142,15 +141,14 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
-
         <meta
           name="theme-color"
-          content="#ffffff"
+          content="transparent"
           media="(prefers-color-scheme: light)"
         />
         <meta
           name="theme-color"
-          content="#09090b"
+          content="transparent"
           media="(prefers-color-scheme: dark)"
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
