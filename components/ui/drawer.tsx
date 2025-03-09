@@ -21,7 +21,7 @@ export default function VaulDrawer({
             <Drawer.Handle />
           </div>
           <Drawer.Title className="sr-only">{title}</Drawer.Title>
-          <div className="p-4 bg-background rounded-t-2xl">{children}</div>
+          <div className="p-4 bg-background pb-8">{children}</div>
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>

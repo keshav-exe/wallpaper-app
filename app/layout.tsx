@@ -143,12 +143,12 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta
           name="theme-color"
-          content="transparent"
+          content="#ffffff"
           media="(prefers-color-scheme: light)"
         />
         <meta
           name="theme-color"
-          content="transparent"
+          content="#09090b"
           media="(prefers-color-scheme: dark)"
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />

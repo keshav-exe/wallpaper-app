@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { motion } from "motion/react";
+
 import { HexColorPicker } from "react-colorful";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -46,9 +46,7 @@ import logo from "@/public/logo.svg";
 import { ThemeSwitch } from "../ui/themeSwitch";
 import Image from "next/image";
 import { Textarea } from "../ui/textarea";
-
 import Link from "next/link";
-import { IMAGES } from "@/assets";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
@@ -359,31 +357,29 @@ export default function MobileApp({
               </button>
             }
           >
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-xs text-muted-foreground">
                   Image Resolution
                 </label>
                 <Tabs
                   defaultValue={resolution.scale.toString()}
-                  className="flex flex-col items-center w-full rounded-xl"
+                  className="flex items-center w-full rounded-xl"
                 >
-                  <TabsList className="w-full flex flex-col gap-2">
+                  <TabsList className="w-full flex gap-2">
                     {filteredResolutions.map((res) => (
                       <TabsTrigger
                         key={res.width}
                         value={res.scale.toString()}
                         onClick={() => setResolution(res)}
-                        className="flex-1 relative rounded-lg text-xl flex justify-between w-full bg-secondary hover:bg-secondary/50 transition-colors duration-200 cursor-pointer"
+                        className={cn(
+                          "flex flex-col relative rounded-lg text-xl justify-between w-full bg-secondary hover:bg-secondary/50 transition-colors duration-200 cursor-pointer",
+                          resolution.scale === res.scale &&
+                            "border text-primary shadow-sm"
+                        )}
                       >
                         {res.name}
-                        {resolution.scale === res.scale && (
-                          <motion.div
-                            layoutId="activeResolution"
-                            className="absolute inset-0 bg-primary/10 rounded-lg"
-                            transition={{ type: "spring", duration: 0.5 }}
-                          />
-                        )}
+
                         <span className="text-xs text-muted-foreground">
                           {res.scale}x
                         </span>
@@ -392,22 +388,23 @@ export default function MobileApp({
                   </TabsList>
                 </Tabs>
               </div>
-              <div className="flex items-center gap-2">
-                <ThemeSwitch />
-                <Link
-                  href="https://x.com/kshvbgde"
-                  target="_blank"
-                  className="transition-all duration-300 shrink-0 rounded-2xl overflow-hidden bg-black border border-primary/10 p-0.5"
-                >
-                  <Image
-                    src={IMAGES.x}
-                    alt="Follow @kshvbgde on X"
-                    className="size-12"
-                    priority
-                    loading="eager"
-                  />
-                </Link>
+
+              <div className="flex gap-2 flex-col">
+                <label className="text-xs text-muted-foreground">Theme</label>
+                <div>
+                  <ThemeSwitch />
+                </div>
               </div>
+
+              <Separator className="my-2" />
+
+              <Link
+                href="https://x.com/kshvbgde"
+                target="_blank"
+                className="text-primary text-sm text-center"
+              >
+                Follow me on X
+              </Link>
             </div>
           </VaulDrawer>
 
