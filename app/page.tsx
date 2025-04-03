@@ -1,15 +1,26 @@
 "use client";
 import DesktopApp from "@/components/core-ui/desktop-app";
 import MobileApp from "@/components/core-ui/mobile-app";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FONTS } from "@/lib/constants";
 import { useWallpaperStore } from "@/store/wallpaper";
 import { useSafariCheck } from "@/hooks/use-safari-check";
 
 export default function Home() {
+  const [isMobile, setIsMobile] = useState(false);
   const isSafari = useSafariCheck();
   const store = useWallpaperStore();
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // 768px is Tailwind's md breakpoint
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     const currentFont = FONTS.find((f) => f.name === store.fontFamily);
@@ -58,7 +69,7 @@ export default function Home() {
           store.fontSize
         }px ${store.fontFamily}`;
         ctx.fillStyle = store.textColor;
-        ctx.textAlign = "center";
+        ctx.textAlign = store.textAlign;
         ctx.textBaseline = "middle";
 
         if (store.textShadow.blur > 0) {
@@ -68,9 +79,18 @@ export default function Home() {
           ctx.shadowOffsetY = store.textShadow.offsetY;
         }
 
+        let x = store.resolution.width / 2 + store.textPosition.x;
+
+        // Adjust x position based on alignment
+        if (store.textAlign === "left") {
+          x = 20 + store.textPosition.x; // Add some padding
+        } else if (store.textAlign === "right") {
+          x = store.resolution.width - 20 + store.textPosition.x; // Add some padding
+        }
+
         ctx.fillText(
           textContent,
-          store.resolution.width / 2 + store.textPosition.x,
+          x,
           store.resolution.height / 2 + store.textPosition.y
         );
         ctx.restore();
@@ -190,28 +210,16 @@ export default function Home() {
     reader.readAsDataURL(file);
   };
 
+  const AppComponent = isMobile ? MobileApp : DesktopApp;
+
   return (
-    <>
-      <div className="md:hidden">
-        <MobileApp
-          {...store}
-          fonts={FONTS}
-          isSafari={isSafari}
-          downloadImage={downloadImage}
-          handleColorChange={handleColorChange}
-          handleImageUpload={handleImageUpload}
-        />
-      </div>
-      <div className="hidden md:block">
-        <DesktopApp
-          {...store}
-          fonts={FONTS}
-          isSafari={isSafari}
-          downloadImage={downloadImage}
-          handleColorChange={handleColorChange}
-          handleImageUpload={handleImageUpload}
-        />
-      </div>
-    </>
+    <AppComponent
+      {...store}
+      fonts={FONTS}
+      isSafari={isSafari}
+      downloadImage={downloadImage}
+      handleColorChange={handleColorChange}
+      handleImageUpload={handleImageUpload}
+    />
   );
 }

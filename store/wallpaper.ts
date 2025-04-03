@@ -5,6 +5,7 @@ import {
   type CircleProps,
 } from "@/lib/constants";
 import { Dispatch, SetStateAction } from "react";
+import { debounce } from "@/lib/utils";
 
 interface WallpaperState {
   // Colors and Circles
@@ -45,7 +46,7 @@ interface WallpaperState {
   };
 
   // UI State
-  activeTab: "colors" | "text" | "effects" | "background";
+  activeTab: "colors" | "design" | "filters" | "canvas";
   activeColorPicker: string;
   activeColorType: "text" | "background" | "gradient";
   resolution: { width: number; height: number };
@@ -60,6 +61,9 @@ interface WallpaperState {
   // Add these to WallpaperState interface
   textMode: "text" | "image";
   logoImage: string | null;
+
+  // Text Alignment
+  textAlign: "left" | "center" | "right";
 
   // Actions
   setCircles: (circles: CircleProps[]) => void;
@@ -76,7 +80,7 @@ interface WallpaperState {
   generateNewPalette: () => void;
 
   // Add missing setters
-  setActiveTab: (tab: "colors" | "text" | "effects" | "background") => void;
+  setActiveTab: (tab: "colors" | "design" | "filters" | "canvas") => void;
   setLetterSpacing: (spacing: number) => void;
   setOpacity: (opacity: number) => void;
   setLineHeight: (height: number) => void;
@@ -109,6 +113,9 @@ interface WallpaperState {
   // Add these actions
   setTextMode: (mode: "text" | "image") => void;
   setLogoImage: (image: string | null) => void;
+
+  // Add missing setters
+  setTextAlign: (align: "left" | "center" | "right") => void;
 }
 
 export const useWallpaperStore = create<WallpaperState>((set, get) => ({
@@ -126,12 +133,12 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   text: "Gradii.",
   htmlContent: "<p>Gradii.</p>",
   fontSize: 36,
-  blur: 500,
+  blur: 600,
   fontWeight: 600,
   letterSpacing: -0.02,
   opacity: 100,
   fontFamily: "Onest",
-  activeTab: "text",
+  activeTab: "design",
   grainIntensity: 25,
   vignetteIntensity: 0,
   backgroundColor: "#001220",
@@ -162,6 +169,9 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   textMode: "text",
   logoImage: null,
 
+  // Text Alignment
+  textAlign: "center",
+
   // Actions
   setCircles: (circles) => set({ circles }),
   setPreviousCircles: (circles) => set({ previousCircles: circles }),
@@ -177,7 +187,7 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   },
   setText: (text) => set({ text }),
   setHtmlContent: (content) => set({ htmlContent: content }),
-  setFontSize: (size) => set({ fontSize: size }),
+  setFontSize: debounce((size: number) => set({ fontSize: size }), 100),
   setFontWeight: (weight) => set({ fontWeight: weight }),
   setFontFamily: (family) => set({ fontFamily: family }),
   setBackgroundColor: (color) => set({ backgroundColor: color }),
@@ -201,19 +211,33 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
 
   // Add missing setters
   setActiveTab: (tab) => set({ activeTab: tab }),
-  setLetterSpacing: (spacing) => set({ letterSpacing: spacing }),
+  setLetterSpacing: debounce(
+    (spacing: number) => set({ letterSpacing: spacing }),
+    100
+  ),
   setOpacity: (opacity) => set({ opacity }),
-  setLineHeight: (height) => set({ lineHeight: height }),
-  setBlur: (blur) => set({ blur }),
-  setSaturation: (saturation) => set({ saturation }),
-  setContrast: (contrast) => set({ contrast }),
-  setBrightness: (brightness) => set({ brightness }),
-  setGrainIntensity: (intensity) => set({ grainIntensity: intensity }),
-  setVignetteIntensity: (intensity) => set({ vignetteIntensity: intensity }),
+  setLineHeight: debounce((height: number) => set({ lineHeight: height }), 100),
+  setBlur: debounce((blur: number) => set({ blur }), 100),
+  setSaturation: debounce((saturation: number) => set({ saturation }), 100),
+  setContrast: debounce((contrast: number) => set({ contrast }), 100),
+  setBrightness: debounce((brightness: number) => set({ brightness }), 100),
+  setGrainIntensity: debounce(
+    (grainIntensity: number) => set({ grainIntensity }),
+    100
+  ),
+  setVignetteIntensity: debounce(
+    (vignetteIntensity: number) => set({ vignetteIntensity }),
+    100
+  ),
   setTextShadow: (value) =>
-    set({
-      textShadow: typeof value === "function" ? value(get().textShadow) : value,
-    }),
+    debounce(
+      () =>
+        set({
+          textShadow:
+            typeof value === "function" ? value(get().textShadow) : value,
+        }),
+      100
+    ),
   setIsItalic: (isItalic) => set({ isItalic }),
   setIsUnderline: (isUnderline) => set({ isUnderline }),
   setIsStrikethrough: (isStrikethrough) => set({ isStrikethrough }),
@@ -229,4 +253,7 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   // Add these actions
   setTextMode: (mode) => set({ textMode: mode }),
   setLogoImage: (image) => set({ logoImage: image }),
+
+  // Add missing setters
+  setTextAlign: (align) => set({ textAlign: align }),
 }));

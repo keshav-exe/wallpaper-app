@@ -1,46 +1,68 @@
 import { useEffect, useRef, useCallback, useMemo } from "react";
-import { CircleProps } from "@/lib/constants";
+
 import { generateRandomShape } from "@/lib/utils/shapes";
 import "context-filter-polyfill";
 import { debounce } from "@/lib/utils";
 import { applyGrainEffect, applyVignetteEffect } from "@/lib/utils/effects";
 import { drawShape } from "@/lib/utils/shapes";
+import { useWallpaperStore } from "@/store/wallpaper";
 
-interface CanvasPreviewProps {
-  width: number;
-  height: number;
-  backgroundColor: string;
-  circles: CircleProps[];
-  filters: {
-    blur: number;
-    brightness: number;
-    contrast: number;
-    saturation: number;
-  };
-  effects: {
-    grain: number;
-    vignette: number;
-  };
-  backgroundImage: string | null;
-}
-
-export function CanvasPreview({
-  width,
-  height,
-  backgroundColor,
-  circles,
-  filters,
-  backgroundImage,
-  effects,
-}: CanvasPreviewProps) {
+export function CanvasPreview() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const backgroundLayerRef = useRef<HTMLCanvasElement | null>(null);
+  const store = useWallpaperStore();
 
   const debouncedCompositeCanvas = useMemo(
     () => debounce((fn: () => void) => fn(), 16), // ~60fps
     []
   );
+
+  const savedValues = {
+    // Filters
+    blur: store.blur,
+    brightness: store.brightness,
+    contrast: store.contrast,
+    saturation: store.saturation,
+
+    // Colors and Background
+    backgroundColor: store.backgroundColor,
+    backgroundImage: store.backgroundImage,
+    circles: store.circles,
+
+    // Text Properties
+    text: store.text,
+    fontSize: store.fontSize,
+    fontWeight: store.fontWeight,
+    letterSpacing: store.letterSpacing,
+    opacity: store.opacity,
+    fontFamily: store.fontFamily,
+    lineHeight: store.lineHeight,
+    textColor: store.textColor,
+    isItalic: store.isItalic,
+    isUnderline: store.isUnderline,
+    isStrikethrough: store.isStrikethrough,
+
+    // Effects
+    grainIntensity: store.grainIntensity,
+    vignetteIntensity: store.vignetteIntensity,
+    textShadow: store.textShadow,
+
+    // Position and Mode
+    textPosition: store.textPosition,
+    textMode: store.textMode,
+    logoImage: store.logoImage,
+
+    // Resolution
+    resolution: store.resolution,
+
+    // Text Alignment
+    textAlign: store.textAlign,
+  };
+
+  const effectiveValues = {
+    ...savedValues,
+  };
 
   // Initialize canvases once
   useEffect(() => {
@@ -51,47 +73,71 @@ export function CanvasPreview({
 
     [offscreenCanvasRef, backgroundLayerRef].forEach((ref) => {
       if (ref.current) {
-        ref.current.width = width;
-        ref.current.height = height;
+        ref.current.width = effectiveValues.resolution.width;
+        ref.current.height = effectiveValues.resolution.height;
       }
     });
-  }, [width, height]);
+  }, [effectiveValues.resolution.width, effectiveValues.resolution.height]);
 
   // Handle background and shapes
   useEffect(() => {
     if (!backgroundLayerRef.current) return;
     const ctx = backgroundLayerRef.current.getContext("2d")!;
 
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, width, height);
+    ctx.clearRect(
+      0,
+      0,
+      effectiveValues.resolution.width,
+      effectiveValues.resolution.height
+    );
+    ctx.fillStyle = effectiveValues.backgroundColor;
+    ctx.fillRect(
+      0,
+      0,
+      effectiveValues.resolution.width,
+      effectiveValues.resolution.height
+    );
 
-    if (backgroundImage) {
+    if (effectiveValues.backgroundImage) {
       const img = new Image();
-      img.src = backgroundImage;
+      img.src = effectiveValues.backgroundImage;
       img.onload = () => {
-        const scale = Math.max(width / img.width, height / img.height);
+        const scale = Math.max(
+          effectiveValues.resolution.width / img.width,
+          effectiveValues.resolution.height / img.height
+        );
         const scaledWidth = img.width * scale;
         const scaledHeight = img.height * scale;
-        const x = (width - scaledWidth) / 2;
-        const y = (height - scaledHeight) / 2;
+        const x = (effectiveValues.resolution.width - scaledWidth) / 2;
+        const y = (effectiveValues.resolution.height - scaledHeight) / 2;
 
         ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
         debouncedCompositeCanvas(compositeCanvas);
       };
     } else {
-      circles.forEach((circle) => {
+      effectiveValues.circles.forEach((circle) => {
         const shape = generateRandomShape(circle.color);
         drawShape(ctx, shape, circle);
       });
       debouncedCompositeCanvas(compositeCanvas);
     }
-  }, [backgroundColor, circles, backgroundImage, width, height]);
+  }, [
+    effectiveValues.backgroundColor,
+    effectiveValues.circles,
+    effectiveValues.backgroundImage,
+    effectiveValues.resolution.width,
+    effectiveValues.resolution.height,
+  ]);
 
   // Handle filters
   useEffect(() => {
     debouncedCompositeCanvas(compositeCanvas);
-  }, [filters]);
+  }, [
+    effectiveValues.blur,
+    effectiveValues.brightness,
+    effectiveValues.contrast,
+    effectiveValues.saturation,
+  ]);
 
   const compositeCanvas = useCallback(() => {
     if (!canvasRef.current || !backgroundLayerRef.current) return;
@@ -102,18 +148,28 @@ export function CanvasPreview({
     })!;
 
     // Clear main canvas
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(
+      0,
+      0,
+      effectiveValues.resolution.width,
+      effectiveValues.resolution.height
+    );
 
     // 1. Draw solid background color first (no filters)
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = effectiveValues.backgroundColor;
+    ctx.fillRect(
+      0,
+      0,
+      effectiveValues.resolution.width,
+      effectiveValues.resolution.height
+    );
 
     // 2. Draw shapes/gradients with filters
     const cssFilters = [
-      filters.blur > 0 ? `blur(${filters.blur / 4}px)` : "",
-      `brightness(${filters.brightness}%)`,
-      `contrast(${filters.contrast}%)`,
-      `saturate(${filters.saturation}%)`,
+      effectiveValues.blur > 0 ? `blur(${effectiveValues.blur / 4}px)` : "",
+      `brightness(${effectiveValues.brightness}%)`,
+      `contrast(${effectiveValues.contrast}%)`,
+      `saturate(${effectiveValues.saturation}%)`,
     ]
       .filter(Boolean)
       .join(" ");
@@ -122,22 +178,62 @@ export function CanvasPreview({
     ctx.drawImage(backgroundLayerRef.current, 0, 0);
 
     // 3. Apply film grain
-    if (effects.grain > 0) {
-      applyGrainEffect(ctx, effects.grain / 100);
+    if (effectiveValues.grainIntensity > 0) {
+      applyGrainEffect(ctx, effectiveValues.grainIntensity / 100);
     }
 
     // 4. Apply vignette
-    if (effects.vignette > 0) {
-      applyVignetteEffect(ctx, effects.vignette / 100);
+    if (effectiveValues.vignetteIntensity > 0) {
+      applyVignetteEffect(ctx, effectiveValues.vignetteIntensity / 100);
     }
-  }, [filters, width, height, backgroundColor, effects]);
+
+    // Update text alignment
+    ctx.textAlign = effectiveValues.textAlign;
+
+    // Draw text
+    if (effectiveValues.text) {
+      const textContent = effectiveValues.text;
+      ctx.fillStyle = effectiveValues.textColor;
+      ctx.font = `${effectiveValues.fontWeight} ${effectiveValues.fontSize}px ${effectiveValues.fontFamily}`;
+      ctx.textBaseline = "middle";
+      ctx.fillText(
+        textContent,
+        effectiveValues.textAlign === "center"
+          ? effectiveValues.resolution.width / 2 +
+              effectiveValues.textPosition.x
+          : effectiveValues.textAlign === "left"
+          ? effectiveValues.fontSize + effectiveValues.textPosition.x
+          : effectiveValues.resolution.width -
+            effectiveValues.fontSize +
+            effectiveValues.textPosition.x,
+        effectiveValues.resolution.height / 2 + effectiveValues.textPosition.y
+      );
+    }
+  }, [
+    effectiveValues.blur,
+    effectiveValues.brightness,
+    effectiveValues.contrast,
+    effectiveValues.saturation,
+    effectiveValues.resolution.width,
+    effectiveValues.resolution.height,
+    effectiveValues.backgroundColor,
+    effectiveValues.grainIntensity,
+    effectiveValues.vignetteIntensity,
+    effectiveValues.text,
+    effectiveValues.textColor,
+    effectiveValues.fontSize,
+    effectiveValues.fontWeight,
+    effectiveValues.fontFamily,
+    effectiveValues.textAlign,
+    effectiveValues.textPosition,
+  ]);
 
   return (
     <canvas
       id="wallpaper"
       ref={canvasRef}
-      width={width}
-      height={height}
+      width={effectiveValues.resolution.width}
+      height={effectiveValues.resolution.height}
       style={{
         width: "100%",
         height: "100%",

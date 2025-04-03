@@ -12,18 +12,18 @@ const Slider = React.forwardRef<
   }
 >(({ className, label, valueSubtext, ...props }, ref) => (
   <div className="relative">
-    <label className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/80 text-sm font-medium z-10">
+    <label className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground text-sm font-medium z-10">
       {label}
     </label>
     <SliderPrimitive.Root
       ref={ref}
       className={cn(
-        "relative flex w-full touch-none select-none items-center overflow-hidden",
+        "relative flex w-full touch-none select-none items-center overflow-hidden z-10",
         className
       )}
       {...props}
     >
-      <SliderPrimitive.Track className="relative h-10 w-full grow overflow-hidden rounded-xl bg-background/80 backdrop-blur-sm border border-foreground/10">
+      <SliderPrimitive.Track className="relative h-10 w-full grow overflow-hidden rounded-2xl border border-foreground/10 bg-foreground/5">
         <SliderPrimitive.Range className="absolute h-full hidden" />
       </SliderPrimitive.Track>
       <SliderPrimitive.Thumb className="block h-8 w-2 rounded-full bg-foreground/20 shadow transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 overflow-hidden" />

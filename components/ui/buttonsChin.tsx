@@ -4,6 +4,7 @@ import * as React from "react";
 import { WandSparklesIcon, Undo, Trash2Icon } from "lucide-react";
 import { motion } from "motion/react";
 import { CircleProps } from "@/lib/constants";
+import { Button } from "./button";
 
 interface ButtonsChinProps {
   isMobile?: boolean;
@@ -67,8 +68,8 @@ export function ButtonsChin({
       }}
       className="flex items-center gap-2 mx-auto justify-start lg:justify-center overflow-x-auto no-scrollbar w-fit"
     >
-      <button
-        className="px-4 py-3 bg-primary rounded-2xl hover:text-primary-foreground/80 text-primary-foreground transition-all duration-300 z-50 flex items-center gap-2 justify-center disabled:opacity-50 text-nowrap cursor-pointer disabled:cursor-not-allowed shadow border border-primary/10"
+      <Button
+        variant="accent"
         onClick={() => {
           generateNewPalette();
           setBackgroundImage(null);
@@ -80,11 +81,11 @@ export function ButtonsChin({
       >
         <WandSparklesIcon className="size-4" />
         <span className="text-sm tracking-tight">Generate</span>
-      </button>
+      </Button>
 
-      <button
-        className="px-4 py-3 relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer flex gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow h-full"
+      <Button
         disabled={previousCircles.length === 0}
+        className="w-fit"
         onClick={() => {
           setBackgroundImage(null);
           if (previousCircles.length > 0) {
@@ -98,7 +99,7 @@ export function ButtonsChin({
         ) : (
           <Undo className="size-4" />
         )}
-      </button>
+      </Button>
     </motion.div>
   );
 }

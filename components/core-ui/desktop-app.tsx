@@ -14,10 +14,14 @@ import {
   FacebookIcon,
   InstagramIcon,
   TwitterIcon,
-  ChevronDownIcon,
   ZoomInIcon,
   ZoomOutIcon,
   CropIcon,
+  AlignLeftIcon,
+  AlignCenterIcon,
+  AlignRightIcon,
+  MonitorIcon,
+  ImageIcon,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -25,7 +29,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -80,8 +83,8 @@ interface DesktopAppProps {
   previousCircles: CircleProps[];
   setCircles: (circles: CircleProps[]) => void;
   setPreviousCircles: (circles: CircleProps[]) => void;
-  setActiveTab: (tab: "text" | "colors" | "effects" | "background") => void;
-  activeTab: "text" | "colors" | "effects" | "background";
+  setActiveTab: (tab: "design" | "colors" | "filters" | "canvas") => void;
+  activeTab: "design" | "colors" | "filters" | "canvas";
   setText: (text: string) => void;
   setFontFamily: (fontFamily: string) => void;
   setFontSize: (fontSize: number) => void;
@@ -147,6 +150,8 @@ interface DesktopAppProps {
   logoImage: string | null;
   setTextMode: (mode: "text" | "image") => void;
   setLogoImage: (image: string | null) => void;
+  textAlign: "left" | "center" | "right";
+  setTextAlign: (align: "left" | "center" | "right") => void;
 }
 
 function DraggablePreview({
@@ -245,6 +250,8 @@ export default function DesktopApp({
   logoImage,
   setTextMode,
   setLogoImage,
+  textAlign,
+  setTextAlign,
 }: DesktopAppProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
@@ -322,7 +329,6 @@ export default function DesktopApp({
                     priority
                     loading="eager"
                   />
-                  <p className="text-lg font-bold tracking-tighter">Gradii</p>
                 </div>
               </div>
               <Link href="https://x.com/kshvbgde" target="_blank">
@@ -340,24 +346,23 @@ export default function DesktopApp({
         <Tabs
           value={activeTab}
           onValueChange={(value) =>
-            setActiveTab(value as "text" | "background" | "colors" | "effects")
+            setActiveTab(value as "design" | "colors" | "filters" | "canvas")
           }
           className="flex flex-col items-center w-full"
         >
           <TabsList className="w-full flex items-center gap-1">
             <div className="flex items-center gap-2 w-full">
               {[
-                { id: "text", icon: PaintbrushIcon },
-                { id: "background", icon: CropIcon },
+                { id: "design", icon: PaintbrushIcon },
+                { id: "canvas", icon: CropIcon },
                 { id: "colors", icon: PaletteIcon },
-                { id: "effects", icon: SparklesIcon },
+                { id: "filters", icon: SparklesIcon },
               ].map(({ id, icon: Icon }) => (
                 <TabsTrigger
                   key={id}
                   value={id}
                   className={cn(
-                    "flex-1 relative w-full px-4 py-3 cursor-pointer hover:bg-primary/10 transition-all duration-300 rounded-2xl bg-secondary border",
-                    activeTab === id ? "border-primary/50" : "border-primary/10"
+                    "flex-1 relative w-full px-4 py-3 cursor-pointer hover:bg-foreground/25 transition-all duration-300 rounded-2xl  text-foreground border border-primary/10"
                   )}
                   disabled={!!backgroundImage && id === "colors"}
                 >
@@ -371,8 +376,12 @@ export default function DesktopApp({
         {/* controls */}
         <section className="w-full bg-secondary rounded-2xl flex flex-col no-scrollbar overflow-hidden h-full  border border-primary/10">
           <div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full gap-2 p-4">
-            {activeTab === "text" && (
-              <div key={activeTab} className="flex flex-col gap-4">
+            {activeTab === "design" && (
+              <div key={activeTab} className="flex flex-col gap-8">
+                <h3 className="text-[64px] leading-[100%] text-center font-bold tracking-tighter uppercase bg-clip-text text-transparent bg-gradient-to-b from-foreground/20 to-foreground/70">
+                  {activeTab}
+                </h3>
+
                 <div className="flex flex-col gap-4 w-full">
                   <div className="flex flex-col gap-2 w-full">
                     <Textarea
@@ -395,7 +404,7 @@ export default function DesktopApp({
                     </div>
                     <div className="relative pt-2">
                       <label
-                        className={`px-4 py-3 bg-background rounded-xl hover:text-foreground/80 text-primary transition-all duration-300 flex items-center gap-2 cursor-pointer justify-center border border-primary/10 ${
+                        className={`px-4 py-3 bg-foreground/5 rounded-xl hover:text-foreground/80 text-primary transition-all duration-300 flex items-center gap-2 cursor-pointer justify-center border border-primary/10 ${
                           isUploading ? "opacity-50 cursor-not-allowed" : ""
                         }`}
                       >
@@ -429,9 +438,7 @@ export default function DesktopApp({
                           <>
                             <UploadIcon className="size-4" />
                             <span className="text-xs tracking-tight">
-                              {logoImage
-                                ? "Change Logo/Image"
-                                : "Upload Logo/Image"}
+                              {logoImage ? "Change Image" : "Upload Image"}
                             </span>
                           </>
                         )}
@@ -443,7 +450,6 @@ export default function DesktopApp({
                             setLogoImage(null);
                             setTextMode("text");
                           }}
-                          className="rounded-xl mt-2 w-full"
                           variant="destructive"
                         >
                           <Trash2Icon className="size-4" />
@@ -454,11 +460,70 @@ export default function DesktopApp({
                       )}
                     </div>
                   </div>
-                </div>
 
-                <Separator className="my-2" />
+                  <Separator className="my-2" />
 
-                <div className="flex flex-col gap-2">
+                  {textMode === "text" && (
+                    <>
+                      <div className="flex flex-col gap-2 w-full">
+                        <label className="text-sm text-muted-foreground">
+                          Color
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <span
+                                className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
+                                style={{ backgroundColor: textColor }}
+                              />
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto p-3"
+                              align="start"
+                            >
+                              <HexColorPicker
+                                color={activeColorPicker}
+                                onChange={(color) => {
+                                  setActiveColorType("text");
+                                  setActiveColorPicker(color);
+                                  handleColorChange(color);
+                                }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <Input
+                            type="text"
+                            value={textColor}
+                            placeholder="Color"
+                            onChange={(e) => setTextColor(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 w-full">
+                        <label className="text-sm text-muted-foreground">
+                          Font
+                        </label>
+                        <Select
+                          value={fontFamily}
+                          onValueChange={setFontFamily}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select font" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              {fonts.map((font) => (
+                                <SelectItem key={font.name} value={font.name}>
+                                  {font.name}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
+
                   <PositionControl
                     value={textPosition}
                     onChange={setTextPosition}
@@ -466,115 +531,9 @@ export default function DesktopApp({
                     height={resolution.height}
                     className="max-w-[200px]"
                   />
-                </div>
 
-                {textMode === "text" && (
-                  <>
-                    <div className="flex flex-col gap-2 w-full">
-                      <Select value={fontFamily} onValueChange={setFontFamily}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select font" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel className="text-xs text-muted-foreground">
-                              Font Family
-                            </SelectLabel>
-                            {fonts.map((font) => (
-                              <SelectItem key={font.name} value={font.name}>
-                                {font.name}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex flex-col gap-2 w-full">
-                      <Slider
-                        label="Font Weight"
-                        min={100}
-                        max={900}
-                        step={100}
-                        value={[fontWeight]}
-                        onValueChange={([value]) => setFontWeight(value)}
-                        disabled={
-                          !fonts.find((f) => f.name === fontFamily)?.variable
-                        }
-                        className={cn(
-                          !fonts.find((f) => f.name === fontFamily)?.variable &&
-                            "cursor-not-allowed"
-                        )}
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2 w-full">
-                      <Slider
-                        label="Tracking"
-                        min={-0.1}
-                        max={0.1}
-                        step={0.01}
-                        value={[letterSpacing]}
-                        onValueChange={([value]) => setLetterSpacing(value)}
-                        valueSubtext="em"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2 w-full">
-                      <Slider
-                        label="Leading"
-                        min={0.5}
-                        max={2}
-                        step={0.1}
-                        value={[lineHeight]}
-                        onValueChange={([value]) => setLineHeight(value)}
-                        valueSubtext="em"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2 w-full">
-                      <label className="text-sm text-muted-foreground">
-                        Text Decoration
-                      </label>
-                      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
-                        <button
-                          onClick={() => setIsItalic(!isItalic)}
-                          className={cn(
-                            "w-full rounded-xl px-4 py-2 text-sm relative flex items-center justify-center",
-                            "text-primary transition-all duration-300 hover:bg-primary/10 cursor-pointer border border-primary/10",
-                            isItalic ? "bg-primary/20 " : "bg-background"
-                          )}
-                        >
-                          <ItalicIcon className="size-4" />
-                        </button>
-                        <button
-                          onClick={() => setIsUnderline(!isUnderline)}
-                          className={cn(
-                            "w-full rounded-xl px-4 py-2 text-sm relative flex items-center justify-center",
-                            "transition-all duration-300 text-primary hover:bg-primary/10 cursor-pointer border border-primary/10",
-                            isUnderline ? "bg-primary/20" : "bg-background"
-                          )}
-                        >
-                          <UnderlineIcon className="size-4 mx-auto" />
-                        </button>
-                        <button
-                          onClick={() => setIsStrikethrough(!isStrikethrough)}
-                          className={cn(
-                            "w-full rounded-xl px-4 py-2 text-sm relative flex items-center justify-center",
-                            "transition-all duration-300 text-primary hover:bg-primary/10 cursor-pointer border border-primary/10",
-                            isStrikethrough ? "bg-primary/20" : "bg-background"
-                          )}
-                        >
-                          <StrikethroughIcon className="size-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div className="flex flex-col gap-2 w-full">
                   <Slider
-                    label={textMode === "text" ? "Font Size" : "Image Size"}
+                    label={textMode === "text" ? "Size" : "Size"}
                     min={textMode === "text" ? 12 : 10}
                     max={textMode === "text" ? 180 : 100}
                     step={textMode === "text" ? 2 : 1}
@@ -582,9 +541,52 @@ export default function DesktopApp({
                     onValueChange={([value]) => setFontSize(value)}
                     valueSubtext={textMode === "text" ? "px" : "%"}
                   />
-                </div>
+                  {textMode === "text" && (
+                    <>
+                      <div className="flex flex-col gap-2 w-full">
+                        <Slider
+                          label="Weight"
+                          min={100}
+                          max={900}
+                          step={100}
+                          value={[fontWeight]}
+                          onValueChange={([value]) => setFontWeight(value)}
+                          disabled={
+                            !fonts.find((f) => f.name === fontFamily)?.variable
+                          }
+                          className={cn(
+                            !fonts.find((f) => f.name === fontFamily)
+                              ?.variable && "cursor-not-allowed"
+                          )}
+                        />
+                      </div>
 
-                <div className="flex flex-col gap-2 w-full">
+                      <div className="flex flex-col gap-2 w-full">
+                        <Slider
+                          label="Tracking"
+                          min={-0.1}
+                          max={0.1}
+                          step={0.01}
+                          value={[letterSpacing]}
+                          onValueChange={([value]) => setLetterSpacing(value)}
+                          valueSubtext="em"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-2 w-full">
+                        <Slider
+                          label="Leading"
+                          min={0.5}
+                          max={2}
+                          step={0.1}
+                          value={[lineHeight]}
+                          onValueChange={([value]) => setLineHeight(value)}
+                          valueSubtext="em"
+                        />
+                      </div>
+                    </>
+                  )}
+
                   <Slider
                     label="Opacity"
                     min={0}
@@ -593,14 +595,76 @@ export default function DesktopApp({
                     value={[opacity]}
                     onValueChange={([value]) => setOpacity(value)}
                   />
-                </div>
+                  {textMode === "text" && (
+                    <div className="flex flex-col gap-2 w-full">
+                      <label className="text-sm text-muted-foreground">
+                        Decoration
+                      </label>
+                      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
+                        <Button
+                          onClick={() => setTextAlign("left")}
+                          className={cn(
+                            textAlign === "left"
+                              ? "bg-primary/20"
+                              : "bg-background/5"
+                          )}
+                        >
+                          <AlignLeftIcon className="size-4" />
+                        </Button>
+                        <Button
+                          onClick={() => setTextAlign("center")}
+                          className={cn(
+                            textAlign === "center"
+                              ? "bg-primary/20"
+                              : "bg-background/5"
+                          )}
+                        >
+                          <AlignCenterIcon className="size-4" />
+                        </Button>
+                        <Button
+                          onClick={() => setTextAlign("right")}
+                          className={cn(
+                            textAlign === "right"
+                              ? "bg-primary/20"
+                              : "bg-background/5"
+                          )}
+                        >
+                          <AlignRightIcon className="size-4" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
+                        <Button
+                          onClick={() => setIsItalic(!isItalic)}
+                          className={cn(
+                            isItalic ? "bg-primary/20 " : "bg-background/5"
+                          )}
+                        >
+                          <ItalicIcon className="size-4" />
+                        </Button>
+                        <Button
+                          onClick={() => setIsUnderline(!isUnderline)}
+                          className={cn(
+                            isUnderline ? "bg-primary/20 " : "bg-background/5"
+                          )}
+                        >
+                          <UnderlineIcon className="size-4 mx-auto" />
+                        </Button>
+                        <Button
+                          onClick={() => setIsStrikethrough(!isStrikethrough)}
+                          className={cn(
+                            isStrikethrough
+                              ? "bg-primary/20"
+                              : "bg-background/5"
+                          )}
+                        >
+                          <StrikethroughIcon className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  <Separator className="my-2" />
 
-                <Separator className="my-2" />
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">
-                    Text Shadow
-                  </label>
+                  <label className="text-sm text-muted-foreground">Glow</label>
                   <div className="flex items-center gap-2">
                     <Popover>
                       <PopoverTrigger asChild>
@@ -630,6 +694,7 @@ export default function DesktopApp({
                       }
                     />
                   </div>
+
                   <div className="flex flex-col gap-2">
                     <Slider
                       label="Intensity"
@@ -672,217 +737,326 @@ export default function DesktopApp({
                     />
                   </div>
                 </div>
-
-                {textMode === "text" && (
-                  <div className="flex flex-col gap-2 w-full">
-                    <label className="text-sm text-muted-foreground">
-                      Text Color
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <span
-                            className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
-                            style={{ backgroundColor: textColor }}
-                          />
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-3" align="start">
-                          <HexColorPicker
-                            color={activeColorPicker}
-                            onChange={(color) => {
-                              setActiveColorType("text");
-                              setActiveColorPicker(color);
-                              handleColorChange(color);
-                            }}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <Input
-                        type="text"
-                        value={textColor}
-                        placeholder="Color"
-                        onChange={(e) => setTextColor(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
-            {activeTab === "background" && (
-              <div key={activeTab} className="flex flex-col relative">
+            {activeTab === "canvas" && (
+              <div key={activeTab} className="flex flex-col relative gap-8">
+                <h3 className="text-[64px] leading-[100%] text-center font-bold tracking-tighter uppercase bg-clip-text text-transparent bg-gradient-to-b from-foreground/20 to-foreground/70">
+                  {activeTab}
+                </h3>
                 <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar">
                   <div className="flex flex-col gap-2">
                     <label className="text-sm text-muted-foreground">
                       Resolution
                     </label>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={2560}
-                      value={resolution.width}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (value > 2560) {
-                          toast.error("Maximum width is 2560px");
-                          return;
-                        }
-                        setResolution({
-                          ...resolution,
-                          width: value,
-                        });
-                      }}
-                    />
-                    <Input
-                      type="number"
-                      min={0}
-                      max={2560}
-                      value={resolution.height}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (value > 2560) {
-                          toast.error("Maximum height is 2560px");
-                          return;
-                        }
-                        setResolution({
-                          ...resolution,
-                          height: value,
-                        });
-                      }}
-                    />
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col w-full gap-1">
+                        <label className="text-xs text-muted-foreground">
+                          Width
+                        </label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={2560}
+                          value={resolution.width}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value);
+                            if (value > 2560) {
+                              toast.error("Maximum width is 2560px");
+                              return;
+                            }
+                            setResolution({
+                              ...resolution,
+                              width: value,
+                            });
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-xs text-muted-foreground">
+                          Height
+                        </label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={2560}
+                          value={resolution.height}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value);
+                            if (value > 2560) {
+                              toast.error("Maximum height is 2560px");
+                              return;
+                            }
+                            setResolution({
+                              ...resolution,
+                              height: value,
+                            });
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button className="w-full rounded-xl px-2 py-2 text-sm relative cursor-pointer transition-10 hover:bg-primary/10 duration-300 bg-background border border-primary/10 flex items-center justify-between gap-2">
-                          <FacebookIcon className="size-4" />
-                          <ChevronDownIcon className="size-4" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 rounded-2xl p-3 bg-background/50 backdrop-blur-md border border-primary/10">
-                        <div className="flex flex-col gap-1">
-                          <button
-                            className="w-full rounded-xl px-4 py-2 text-sm relative cursor-pointer transition-10 hover:bg-primary/10 duration-300 bg-background border border-primary/10"
-                            onClick={() =>
-                              setResolution({ width: 1200, height: 630 })
-                            }
-                          >
-                            Feed Post
-                          </button>
-                          <button
-                            className="justify-start"
-                            onClick={() =>
-                              setResolution({ width: 1080, height: 1920 })
-                            }
-                          >
-                            Story
-                          </button>
-                          <button
-                            className="justify-start"
-                            onClick={() =>
-                              setResolution({ width: 1920, height: 1005 })
-                            }
-                          >
-                            Event Cover
-                          </button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm text-muted-foreground">
+                      Presets
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button size="sm">
+                            <FacebookIcon className="size-4" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-48 bg-transparent border-none p-0">
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1200, height: 630 })
+                              }
+                            >
+                              Feed Post
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1080, height: 1920 })
+                              }
+                            >
+                              Story
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1920, height: 1005 })
+                              }
+                            >
+                              Event Cover
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
 
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button className="w-full rounded-xl px-2 py-2 text-sm relative cursor-pointer transition-10 hover:bg-primary/10 duration-300 bg-background border border-primary/10 flex items-center justify-between gap-2">
-                          <InstagramIcon className="size-4" />
-                          <ChevronDownIcon className="size-4" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 rounded-2xl p-3 bg-background/50 backdrop-blur-md border border-primary/10">
-                        <div className="flex flex-col gap-1">
-                          <button
-                            className="justify-start"
-                            onClick={() =>
-                              setResolution({ width: 1080, height: 1080 })
-                            }
-                          >
-                            Square Post
-                          </button>
-                          <button
-                            className="justify-start"
-                            onClick={() =>
-                              setResolution({ width: 1080, height: 1350 })
-                            }
-                          >
-                            Portrait Post
-                          </button>
-                          <button
-                            className="justify-start"
-                            onClick={() =>
-                              setResolution({ width: 1080, height: 1920 })
-                            }
-                          >
-                            Story/Reels
-                          </button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button size="sm">
+                            <InstagramIcon className="size-4" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-48 bg-transparent border-none p-0">
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1080, height: 1080 })
+                              }
+                            >
+                              Square Post
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1080, height: 1350 })
+                              }
+                            >
+                              Portrait Post
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1080, height: 1920 })
+                              }
+                            >
+                              Story/Reels
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
 
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button className="w-full rounded-xl px-2 py-2 text-sm relative cursor-pointer transition-10 hover:bg-primary/10 duration-300 bg-background border border-primary/10 flex items-center justify-between gap-2">
-                          <TwitterIcon className="size-4" />
-                          <ChevronDownIcon className="size-4" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 rounded-2xl p-3 bg-background/50 backdrop-blur-md border border-primary/10">
-                        <div className="flex flex-col gap-1">
-                          <button
-                            className="justify-start"
-                            onClick={() =>
-                              setResolution({ width: 1600, height: 900 })
-                            }
-                          >
-                            Post Image
-                          </button>
-                          <button
-                            className="justify-start"
-                            onClick={() =>
-                              setResolution({ width: 1500, height: 500 })
-                            }
-                          >
-                            Header
-                          </button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button size="sm">
+                            <TwitterIcon className="size-4" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-48 bg-transparent border-none p-0">
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1600, height: 900 })
+                              }
+                            >
+                              Post Image
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1500, height: 500 })
+                              }
+                            >
+                              Header
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
 
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button className="w-full rounded-xl px-2 py-2 text-sm relative cursor-pointer transition-10 hover:bg-primary/10 duration-300 bg-background border border-primary/10 flex items-center justify-between gap-2">
-                          <LinkedinIcon className="size-4" />
-                          <ChevronDownIcon className="size-4" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 rounded-2xl p-3 bg-background/50 backdrop-blur-md border border-primary/10">
-                        <div className="flex flex-col gap-1">
-                          <button
-                            className="justify-start"
-                            onClick={() =>
-                              setResolution({ width: 1200, height: 627 })
-                            }
-                          >
-                            Post
-                          </button>
-                          <button
-                            className="justify-start"
-                            onClick={() =>
-                              setResolution({ width: 1584, height: 396 })
-                            }
-                          >
-                            Banner
-                          </button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button size="sm">
+                            <LinkedinIcon className="size-4" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-48 bg-transparent border-none p-0">
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1200, height: 627 })
+                              }
+                            >
+                              Post
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1584, height: 396 })
+                              }
+                            >
+                              Banner
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+
+                      {/* Add Device Presets */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button size="sm">
+                            <MonitorIcon className="size-4" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64 bg-transparent border-none p-0">
+                          <div className="flex flex-col gap-1">
+                            <p className="text-xs text-muted-foreground px-2 py-1">
+                              Mobile
+                            </p>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1284, height: 2778 })
+                              }
+                            >
+                              iPhone 14 Pro Max
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1170, height: 2532 })
+                              }
+                            >
+                              iPhone 13/14
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1440, height: 3200 })
+                              }
+                            >
+                              Samsung S21 Ultra
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1080, height: 2400 })
+                              }
+                            >
+                              Android (Medium)
+                            </Button>
+
+                            <Separator className="my-2" />
+                            <p className="text-xs text-muted-foreground px-2 py-1">
+                              Tablet
+                            </p>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 2048, height: 2732 })
+                              }
+                            >
+                              iPad Pro 12.9&quot;
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1668, height: 2388 })
+                              }
+                            >
+                              iPad Air
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 2560, height: 1600 })
+                              }
+                            >
+                              Samsung Tab S7
+                            </Button>
+
+                            <Separator className="my-2" />
+                            <p className="text-xs text-muted-foreground px-2 py-1">
+                              Desktop
+                            </p>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 2560, height: 1440 })
+                              }
+                            >
+                              2K (QHD)
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1920, height: 1080 })
+                              }
+                            >
+                              Full HD
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 3840, height: 2160 })
+                              }
+                            >
+                              4K UHD
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+
+                      {/* Add OG Image Presets */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button size="sm">
+                            <ImageIcon className="size-4" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-48 bg-transparent border-none p-0">
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1200, height: 630 })
+                              }
+                            >
+                              Open Graph
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1200, height: 600 })
+                              }
+                            >
+                              Twitter Card
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 800, height: 418 })
+                              }
+                            >
+                              Blog Cover
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                setResolution({ width: 1280, height: 720 })
+                              }
+                            >
+                              YouTube Thumbnail
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
                   <Separator className="my-2" />
                   <div className="flex flex-col gap-4">
@@ -936,7 +1110,7 @@ export default function DesktopApp({
                       </div>
                       <div className="relative pt-2">
                         <label
-                          className={`px-4 py-3 bg-background rounded-xl hover:text-foreground/80 text-primary transition-all duration-300 flex items-center gap-2 cursor-pointer justify-center border border-primary/10 ${
+                          className={`px-4 py-3 bg-foreground/5 rounded-xl hover:text-foreground/80 text-primary transition-all duration-300 flex items-center gap-2 cursor-pointer justify-center border border-primary/10 ${
                             isUploading ? "opacity-50 cursor-not-allowed" : ""
                           }`}
                         >
@@ -997,14 +1171,12 @@ export default function DesktopApp({
                   <div className="flex flex-col gap-2">
                     <Slider
                       label="Blur"
-                      min={backgroundImage ? 0 : 40}
-                      max={100}
-                      step={1}
-                      value={[blur / (isSafari ? 8 : 12)]}
-                      valueSubtext="%"
-                      onValueChange={([value]) =>
-                        setBlur(value * (isSafari ? 8 : 12))
-                      }
+                      min={backgroundImage ? 0 : 400}
+                      max={isSafari ? 800 : 1200}
+                      step={20}
+                      value={[blur]}
+                      valueSubtext="px"
+                      onValueChange={([value]) => setBlur(value)}
                     />
                   </div>
                 </div>
@@ -1012,7 +1184,10 @@ export default function DesktopApp({
             )}
 
             {activeTab === "colors" && (
-              <div key={activeTab} className="flex flex-col relative">
+              <div key={activeTab} className="flex flex-col relative gap-8">
+                <h3 className="text-[64px] leading-[100%] text-center font-bold tracking-tighter uppercase bg-clip-text text-transparent bg-gradient-to-b from-foreground/20 to-foreground/70">
+                  {activeTab}
+                </h3>
                 <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar">
                   {!backgroundImage && (
                     <>
@@ -1103,61 +1278,43 @@ export default function DesktopApp({
               </div>
             )}
 
-            {activeTab === "effects" && (
-              <div key={activeTab} className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Grain
-                    </label>
-                    <Slider
-                      label="Grain"
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={[grainIntensity]}
-                      onValueChange={([value]) => {
-                        setGrainIntensity(value);
-                        if (isSafari && value > 0) {
-                          toast.warning(
-                            "Effects may appear different in Safari due to browser limitations"
-                          );
-                        }
-                      }}
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {grainIntensity}%
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Vignette
-                    </label>
-                    <Slider
-                      label="Vignette"
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={[vignetteIntensity]}
-                      onValueChange={([value]) => {
-                        setVignetteIntensity(value);
-                        if (isSafari && value > 0) {
-                          toast.warning(
-                            "Effects may appear different in Safari due to browser limitations"
-                          );
-                        }
-                      }}
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {vignetteIntensity}%
-                    </span>
-                  </div>
-                </div>
-                <Separator className="my-2" />
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">
-                    Saturation
-                  </label>
+            {activeTab === "filters" && (
+              <div key={activeTab} className="flex flex-col gap-8">
+                <h3 className="text-[64px] leading-[100%] text-center font-bold tracking-tighter uppercase bg-clip-text text-transparent bg-gradient-to-b from-foreground/20 to-foreground/70">
+                  {activeTab}
+                </h3>
+                <div className="flex flex-col gap-4">
+                  {!isSafari && (
+                    <>
+                      <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-2">
+                          <Slider
+                            label="Grain"
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={[grainIntensity]}
+                            onValueChange={([value]) => {
+                              setGrainIntensity(value);
+                            }}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Slider
+                            label="Vignette"
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={[vignetteIntensity]}
+                            onValueChange={([value]) => {
+                              setVignetteIntensity(value);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   <Slider
                     label="Saturation"
                     min={0}
@@ -1166,14 +1323,6 @@ export default function DesktopApp({
                     value={[saturation]}
                     onValueChange={([value]) => setSaturation(value)}
                   />
-                  <span className="text-xs text-muted-foreground">
-                    {saturation}%
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">
-                    Contrast
-                  </label>
                   <Slider
                     label="Contrast"
                     min={5}
@@ -1182,14 +1331,6 @@ export default function DesktopApp({
                     value={[contrast]}
                     onValueChange={([value]) => setContrast(value)}
                   />
-                  <span className="text-xs text-muted-foreground">
-                    {contrast}%
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">
-                    Brightness
-                  </label>
                   <Slider
                     label="Brightness"
                     min={10}
@@ -1198,9 +1339,6 @@ export default function DesktopApp({
                     value={[brightness]}
                     onValueChange={([value]) => setBrightness(value)}
                   />
-                  <span className="text-xs text-muted-foreground">
-                    {brightness}%
-                  </span>
                 </div>
               </div>
             )}
@@ -1208,19 +1346,21 @@ export default function DesktopApp({
         </section>
 
         <div className="flex flex-col items-center rounded-2xl w-full gap-4">
-          <div className="flex w-full gap-2">
-            <button
-              onClick={downloadImage}
-              className="w-full flex items-center justify-between gap-2 text-primary-foreground text-sm bg-primary rounded-2xl relative p-4 cursor-pointer border border-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isDownloading}
-            >
-              <div className="flex items-center gap-2">
-                <DownloadIcon className="size-4" />
-                <span className="text-sm">Download</span>
-              </div>
-            </button>
+          <div className="flex w-full gap-2 flex-col">
+            <div className="flex w-full gap-2">
+              <Button
+                className="flex items-center w-full justify-between py-4"
+                onClick={downloadImage}
+                disabled={isDownloading}
+              >
+                <div className="flex items-center gap-2">
+                  <DownloadIcon className="size-4" />
+                  <span className="text-sm">Download</span>
+                </div>
+              </Button>
 
-            <ThemeSwitch />
+              <ThemeSwitch />
+            </div>
           </div>
         </div>
       </aside>
@@ -1243,22 +1383,22 @@ export default function DesktopApp({
             setBlur={setBlur}
             blur={blur}
           />
-          <button
+          <Button
             onClick={() => setZoom((z) => Math.min(z + 0.1, 2))}
-            className="px-4 py-3 relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer flex gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow h-full"
+            className="w-fit"
           >
             <ZoomInIcon className="size-4" />
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setZoom((z) => Math.max(z - 0.1, 0.1))}
-            className="px-4 py-3 relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer flex gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow h-full"
+            className="w-fit"
           >
             <ZoomOutIcon className="size-4" />
-          </button>
+          </Button>
         </div>
 
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          <div className="rounded-2xl overflow-hidden w-full h-full flex items-center justify-center relative cursor-move">
+          <div className="rounded-2xl overflow-hidden w-full h-full flex items-center justify-center relative cursor-grab active:cursor-grabbing">
             <DraggablePreview id="preview">
               <div
                 className="relative overflow-hidden rounded-2xl"
@@ -1284,25 +1424,9 @@ export default function DesktopApp({
                       <WandSparklesIcon className="size-16 text-primary animate-ping" />
                     </div>
                   )}
-                  <CanvasPreview
-                    width={resolution.width}
-                    height={resolution.height}
-                    backgroundColor={backgroundColor}
-                    circles={circles}
-                    filters={{
-                      blur: blur,
-                      brightness: brightness,
-                      contrast: contrast,
-                      saturation: saturation,
-                    }}
-                    effects={{
-                      grain: grainIntensity,
-                      vignette: vignetteIntensity,
-                    }}
-                    backgroundImage={backgroundImage}
-                  />
+                  <CanvasPreview />
 
-                  <div className="absolute inset-0 flex items-center justify-center z-50">
+                  <div className="absolute inset-0 flex items-center justify-center z-40">
                     {textMode === "text" ? (
                       <p
                         style={{
@@ -1319,6 +1443,8 @@ export default function DesktopApp({
                           }`.trim(),
                           textShadow: `${textShadow.offsetX}px ${textShadow.offsetY}px ${textShadow.blur}px ${textShadow.color}`,
                           transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
+                          whiteSpace: "pre-wrap",
+                          textAlign: textAlign,
                         }}
                       >
                         {text}

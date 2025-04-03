@@ -131,7 +131,7 @@ export function PositionControl({
           style={{
             ...containerStyle,
             backgroundImage:
-              "radial-gradient(circle at center, rgba(255,255,255,0.1) 1px, transparent 1px)",
+              "radial-gradient(circle at center, hsl(var(--foreground) / 0.1) 1px, transparent 1px)",
             backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
           }}
         >
