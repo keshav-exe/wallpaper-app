@@ -1,14 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  WandSparklesIcon,
-  Undo,
-  Trash2Icon,
-  MonitorIcon,
-  SmartphoneIcon,
-  SquareIcon,
-} from "lucide-react";
+import { WandSparklesIcon, Undo, Trash2Icon } from "lucide-react";
 import { motion } from "motion/react";
 import { CircleProps } from "@/lib/constants";
 
@@ -24,8 +17,6 @@ interface ButtonsChinProps {
   setBackgroundImage: (image: string | null) => void;
   setBlur: (blur: number) => void;
   blur: number;
-  aspectRatio: "desktop" | "mobile" | "square";
-  setAspectRatio: (ratio: "desktop" | "mobile" | "square") => void;
 }
 
 export function ButtonsChin({
@@ -39,43 +30,10 @@ export function ButtonsChin({
   setBackgroundImage,
   setBlur,
   blur,
-  aspectRatio,
-  setAspectRatio,
 }: ButtonsChinProps) {
-  const ASPECT_OPTIONS = [
-    { value: "desktop", icon: MonitorIcon },
-    { value: "mobile", icon: SmartphoneIcon },
-    { value: "square", icon: SquareIcon },
-  ] as const;
-
   if (isMobile) {
     return (
       <div className="flex items-center gap-2 justify-center">
-        <button
-          onClick={() => {
-            const currentIndex = ASPECT_OPTIONS.findIndex(
-              (opt) => opt.value === aspectRatio
-            );
-            const nextIndex = (currentIndex + 1) % ASPECT_OPTIONS.length;
-            setAspectRatio(ASPECT_OPTIONS[nextIndex].value);
-          }}
-          className="px-4 py-3 min-w-[120px] relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer flex gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {(() => {
-            const Icon =
-              ASPECT_OPTIONS.find((opt) => opt.value === aspectRatio)?.icon ||
-              MonitorIcon;
-            return <Icon className="size-4" />;
-          })()}
-          <span className="text-sm">
-            {aspectRatio === "desktop"
-              ? "Desktop"
-              : aspectRatio === "mobile"
-              ? "Mobile"
-              : "Square"}
-          </span>
-        </button>
-
         <button
           className="flex items-center justify-between gap-2 text-primary-foreground bg-primary rounded-2xl relative px-4 py-3 cursor-pointer border border-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => {
@@ -107,33 +65,8 @@ export function ButtonsChin({
         mass: 0.5,
         delay: 0.5,
       }}
-      className="flex items-center gap-2 p-4 mx-auto justify-start lg:justify-center overflow-x-auto no-scrollbar w-fit"
+      className="flex items-center gap-2 mx-auto justify-start lg:justify-center overflow-x-auto no-scrollbar w-fit"
     >
-      <button
-        onClick={() => {
-          const currentIndex = ASPECT_OPTIONS.findIndex(
-            (opt) => opt.value === aspectRatio
-          );
-          const nextIndex = (currentIndex + 1) % ASPECT_OPTIONS.length;
-          setAspectRatio(ASPECT_OPTIONS[nextIndex].value);
-        }}
-        className="px-4 py-3 min-w-[120px] relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer flex gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow"
-      >
-        {(() => {
-          const Icon =
-            ASPECT_OPTIONS.find((opt) => opt.value === aspectRatio)?.icon ||
-            MonitorIcon;
-          return <Icon className="size-4" />;
-        })()}
-        <span className="text-sm">
-          {aspectRatio === "desktop"
-            ? "Desktop"
-            : aspectRatio === "mobile"
-            ? "Mobile"
-            : "Square"}
-        </span>
-      </button>
-
       <button
         className="px-4 py-3 bg-primary rounded-2xl hover:text-primary-foreground/80 text-primary-foreground transition-all duration-300 z-50 flex items-center gap-2 justify-center disabled:opacity-50 text-nowrap cursor-pointer disabled:cursor-not-allowed shadow border border-primary/10"
         onClick={() => {

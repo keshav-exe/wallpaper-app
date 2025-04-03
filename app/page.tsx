@@ -25,25 +25,106 @@ export default function Home() {
   }, [store.fontFamily]);
 
   const downloadImage = async () => {
-    const canvas = document.querySelector(
-      "#wallpaper canvas"
-    ) as HTMLCanvasElement;
-    if (!canvas) return;
-
     try {
-      const link = document.createElement("a");
-      link.download = `gradii-${store.resolution.width}x${store.resolution.height}.png`;
-      link.href = canvas.toDataURL("image/png");
+      // Get the preview canvas
+      const previewCanvas = document.querySelector(
+        "#wallpaper canvas"
+      ) as HTMLCanvasElement;
+      if (!previewCanvas) return;
 
-      const downloadPromise = new Promise((resolve) => {
+      // Create a temporary canvas at full resolution
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = store.resolution.width;
+      tempCanvas.height = store.resolution.height;
+      const ctx = tempCanvas.getContext("2d")!;
+
+      // Draw the preview canvas at full resolution
+      ctx.drawImage(
+        previewCanvas,
+        0,
+        0,
+        store.resolution.width,
+        store.resolution.height
+      );
+
+      // Draw the text
+      if (store.textMode === "text") {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = store.htmlContent;
+        const textContent = tempDiv.textContent || "";
+
+        ctx.save();
+        ctx.font = `${store.isItalic ? "italic" : ""} ${store.fontWeight} ${
+          store.fontSize
+        }px ${store.fontFamily}`;
+        ctx.fillStyle = store.textColor;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        if (store.textShadow.blur > 0) {
+          ctx.shadowColor = store.textShadow.color;
+          ctx.shadowBlur = store.textShadow.blur;
+          ctx.shadowOffsetX = store.textShadow.offsetX;
+          ctx.shadowOffsetY = store.textShadow.offsetY;
+        }
+
+        ctx.fillText(
+          textContent,
+          store.resolution.width / 2 + store.textPosition.x,
+          store.resolution.height / 2 + store.textPosition.y
+        );
+        ctx.restore();
+      }
+
+      if (store.textMode === "image" && store.logoImage) {
+        const img = new Image();
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = store.logoImage as string;
+        });
+
+        const maxWidth = store.resolution.width * 0.5;
+        const maxHeight = store.resolution.height * 0.5;
+        const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+        const width = img.width * scale;
+        const height = img.height * scale;
+
+        ctx.save();
+        ctx.globalAlpha = store.opacity / 100;
+        ctx.filter = `drop-shadow(${store.textShadow.offsetX}px ${store.textShadow.offsetY}px ${store.textShadow.blur}px ${store.textShadow.color})`;
+        ctx.drawImage(
+          img,
+          store.resolution.width / 2 - width / 2 + store.textPosition.x,
+          store.resolution.height / 2 - height / 2 + store.textPosition.y,
+          width,
+          height
+        );
+        ctx.restore();
+      }
+
+      // Handle download based on browser
+      if (isSafari) {
+        const dataUrl = tempCanvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = `gradii-${store.resolution.width}x${store.resolution.height}.png`;
         link.click();
-        resolve(true);
-      });
+      } else {
+        const blob = await new Promise<Blob>((resolve) =>
+          tempCanvas.toBlob((blob) => resolve(blob!), "image/png")
+        );
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `gradii-${store.resolution.width}x${store.resolution.height}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
 
-      toast.promise(downloadPromise, {
-        success: "Download started",
-        error: "Failed to download image",
-      });
+      toast.success("Download started");
     } catch (err) {
       console.error(err);
       toast.error("Failed to download image");

@@ -36,7 +36,6 @@ import {
   BLUR_OPTIONS,
   CircleProps,
   FontOption,
-  RESOLUTIONS,
   SAFARI_BLUR_OPTIONS,
 } from "@/lib/constants";
 import { ButtonsChin } from "../ui/buttonsChin";
@@ -88,8 +87,8 @@ interface DesktopAppProps {
   fonts: FontOption[];
   activeColorPicker: string;
   setTextColor: (textColor: string) => void;
-  resolution: (typeof RESOLUTIONS)[number];
-  setResolution: (res: (typeof RESOLUTIONS)[number]) => void;
+  resolution: { width: number; height: number };
+  setResolution: (res: { width: number; height: number }) => void;
   saturation: number;
   setSaturation: (value: number) => void;
   contrast: number;
@@ -215,36 +214,12 @@ export default function MobileApp({
   isUploading,
   setIsUploading,
 }: DesktopAppProps) {
-  const getPreviewScale = (resolution: (typeof RESOLUTIONS)[number]) => {
-    const container = PREVIEW_DIMENSIONS[aspectRatio];
+  const getPreviewScale = (resolution: { width: number; height: number }) => {
+    const container = PREVIEW_DIMENSIONS.desktop;
     const scaleX = container.width / resolution.width;
     const scaleY = container.height / resolution.height;
     return Math.min(scaleX, scaleY);
   };
-
-  const [aspectRatio, setAspectRatio] = useState<
-    "desktop" | "mobile" | "square"
-  >("desktop");
-
-  const filteredResolutions = RESOLUTIONS.filter(
-    (r) => r.ratio === aspectRatio
-  );
-
-  const [isAspectRatioChanging, setIsAspectRatioChanging] = useState(false);
-
-  useEffect(() => {
-    const resolutionsForRatio = RESOLUTIONS.filter(
-      (r) => r.ratio === aspectRatio
-    );
-    if (resolutionsForRatio.length > 0) {
-      setResolution(resolutionsForRatio[0]);
-      setIsAspectRatioChanging(true);
-      const timeout = setTimeout(() => {
-        setIsAspectRatioChanging(false);
-      }, 1000);
-      return () => clearTimeout(timeout);
-    }
-  }, [aspectRatio]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -276,8 +251,8 @@ export default function MobileApp({
   }, [fonts, text]);
 
   const getDynamicPreviewDimensions = (containerWidth: number) => {
-    const maxWidth = PREVIEW_DIMENSIONS[aspectRatio].width;
-    const maxHeight = PREVIEW_DIMENSIONS[aspectRatio].height;
+    const maxWidth = PREVIEW_DIMENSIONS.desktop.width;
+    const maxHeight = PREVIEW_DIMENSIONS.desktop.height;
     const scale = Math.min(1, containerWidth / maxWidth);
 
     return {
@@ -305,7 +280,7 @@ export default function MobileApp({
     }
 
     return () => resizeObserver.disconnect();
-  }, [aspectRatio]);
+  }, []);
 
   return (
     <main className="relative flex flex-col gap-2 items-center justify-center p-2 h-screen w-full">
@@ -362,31 +337,31 @@ export default function MobileApp({
                 <label className="text-xs text-muted-foreground">
                   Image Resolution
                 </label>
-                <Tabs
-                  defaultValue={resolution.scale.toString()}
-                  className="flex items-center w-full rounded-xl"
-                >
-                  <TabsList className="w-full flex gap-2">
-                    {filteredResolutions.map((res) => (
-                      <TabsTrigger
-                        key={res.width}
-                        value={res.scale.toString()}
-                        onClick={() => setResolution(res)}
-                        className={cn(
-                          "flex flex-col relative rounded-lg text-xl justify-between w-full bg-secondary hover:bg-secondary/50 transition-colors duration-200 cursor-pointer",
-                          resolution.scale === res.scale &&
-                            "border text-primary shadow-sm"
-                        )}
-                      >
-                        {res.name}
-
-                        <span className="text-xs text-muted-foreground">
-                          {res.scale}x
-                        </span>
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm text-muted-foreground">
+                    Dimensions
+                  </label>
+                  <Input
+                    type="number"
+                    value={resolution.width}
+                    onChange={(e) =>
+                      setResolution({
+                        ...resolution,
+                        width: parseInt(e.target.value),
+                      })
+                    }
+                  />
+                  <Input
+                    type="number"
+                    value={resolution.height}
+                    onChange={(e) =>
+                      setResolution({
+                        ...resolution,
+                        height: parseInt(e.target.value),
+                      })
+                    }
+                  />
+                </div>
               </div>
 
               <div className="flex gap-2 flex-col">
@@ -426,14 +401,12 @@ export default function MobileApp({
         <div
           className="relative w-full overflow-hidden rounded-2xl border border-primary/10 transition-all duration-300"
           style={{
-            width:
-              previewDimensions.width || PREVIEW_DIMENSIONS[aspectRatio].width,
+            width: previewDimensions.width || PREVIEW_DIMENSIONS.desktop.width,
             height:
-              previewDimensions.height ||
-              PREVIEW_DIMENSIONS[aspectRatio].height,
+              previewDimensions.height || PREVIEW_DIMENSIONS.desktop.height,
           }}
         >
-          {(isAspectRatioChanging || isGenerating) && (
+          {isGenerating && (
             <div className="absolute inset-0 bg-background z-50 flex items-center justify-center">
               <WandSparklesIcon className="size-8 text-primary animate-ping" />
             </div>
@@ -456,20 +429,6 @@ export default function MobileApp({
               height={resolution.height}
               backgroundColor={backgroundColor}
               circles={circles}
-              text={text}
-              textStyle={{
-                fontSize: fontSize,
-                fontWeight: fontWeight,
-                letterSpacing: letterSpacing,
-                fontFamily: fontFamily,
-                opacity: opacity,
-                lineHeight: lineHeight,
-                color: textColor,
-                isItalic: isItalic,
-                isUnderline: isUnderline,
-                isStrikethrough: isStrikethrough,
-                textShadow: textShadow,
-              }}
               filters={{
                 blur: blur,
                 brightness: brightness,
@@ -1112,15 +1071,6 @@ export default function MobileApp({
                     activeTab === id ? "border-primary/50" : "border-primary/10"
                   )}
                 >
-                  {/* {activeTab === id && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 border border-primary/20 rounded-2xl z-10"
-                      transition={{
-                        duration: 0.3,
-                      }}
-                    />
-                  )} */}
                   <Icon className="size-4" />
                 </TabsTrigger>
               ))}
@@ -1130,8 +1080,6 @@ export default function MobileApp({
 
         <ButtonsChin
           isMobile={true}
-          aspectRatio={aspectRatio}
-          setAspectRatio={setAspectRatio}
           handleImageUpload={handleImageUpload}
           backgroundImage={backgroundImage}
           setBackgroundImage={setBackgroundImage}

@@ -1,27 +1,34 @@
 import { Input } from "@/components/ui/input";
 import {
   DownloadIcon,
-  SettingsIcon,
   Trash2Icon,
   UploadIcon,
   PaintbrushIcon,
   PaletteIcon,
   SparklesIcon,
-  TypeIcon,
   ItalicIcon,
   UnderlineIcon,
   StrikethroughIcon,
   WandSparklesIcon,
+  LinkedinIcon,
+  FacebookIcon,
+  InstagramIcon,
+  TwitterIcon,
+  ChevronDownIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
+  CropIcon,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { motion } from "motion/react";
 import { HexColorPicker } from "react-colorful";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -30,23 +37,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import {
-  BLUR_OPTIONS,
-  CircleProps,
-  FontOption,
-  RESOLUTIONS,
-  SAFARI_BLUR_OPTIONS,
-} from "@/lib/constants";
+import { CircleProps, FontOption } from "@/lib/constants";
 import { ButtonsChin } from "../ui/buttonsChin";
 import { cn } from "@/lib/utils";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import logo from "@/public/logo.svg";
 import { ThemeSwitch } from "../ui/themeSwitch";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
 import Image from "next/image";
 import { Textarea } from "../ui/textarea";
 import { CanvasPreview } from "./canvas-preview";
@@ -55,6 +51,16 @@ import { IMAGES } from "@/assets";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
+import {
+  DndContext,
+  useDraggable,
+  useSensor,
+  useSensors,
+  MouseSensor,
+  TouchSensor,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import { PositionControl } from "@/components/ui/position-control";
 
 interface DesktopAppProps {
   backgroundColor: string;
@@ -92,8 +98,8 @@ interface DesktopAppProps {
   fonts: FontOption[];
   activeColorPicker: string;
   setTextColor: (textColor: string) => void;
-  resolution: (typeof RESOLUTIONS)[number];
-  setResolution: (res: (typeof RESOLUTIONS)[number]) => void;
+  resolution: { width: number; height: number };
+  setResolution: (res: { width: number; height: number }) => void;
   saturation: number;
   setSaturation: (value: number) => void;
   contrast: number;
@@ -135,22 +141,37 @@ interface DesktopAppProps {
   >;
   isUploading: boolean;
   setIsUploading: (isUploading: boolean) => void;
+  textPosition: { x: number; y: number };
+  setTextPosition: (position: { x: number; y: number }) => void;
+  textMode: "text" | "image";
+  logoImage: string | null;
+  setTextMode: (mode: "text" | "image") => void;
+  setLogoImage: (image: string | null) => void;
 }
 
-const PREVIEW_DIMENSIONS = {
-  desktop: {
-    width: 768,
-    height: 432, // 16:9
-  },
-  mobile: {
-    width: 293,
-    height: 520,
-  },
-  square: {
-    width: 520,
-    height: 520, // 1:1
-  },
-} as const;
+function DraggablePreview({
+  children,
+  id,
+}: {
+  children: React.ReactNode;
+  id: string;
+}) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id,
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
+
+  return (
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+      {children}
+    </div>
+  );
+}
 
 export default function DesktopApp({
   blur,
@@ -218,30 +239,14 @@ export default function DesktopApp({
   setVignetteIntensity,
   isUploading,
   setIsUploading,
+  textPosition,
+  setTextPosition,
+  textMode,
+  logoImage,
+  setTextMode,
+  setLogoImage,
 }: DesktopAppProps) {
-  const getPreviewScale = (resolution: (typeof RESOLUTIONS)[number]) => {
-    const container = PREVIEW_DIMENSIONS[aspectRatio];
-    const scaleX = container.width / resolution.width;
-    const scaleY = container.height / resolution.height;
-    return Math.min(scaleX, scaleY);
-  };
-
-  const [aspectRatio, setAspectRatio] = useState<
-    "desktop" | "mobile" | "square"
-  >("desktop");
-
-  const filteredResolutions = RESOLUTIONS.filter(
-    (r) => r.ratio === aspectRatio
-  );
-
-  useEffect(() => {
-    const resolutionsForRatio = RESOLUTIONS.filter(
-      (r) => r.ratio === aspectRatio
-    );
-    if (resolutionsForRatio.length > 0) {
-      setResolution(resolutionsForRatio[0]);
-    }
-  }, [aspectRatio]);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -272,56 +277,32 @@ export default function DesktopApp({
     ));
   }, [fonts, text]);
 
-  const getDynamicPreviewDimensions = (containerWidth: number) => {
-    const maxWidth = PREVIEW_DIMENSIONS[aspectRatio].width;
-    const maxHeight = PREVIEW_DIMENSIONS[aspectRatio].height;
-    const scale = Math.min(1, containerWidth / maxWidth);
-
-    return {
-      width: maxWidth * scale,
-      height: maxHeight * scale,
-    };
-  };
-
   const containerRef = useRef<HTMLDivElement>(null);
-  const [previewDimensions, setPreviewDimensions] = useState({
-    width: 0,
-    height: 0,
-  });
+  const [zoom, setZoom] = useState(0.4);
 
-  const [isAspectRatioChanging, setIsAspectRatioChanging] = useState(false);
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 0,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    })
+  );
 
-  useEffect(() => {
-    const resolutionsForRatio = RESOLUTIONS.filter(
-      (r) => r.ratio === aspectRatio
-    );
-    if (resolutionsForRatio.length > 0) {
-      setIsAspectRatioChanging(true);
-      setResolution(resolutionsForRatio[0]);
-
-      const timeout = setTimeout(() => {
-        setIsAspectRatioChanging(false);
-      }, 1000);
-      return () => clearTimeout(timeout);
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { delta } = event;
+    if (delta) {
+      setPosition((prev) => ({
+        x: prev.x + delta.x,
+        y: prev.y + delta.y,
+      }));
     }
-  }, [aspectRatio]);
-
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const availableWidth = entry.contentRect.width - 32;
-        setPreviewDimensions(getDynamicPreviewDimensions(availableWidth));
-      }
-    });
-
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-
-    return () => resizeObserver.disconnect();
-  }, [aspectRatio]);
-
-  const [isOpen, setIsOpen] = useState(false);
+  };
 
   return (
     <main className="relative flex gap-2 items-center justify-center p-2 h-screen w-full">
@@ -366,8 +347,8 @@ export default function DesktopApp({
           <TabsList className="w-full flex items-center gap-1">
             <div className="flex items-center gap-2 w-full">
               {[
-                { id: "text", icon: TypeIcon },
-                { id: "background", icon: PaintbrushIcon },
+                { id: "text", icon: PaintbrushIcon },
+                { id: "background", icon: CropIcon },
                 { id: "colors", icon: PaletteIcon },
                 { id: "effects", icon: SparklesIcon },
               ].map(({ id, icon: Icon }) => (
@@ -378,6 +359,7 @@ export default function DesktopApp({
                     "flex-1 relative w-full px-4 py-3 cursor-pointer hover:bg-primary/10 transition-all duration-300 rounded-2xl bg-secondary border",
                     activeTab === id ? "border-primary/50" : "border-primary/10"
                   )}
+                  disabled={!!backgroundImage && id === "colors"}
                 >
                   <Icon className="size-4" />
                 </TabsTrigger>
@@ -391,193 +373,231 @@ export default function DesktopApp({
           <div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full gap-2 p-4">
             {activeTab === "text" && (
               <div key={activeTab} className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">Text</label>
-                  <Textarea
-                    className="resize-none whitespace-pre-wrap"
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="Enter text"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Font Family
-                  </label>
-                  <Select value={fontFamily} onValueChange={setFontFamily}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select font" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {fonts.map((font) => (
-                        <SelectItem key={font.name} value={font.name}>
-                          {font.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm text-muted-foreground">
-                    Text Color
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <span
-                          className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
-                          style={{ backgroundColor: textColor }}
-                        />
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-3" align="start">
-                        <HexColorPicker
-                          color={activeColorPicker}
-                          onChange={(color) => {
-                            setActiveColorType("text");
-                            setActiveColorPicker(color);
-                            handleColorChange(color);
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <Input
-                      type="text"
-                      value={textColor}
-                      placeholder="Color"
-                      onChange={(e) => setTextColor(e.target.value)}
+                <div className="flex flex-col gap-4 w-full">
+                  <div className="flex flex-col gap-2 w-full">
+                    <Textarea
+                      className={cn(
+                        "resize-none whitespace-pre-wrap",
+                        textMode === "image" && "opacity-50 cursor-not-allowed"
+                      )}
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      placeholder="Enter text"
+                      disabled={textMode === "image"}
                     />
                   </div>
-                </div>
 
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Font Size
-                  </label>
-                  <Slider
-                    min={12}
-                    max={180}
-                    step={2}
-                    value={[fontSize]}
-                    onValueChange={([value]) => setFontSize(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {fontSize}px
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Font Weight
-                  </label>
-                  <Slider
-                    min={100}
-                    max={900}
-                    step={100}
-                    value={[fontWeight]}
-                    onValueChange={([value]) => setFontWeight(value)}
-                    disabled={
-                      !fonts.find((f) => f.name === fontFamily)?.variable
-                    }
-                    className={cn(
-                      !fonts.find((f) => f.name === fontFamily)?.variable &&
-                        "cursor-not-allowed"
-                    )}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {fontWeight}
-                  </span>
-                </div>
+                  <div className="relative">
+                    <div className="absolute inset-x-0 -top-3 flex items-center justify-center">
+                      <span className="bg-secondary px-2 text-xs text-muted-foreground">
+                        or
+                      </span>
+                    </div>
+                    <div className="relative pt-2">
+                      <label
+                        className={`px-4 py-3 bg-background rounded-xl hover:text-foreground/80 text-primary transition-all duration-300 flex items-center gap-2 cursor-pointer justify-center border border-primary/10 ${
+                          isUploading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      >
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            if (isUploading) return;
+                            setIsUploading(true);
+                            try {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setLogoImage(reader.result as string);
+                                  setTextMode("image");
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            } finally {
+                              setIsUploading(false);
+                              e.target.value = "";
+                            }
+                          }}
+                          className="hidden"
+                          disabled={isUploading}
+                        />
+                        {isUploading ? (
+                          <span className="animate-pulse">Uploading...</span>
+                        ) : (
+                          <>
+                            <UploadIcon className="size-4" />
+                            <span className="text-xs tracking-tight">
+                              {logoImage
+                                ? "Change Logo/Image"
+                                : "Upload Logo/Image"}
+                            </span>
+                          </>
+                        )}
+                      </label>
 
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Letter Spacing
-                  </label>
-                  <Slider
-                    min={-0.1}
-                    max={0.1}
-                    step={0.01}
-                    value={[letterSpacing]}
-                    onValueChange={([value]) => setLetterSpacing(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {letterSpacing}em
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Line Height
-                  </label>
-                  <Slider
-                    min={0.5}
-                    max={2}
-                    step={0.1}
-                    value={[lineHeight]}
-                    onValueChange={([value]) => setLineHeight(value)}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {lineHeight}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Text Decoration
-                  </label>
-                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
-                    <button
-                      onClick={() => setIsItalic(!isItalic)}
-                      className={cn(
-                        "w-full rounded-xl px-4 py-2 text-sm relative flex items-center justify-center",
-                        "text-primary transition-all duration-300 hover:bg-primary/10 cursor-pointer border border-primary/10",
-                        isItalic ? "bg-primary/20 " : "bg-background"
+                      {logoImage && (
+                        <Button
+                          onClick={() => {
+                            setLogoImage(null);
+                            setTextMode("text");
+                          }}
+                          className="rounded-xl mt-2 w-full"
+                          variant="destructive"
+                        >
+                          <Trash2Icon className="size-4" />
+                          <span className="text-xs tracking-tight ml-2">
+                            Remove Logo/Image
+                          </span>
+                        </Button>
                       )}
-                    >
-                      <ItalicIcon className="size-4" />
-                    </button>
-                    <button
-                      onClick={() => setIsUnderline(!isUnderline)}
-                      className={cn(
-                        "w-full rounded-xl px-4 py-2 text-sm relative flex items-center justify-center",
-                        "transition-all duration-300 text-primary hover:bg-primary/10 cursor-pointer border border-primary/10",
-                        isUnderline ? "bg-primary/20" : "bg-background"
-                      )}
-                    >
-                      <UnderlineIcon className="size-4" />
-                    </button>
-                    <button
-                      onClick={() => setIsStrikethrough(!isStrikethrough)}
-                      className={cn(
-                        "w-full rounded-xl px-4 py-2 text-sm relative flex items-center justify-center",
-                        "transition-all duration-300 text-primary hover:bg-primary/10 cursor-pointer border border-primary/10",
-                        isStrikethrough ? "bg-primary/20" : "bg-background"
-                      )}
-                    >
-                      <StrikethroughIcon className="size-4" />
-                    </button>
+                    </div>
                   </div>
                 </div>
 
+                <Separator className="my-2" />
+
+                <div className="flex flex-col gap-2">
+                  <PositionControl
+                    value={textPosition}
+                    onChange={setTextPosition}
+                    width={resolution.width}
+                    height={resolution.height}
+                    className="max-w-[200px]"
+                  />
+                </div>
+
+                {textMode === "text" && (
+                  <>
+                    <div className="flex flex-col gap-2 w-full">
+                      <Select value={fontFamily} onValueChange={setFontFamily}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select font" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel className="text-xs text-muted-foreground">
+                              Font Family
+                            </SelectLabel>
+                            {fonts.map((font) => (
+                              <SelectItem key={font.name} value={font.name}>
+                                {font.name}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex flex-col gap-2 w-full">
+                      <Slider
+                        label="Font Weight"
+                        min={100}
+                        max={900}
+                        step={100}
+                        value={[fontWeight]}
+                        onValueChange={([value]) => setFontWeight(value)}
+                        disabled={
+                          !fonts.find((f) => f.name === fontFamily)?.variable
+                        }
+                        className={cn(
+                          !fonts.find((f) => f.name === fontFamily)?.variable &&
+                            "cursor-not-allowed"
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2 w-full">
+                      <Slider
+                        label="Tracking"
+                        min={-0.1}
+                        max={0.1}
+                        step={0.01}
+                        value={[letterSpacing]}
+                        onValueChange={([value]) => setLetterSpacing(value)}
+                        valueSubtext="em"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2 w-full">
+                      <Slider
+                        label="Leading"
+                        min={0.5}
+                        max={2}
+                        step={0.1}
+                        value={[lineHeight]}
+                        onValueChange={([value]) => setLineHeight(value)}
+                        valueSubtext="em"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2 w-full">
+                      <label className="text-sm text-muted-foreground">
+                        Text Decoration
+                      </label>
+                      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
+                        <button
+                          onClick={() => setIsItalic(!isItalic)}
+                          className={cn(
+                            "w-full rounded-xl px-4 py-2 text-sm relative flex items-center justify-center",
+                            "text-primary transition-all duration-300 hover:bg-primary/10 cursor-pointer border border-primary/10",
+                            isItalic ? "bg-primary/20 " : "bg-background"
+                          )}
+                        >
+                          <ItalicIcon className="size-4" />
+                        </button>
+                        <button
+                          onClick={() => setIsUnderline(!isUnderline)}
+                          className={cn(
+                            "w-full rounded-xl px-4 py-2 text-sm relative flex items-center justify-center",
+                            "transition-all duration-300 text-primary hover:bg-primary/10 cursor-pointer border border-primary/10",
+                            isUnderline ? "bg-primary/20" : "bg-background"
+                          )}
+                        >
+                          <UnderlineIcon className="size-4 mx-auto" />
+                        </button>
+                        <button
+                          onClick={() => setIsStrikethrough(!isStrikethrough)}
+                          className={cn(
+                            "w-full rounded-xl px-4 py-2 text-sm relative flex items-center justify-center",
+                            "transition-all duration-300 text-primary hover:bg-primary/10 cursor-pointer border border-primary/10",
+                            isStrikethrough ? "bg-primary/20" : "bg-background"
+                          )}
+                        >
+                          <StrikethroughIcon className="size-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <div className="flex flex-col gap-2 w-full">
-                  <label className="text-sm text-muted-foreground">
-                    Text Opacity
-                  </label>
                   <Slider
+                    label={textMode === "text" ? "Font Size" : "Image Size"}
+                    min={textMode === "text" ? 12 : 10}
+                    max={textMode === "text" ? 180 : 100}
+                    step={textMode === "text" ? 2 : 1}
+                    value={[fontSize]}
+                    onValueChange={([value]) => setFontSize(value)}
+                    valueSubtext={textMode === "text" ? "px" : "%"}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 w-full">
+                  <Slider
+                    label="Opacity"
                     min={0}
                     max={100}
                     step={1}
                     value={[opacity]}
                     onValueChange={([value]) => setOpacity(value)}
                   />
-                  <span className="text-xs text-muted-foreground">
-                    {opacity}%
-                  </span>
                 </div>
 
                 <Separator className="my-2" />
 
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
                   <label className="text-sm text-muted-foreground">
                     Text Shadow
                   </label>
@@ -611,27 +631,24 @@ export default function DesktopApp({
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs text-muted-foreground">
-                      Intensity
-                    </label>
                     <Slider
+                      label="Intensity"
                       min={0}
-                      max={80}
+                      max={100} // Changed from 80 to 100 for percentage
                       step={1}
                       value={[textShadow.blur]}
                       onValueChange={([value]) =>
-                        setTextShadow((prev) => ({ ...prev, blur: value }))
+                        setTextShadow((prev) => ({
+                          ...prev,
+                          blur: value, // Store as percentage
+                        }))
                       }
+                      valueSubtext="%"
                     />
-                    <span className="text-xs text-muted-foreground">
-                      {textShadow.blur}px
-                    </span>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs text-muted-foreground">
-                      Offset X
-                    </label>
                     <Slider
+                      label="Offset X"
                       min={-20}
                       max={20}
                       step={1}
@@ -640,16 +657,11 @@ export default function DesktopApp({
                         setTextShadow((prev) => ({ ...prev, offsetX: value }))
                       }
                     />
-                    <span className="text-xs text-muted-foreground">
-                      {textShadow.offsetX}px
-                    </span>
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs text-muted-foreground">
-                      Offset Y
-                    </label>
                     <Slider
+                      label="Offset Y"
                       min={-20}
                       max={20}
                       step={1}
@@ -658,11 +670,42 @@ export default function DesktopApp({
                         setTextShadow((prev) => ({ ...prev, offsetY: value }))
                       }
                     />
-                    <span className="text-xs text-muted-foreground">
-                      {textShadow.offsetY}px
-                    </span>
                   </div>
                 </div>
+
+                {textMode === "text" && (
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="text-sm text-muted-foreground">
+                      Text Color
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <span
+                            className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
+                            style={{ backgroundColor: textColor }}
+                          />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-3" align="start">
+                          <HexColorPicker
+                            color={activeColorPicker}
+                            onChange={(color) => {
+                              setActiveColorType("text");
+                              setActiveColorPicker(color);
+                              handleColorChange(color);
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <Input
+                        type="text"
+                        value={textColor}
+                        placeholder="Color"
+                        onChange={(e) => setTextColor(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -671,129 +714,298 @@ export default function DesktopApp({
                 <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar">
                   <div className="flex flex-col gap-2">
                     <label className="text-sm text-muted-foreground">
-                      Background Color
+                      Resolution
                     </label>
-                    <div
-                      className="flex items-center gap-2"
-                      onClick={() => {
-                        setActiveColorType("background");
-                        setActiveColorPicker(backgroundColor);
+                    <Input
+                      type="number"
+                      min={0}
+                      max={2560}
+                      value={resolution.width}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        if (value > 2560) {
+                          toast.error("Maximum width is 2560px");
+                          return;
+                        }
+                        setResolution({
+                          ...resolution,
+                          width: value,
+                        });
                       }}
-                    >
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <span
-                            className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
-                            style={{ backgroundColor: backgroundColor }}
-                          />
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-3" align="start">
-                          <HexColorPicker
-                            color={activeColorPicker}
-                            onChange={(color) => {
-                              setActiveColorPicker(color);
-                              setBackgroundColor(color);
-                            }}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <Input
-                        type="text"
-                        value={backgroundColor}
-                        placeholder="Color"
-                        onChange={(e) => setBackgroundColor(e.target.value)}
-                      />
-                    </div>
+                    />
+                    <Input
+                      type="number"
+                      min={0}
+                      max={2560}
+                      value={resolution.height}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        if (value > 2560) {
+                          toast.error("Maximum height is 2560px");
+                          return;
+                        }
+                        setResolution({
+                          ...resolution,
+                          height: value,
+                        });
+                      }}
+                    />
                   </div>
-
-                  <Separator className="my-2" />
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Background Image
-                    </label>
-                    <label
-                      className={`px-4 py-3 bg-background rounded-xl hover:text-foreground/80 text-primary transition-all duration-300 flex items-center gap-2 cursor-pointer justify-center border border-primary/10 ${
-                        isUploading ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        key={backgroundImage ? "has-image" : "no-image"}
-                        onChange={async (e) => {
-                          if (isUploading) return;
-                          setIsUploading(true);
-                          try {
-                            await handleImageUpload(e);
-                          } finally {
-                            setIsUploading(false);
-                            e.target.value = "";
-                          }
-                        }}
-                        className="hidden"
-                        disabled={isUploading}
-                      />
-                      {isUploading ? (
-                        <span className="animate-pulse">Uploading...</span>
-                      ) : (
-                        <>
-                          <UploadIcon className="size-4" />
-                          <span className="text-xs tracking-tight">
-                            {backgroundImage ? "Change Image" : "Upload Image"}
-                          </span>
-                        </>
-                      )}
-                    </label>
-
-                    {backgroundImage && (
-                      <Button
-                        onClick={() => {
-                          setBackgroundImage(null);
-                          if (blur === 0) {
-                            setBlur(600);
-                          }
-                        }}
-                        className="rounded-xl"
-                        variant="destructive"
-                      >
-                        <Trash2Icon className="size-4" />
-                        <span className="text-xs tracking-tight">
-                          Remove Image
-                        </span>
-                      </Button>
-                    )}
-                  </div>
-
-                  <Separator className="my-2" />
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Blur
-                    </label>
-                    <div className="grid grid-cols-2 gap-2 rounded-xl">
-                      {(isSafari ? SAFARI_BLUR_OPTIONS : BLUR_OPTIONS).map(
-                        (blurOption: { name: string; value: number }) => (
+                  <div className="flex items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="w-full rounded-xl px-2 py-2 text-sm relative cursor-pointer transition-10 hover:bg-primary/10 duration-300 bg-background border border-primary/10 flex items-center justify-between gap-2">
+                          <FacebookIcon className="size-4" />
+                          <ChevronDownIcon className="size-4" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 rounded-2xl p-3 bg-background/50 backdrop-blur-md border border-primary/10">
+                        <div className="flex flex-col gap-1">
                           <button
-                            key={blurOption.value}
-                            onClick={() => setBlur(blurOption.value)}
-                            disabled={
-                              !backgroundImage && blurOption.value === 0
+                            className="w-full rounded-xl px-4 py-2 text-sm relative cursor-pointer transition-10 hover:bg-primary/10 duration-300 bg-background border border-primary/10"
+                            onClick={() =>
+                              setResolution({ width: 1200, height: 630 })
                             }
-                            className={cn(
-                              "w-full rounded-xl px-4 py-2 text-sm relative cursor-pointer",
-                              "transition-10 hover:bg-primary/10 duration-300 bg-background border border-primary/10",
-                              !backgroundImage &&
-                                blurOption.value === 0 &&
-                                "opacity-50 cursor-not-allowed",
-                              blur === blurOption.value && "bg-primary/10"
-                            )}
                           >
-                            <span>{blurOption.name}</span>
+                            Feed Post
                           </button>
-                        )
-                      )}
+                          <button
+                            className="justify-start"
+                            onClick={() =>
+                              setResolution({ width: 1080, height: 1920 })
+                            }
+                          >
+                            Story
+                          </button>
+                          <button
+                            className="justify-start"
+                            onClick={() =>
+                              setResolution({ width: 1920, height: 1005 })
+                            }
+                          >
+                            Event Cover
+                          </button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="w-full rounded-xl px-2 py-2 text-sm relative cursor-pointer transition-10 hover:bg-primary/10 duration-300 bg-background border border-primary/10 flex items-center justify-between gap-2">
+                          <InstagramIcon className="size-4" />
+                          <ChevronDownIcon className="size-4" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 rounded-2xl p-3 bg-background/50 backdrop-blur-md border border-primary/10">
+                        <div className="flex flex-col gap-1">
+                          <button
+                            className="justify-start"
+                            onClick={() =>
+                              setResolution({ width: 1080, height: 1080 })
+                            }
+                          >
+                            Square Post
+                          </button>
+                          <button
+                            className="justify-start"
+                            onClick={() =>
+                              setResolution({ width: 1080, height: 1350 })
+                            }
+                          >
+                            Portrait Post
+                          </button>
+                          <button
+                            className="justify-start"
+                            onClick={() =>
+                              setResolution({ width: 1080, height: 1920 })
+                            }
+                          >
+                            Story/Reels
+                          </button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="w-full rounded-xl px-2 py-2 text-sm relative cursor-pointer transition-10 hover:bg-primary/10 duration-300 bg-background border border-primary/10 flex items-center justify-between gap-2">
+                          <TwitterIcon className="size-4" />
+                          <ChevronDownIcon className="size-4" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 rounded-2xl p-3 bg-background/50 backdrop-blur-md border border-primary/10">
+                        <div className="flex flex-col gap-1">
+                          <button
+                            className="justify-start"
+                            onClick={() =>
+                              setResolution({ width: 1600, height: 900 })
+                            }
+                          >
+                            Post Image
+                          </button>
+                          <button
+                            className="justify-start"
+                            onClick={() =>
+                              setResolution({ width: 1500, height: 500 })
+                            }
+                          >
+                            Header
+                          </button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="w-full rounded-xl px-2 py-2 text-sm relative cursor-pointer transition-10 hover:bg-primary/10 duration-300 bg-background border border-primary/10 flex items-center justify-between gap-2">
+                          <LinkedinIcon className="size-4" />
+                          <ChevronDownIcon className="size-4" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 rounded-2xl p-3 bg-background/50 backdrop-blur-md border border-primary/10">
+                        <div className="flex flex-col gap-1">
+                          <button
+                            className="justify-start"
+                            onClick={() =>
+                              setResolution({ width: 1200, height: 627 })
+                            }
+                          >
+                            Post
+                          </button>
+                          <button
+                            className="justify-start"
+                            onClick={() =>
+                              setResolution({ width: 1584, height: 396 })
+                            }
+                          >
+                            Banner
+                          </button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2 w-full">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm text-muted-foreground">
+                          Background
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <span
+                                className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
+                                style={{ backgroundColor: backgroundColor }}
+                              />
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto p-3"
+                              align="start"
+                            >
+                              <HexColorPicker
+                                color={activeColorPicker}
+                                onChange={(color) => {
+                                  setActiveColorType("background");
+                                  setActiveColorPicker(color);
+                                  setBackgroundColor(color);
+                                }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <Input
+                            type="text"
+                            value={backgroundColor}
+                            placeholder="Background Color"
+                            onChange={(e) => setBackgroundColor(e.target.value)}
+                            className={cn(
+                              "resize-none",
+                              backgroundImage && "opacity-50 cursor-not-allowed"
+                            )}
+                            disabled={!!backgroundImage}
+                          />
+                        </div>
+                      </div>
                     </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-x-0 -top-3 flex items-center justify-center">
+                        <span className="bg-secondary px-2 text-xs text-muted-foreground">
+                          or
+                        </span>
+                      </div>
+                      <div className="relative pt-2">
+                        <label
+                          className={`px-4 py-3 bg-background rounded-xl hover:text-foreground/80 text-primary transition-all duration-300 flex items-center gap-2 cursor-pointer justify-center border border-primary/10 ${
+                            isUploading ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
+                        >
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            key={backgroundImage ? "has-image" : "no-image"}
+                            onChange={async (e) => {
+                              if (isUploading) return;
+                              setIsUploading(true);
+                              try {
+                                await handleImageUpload(e);
+                              } finally {
+                                setIsUploading(false);
+                                e.target.value = "";
+                              }
+                            }}
+                            className="hidden"
+                            disabled={isUploading}
+                          />
+                          {isUploading ? (
+                            <span className="animate-pulse">Uploading...</span>
+                          ) : (
+                            <>
+                              <UploadIcon className="size-4" />
+                              <span className="text-xs tracking-tight">
+                                {backgroundImage
+                                  ? "Change Image"
+                                  : "Upload Image"}
+                              </span>
+                            </>
+                          )}
+                        </label>
+
+                        {backgroundImage && (
+                          <Button
+                            onClick={() => {
+                              setBackgroundImage(null);
+                              if (blur === 0) {
+                                setBlur(600);
+                              }
+                            }}
+                            className="rounded-xl mt-2 w-full"
+                            variant="destructive"
+                          >
+                            <Trash2Icon className="size-4" />
+                            <span className="text-xs tracking-tight">
+                              Remove Image
+                            </span>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator className="my-2" />
+
+                  <div className="flex flex-col gap-2">
+                    <Slider
+                      label="Blur"
+                      min={backgroundImage ? 0 : 40}
+                      max={100}
+                      step={1}
+                      value={[blur / (isSafari ? 8 : 12)]}
+                      valueSubtext="%"
+                      onValueChange={([value]) =>
+                        setBlur(value * (isSafari ? 8 : 12))
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -809,15 +1021,16 @@ export default function DesktopApp({
                           Blobs
                         </label>
                         <Slider
+                          label="Blobs"
                           min={1}
                           max={10}
                           step={1}
                           value={[numCircles]}
                           onValueChange={([value]) => {
                             setNumCircles(value);
-                            const newCircles = [...circles];
                             if (value > circles.length) {
-                              // Add new circles
+                              // Only add new circles while preserving existing ones
+                              const newCircles = [...circles];
                               for (let i = circles.length; i < value; i++) {
                                 newCircles.push({
                                   color: colors[i % colors.length],
@@ -825,11 +1038,11 @@ export default function DesktopApp({
                                   cy: Math.random() * 100,
                                 });
                               }
+                              setCircles(newCircles);
                             } else {
-                              // Remove circles
-                              newCircles.splice(value);
+                              // Remove excess circles
+                              setCircles(circles.slice(0, value));
                             }
-                            setCircles(newCircles);
                           }}
                         />
                         <span className="text-xs text-muted-foreground">
@@ -898,6 +1111,7 @@ export default function DesktopApp({
                       Grain
                     </label>
                     <Slider
+                      label="Grain"
                       min={0}
                       max={100}
                       step={1}
@@ -920,6 +1134,7 @@ export default function DesktopApp({
                       Vignette
                     </label>
                     <Slider
+                      label="Vignette"
                       min={0}
                       max={100}
                       step={1}
@@ -944,6 +1159,7 @@ export default function DesktopApp({
                     Saturation
                   </label>
                   <Slider
+                    label="Saturation"
                     min={0}
                     max={200}
                     step={1}
@@ -959,6 +1175,7 @@ export default function DesktopApp({
                     Contrast
                   </label>
                   <Slider
+                    label="Contrast"
                     min={5}
                     max={200}
                     step={1}
@@ -974,6 +1191,7 @@ export default function DesktopApp({
                     Brightness
                   </label>
                   <Slider
+                    label="Brightness"
                     min={10}
                     max={200}
                     step={1}
@@ -1000,62 +1218,9 @@ export default function DesktopApp({
                 <DownloadIcon className="size-4" />
                 <span className="text-sm">Download</span>
               </div>
-              <span className="text-secondary text-sm">
-                {resolution.scale}x
-              </span>
             </button>
 
             <ThemeSwitch />
-
-            <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-              <DropdownMenuTrigger asChild>
-                <button className="p-4 relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary">
-                  <motion.span
-                    animate={{ rotate: isOpen ? 45 : 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <SettingsIcon className="size-4" />
-                  </motion.span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="rounded-2xl p-3 bg-background/50 backdrop-blur-md border border-primary/10"
-              >
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs text-muted-foreground">
-                    Image Resolution
-                  </label>
-                  <Tabs
-                    defaultValue={resolution.scale.toString()}
-                    className="flex flex-col items-center w-full rounded-xl"
-                  >
-                    <TabsList className="w-full flex items-center gap-1">
-                      {filteredResolutions.map((res) => (
-                        <TabsTrigger
-                          key={res.width}
-                          value={res.scale.toString()}
-                          onClick={() => setResolution(res)}
-                          className="flex-1 relative rounded-md text-xl flex flex-col items-center justify-center w-full bg-secondary hover:bg-background/50 transition-colors duration-200"
-                        >
-                          {res.name}
-                          {resolution.scale === res.scale && (
-                            <motion.div
-                              layoutId="activeResolution"
-                              className="absolute inset-0 bg-primary/10 rounded-md"
-                              transition={{ type: "spring", duration: 0.5 }}
-                            />
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            {res.scale}x
-                          </span>
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
       </aside>
@@ -1063,88 +1228,123 @@ export default function DesktopApp({
       {/* preview section */}
       <section
         ref={containerRef}
-        className="flex flex-col gap-4 w-full h-full items-center justify-center relative bg-secondary rounded-2xl border border-primary/10"
+        className="flex flex-col gap-4 w-full h-full items-center justify-center relative bg-secondary rounded-2xl border border-primary/10 overflow-hidden"
       >
-        <div className="rounded-2xl overflow-hidden w-full max-w-3xl flex items-center justify-center relative">
-          <div
-            className="relative w-full overflow-hidden rounded-2xl max-h-[95vh] border border-primary/10"
-            style={{
-              width:
-                previewDimensions.width ||
-                PREVIEW_DIMENSIONS[aspectRatio].width,
-              height:
-                previewDimensions.height ||
-                PREVIEW_DIMENSIONS[aspectRatio].height,
-            }}
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-50">
+          <ButtonsChin
+            handleImageUpload={handleImageUpload}
+            backgroundImage={backgroundImage}
+            setBackgroundImage={setBackgroundImage}
+            generateNewPalette={generateNewPalette}
+            isGenerating={isGenerating}
+            previousCircles={previousCircles}
+            setCircles={setCircles}
+            setPreviousCircles={setPreviousCircles}
+            setBlur={setBlur}
+            blur={blur}
+          />
+          <button
+            onClick={() => setZoom((z) => Math.min(z + 0.1, 2))}
+            className="px-4 py-3 relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer flex gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow h-full"
           >
-            <div
-              className="absolute inset-0 object-center overflow-hidden"
-              id="wallpaper"
-              style={{
-                width: `${resolution.width}px`,
-                height: `${resolution.height}px`,
-                transform: `scale(${getPreviewScale(resolution)})`,
-                transformOrigin: "top left",
-                backfaceVisibility: "hidden",
-                WebkitBackfaceVisibility: "hidden",
-              }}
-            >
-              {(isAspectRatioChanging || isGenerating) && (
-                <div className="absolute inset-0 bg-background z-50 flex items-center justify-center">
-                  <WandSparklesIcon className="size-16 text-primary animate-ping" />
-                </div>
-              )}
-              {/* Background Layer */}
-              <CanvasPreview
-                width={resolution.width}
-                height={resolution.height}
-                backgroundColor={backgroundColor}
-                circles={circles}
-                text={text}
-                textStyle={{
-                  fontSize: fontSize,
-                  fontWeight: fontWeight,
-                  letterSpacing: letterSpacing,
-                  fontFamily: fontFamily,
-                  opacity: opacity,
-                  lineHeight: lineHeight,
-                  color: textColor,
-                  isItalic: isItalic,
-                  isUnderline: isUnderline,
-                  isStrikethrough: isStrikethrough,
-                  textShadow: textShadow,
-                }}
-                filters={{
-                  blur: blur,
-                  brightness: brightness,
-                  contrast: contrast,
-                  saturation: saturation,
-                }}
-                effects={{
-                  grain: grainIntensity,
-                  vignette: vignetteIntensity,
-                }}
-                backgroundImage={backgroundImage}
-              />
-            </div>
-            {/* Downloading Overlay */}
-          </div>
+            <ZoomInIcon className="size-4" />
+          </button>
+          <button
+            onClick={() => setZoom((z) => Math.max(z - 0.1, 0.1))}
+            className="px-4 py-3 relative items-center justify-center rounded-2xl text-foreground border border-primary/10 bg-secondary cursor-pointer flex gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow h-full"
+          >
+            <ZoomOutIcon className="size-4" />
+          </button>
         </div>
 
-        <ButtonsChin
-          aspectRatio={aspectRatio}
-          setAspectRatio={setAspectRatio}
-          handleImageUpload={handleImageUpload}
-          backgroundImage={backgroundImage}
-          setBackgroundImage={setBackgroundImage}
-          generateNewPalette={generateNewPalette}
-          isGenerating={isGenerating}
-          previousCircles={previousCircles}
-          setCircles={setCircles}
-          setPreviousCircles={setPreviousCircles}
-          setBlur={setBlur}
-          blur={blur}
-        />
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          <div className="rounded-2xl overflow-hidden w-full h-full flex items-center justify-center relative cursor-move">
+            <DraggablePreview id="preview">
+              <div
+                className="relative overflow-hidden rounded-2xl"
+                style={{
+                  height: resolution.height * zoom,
+                  width: resolution.width * zoom,
+                  transform: `translate(${position.x}px, ${position.y}px)`,
+                }}
+              >
+                <div
+                  id="wallpaper"
+                  style={{
+                    width: `${resolution.width}px`,
+                    height: `${resolution.height}px`,
+                    transform: `scale(${zoom})`,
+                    transformOrigin: "top left",
+                    backfaceVisibility: "hidden",
+                    WebkitBackfaceVisibility: "hidden",
+                  }}
+                >
+                  {isGenerating && (
+                    <div className="absolute inset-0 bg-background z-50 flex items-center justify-center">
+                      <WandSparklesIcon className="size-16 text-primary animate-ping" />
+                    </div>
+                  )}
+                  <CanvasPreview
+                    width={resolution.width}
+                    height={resolution.height}
+                    backgroundColor={backgroundColor}
+                    circles={circles}
+                    filters={{
+                      blur: blur,
+                      brightness: brightness,
+                      contrast: contrast,
+                      saturation: saturation,
+                    }}
+                    effects={{
+                      grain: grainIntensity,
+                      vignette: vignetteIntensity,
+                    }}
+                    backgroundImage={backgroundImage}
+                  />
+
+                  <div className="absolute inset-0 flex items-center justify-center z-50">
+                    {textMode === "text" ? (
+                      <p
+                        style={{
+                          fontSize: `${fontSize}px`,
+                          fontWeight: fontWeight,
+                          letterSpacing: `${letterSpacing}em`,
+                          fontFamily: fontFamily,
+                          opacity: opacity / 100,
+                          lineHeight: lineHeight,
+                          color: textColor,
+                          fontStyle: isItalic ? "italic" : "normal",
+                          textDecoration: `${isUnderline ? "underline" : ""} ${
+                            isStrikethrough ? "line-through" : ""
+                          }`.trim(),
+                          textShadow: `${textShadow.offsetX}px ${textShadow.offsetY}px ${textShadow.blur}px ${textShadow.color}`,
+                          transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
+                        }}
+                      >
+                        {text}
+                      </p>
+                    ) : (
+                      logoImage && (
+                        <Image
+                          unoptimized
+                          src={logoImage}
+                          alt="Logo"
+                          style={{
+                            maxWidth: `${fontSize}%`,
+                            maxHeight: `${fontSize}%`,
+                            opacity: opacity / 100,
+                            transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
+                            filter: `drop-shadow(${textShadow.offsetX}px ${textShadow.offsetY}px ${textShadow.blur}px ${textShadow.color})`,
+                          }}
+                        />
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+            </DraggablePreview>
+          </div>
+        </DndContext>
       </section>
     </main>
   );
