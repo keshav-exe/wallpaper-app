@@ -31,7 +31,7 @@ export default function VaulDrawer({
         <Drawer.Overlay className="fixed inset-0 bg-black/40 z-40" />
         <Drawer.Content
           className={cn(
-            "fixed bottom-0 left-0 right-0 outline-none z-50 bg-secondary overflow-hidden",
+            "fixed bottom-0 left-0 right-0 outline-none z-50 bg-secondary",
             className
           )}
         >

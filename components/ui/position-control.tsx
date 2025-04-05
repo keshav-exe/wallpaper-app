@@ -99,14 +99,15 @@ export function PositionControl({
   return (
     <div className="flex flex-col gap-4">
       <div
-        className={cn(
-          "relative w-full h-[200px] flex items-center justify-between mx-auto flex-col",
-          className
-        )}
+        className={"relative w-full h-[200px] flex justify-between flex-col"}
       >
+        <h4 className="text-sm text-muted-foreground">Position Control</h4>
         <div
           ref={containerRef}
-          className="relative rounded-xl bg-secondary border border-primary/10 my-auto"
+          className={cn(
+            "relative rounded-xl bg-secondary border border-primary/10 flex mx-auto scale-95 hover:scale-100 transition-all duration-300 ease-[cubic-bezier(0.45, 0.05, 0.55, 0.95)] hover:border-primary/20",
+            className
+          )}
           onPointerDown={(e) => {
             setIsDragging(true);
             const pos = absoluteToRelative(e.clientX, e.clientY);

@@ -148,6 +148,8 @@
 
 .no-scrollbar {
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
 }
 
 .dark ::selection {

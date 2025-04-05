@@ -58,6 +58,9 @@ import {
 import { PositionControl } from "@/components/ui/position-control";
 import VaulDrawer from "../ui/drawer";
 import SettingsDrawerContent from "../drawer-content/settings-drawer-content";
+import TwitterIcon from "@/lib/icons/twitter";
+import Link from "next/link";
+import { motion } from "motion/react";
 function DraggablePreview({
   children,
   id,
@@ -235,7 +238,7 @@ export default function DesktopApp({
         {fontPreloadText}
       </div>
       <aside className="flex flex-col gap-1 w-full max-w-[260px] min-w-[220px] h-full overflow-hidden">
-        <div className="flex items-center gap-2 p-1 border border-primary/10 bg-secondary rounded-2xl">
+        <div className="flex items-center justify-between gap-2 p-1 border border-primary/10 bg-secondary rounded-2xl">
           <button
             className="flex items-center gap-1 cursor-pointer p-1 hover:bg-foreground/5 transition-all duration-300 rounded-xl"
             onClick={() => setIsSettingsOpen(true)}
@@ -249,12 +252,20 @@ export default function DesktopApp({
             />
             <ChevronRight className="size-4" />
           </button>
+          <Link
+            href="https://twitter.com/intent/tweet?text=Check%20out%20Gradii%20-%20A%20beautiful%20gradient%20generator%20tool%20for%20designers%20%F0%9F%8E%A8%0A%0Ahttps%3A%2F%2Fgithub.com%2Fkeshav-exe%2Fwallpaper-app"
+            target="_blank"
+          >
+            <Button variant="accent" size="icon">
+              <TwitterIcon className="size-4 " />
+            </Button>
+          </Link>
 
           <VaulDrawer
             isOpen={isSettingsOpen}
             setIsOpen={setIsSettingsOpen}
             title="Settings"
-            className="w-[310px] bg-transparent p-2 top-0 bottom-0"
+            className="w-full max-w-sm bg-transparent p-2 top-0 bottom-0"
             direction="left"
           >
             <SettingsDrawerContent setIsSettingsOpen={setIsSettingsOpen} />
@@ -295,7 +306,20 @@ export default function DesktopApp({
         <section className="w-full bg-secondary rounded-2xl flex flex-col no-scrollbar overflow-hidden h-full  border border-primary/10 relative">
           <div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full gap-2 p-2">
             {activeTab === "design" && (
-              <div key={activeTab} className="flex flex-col gap-8">
+              <motion.div
+                key={activeTab}
+                className="flex flex-col gap-8"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{
+                  duration: 0.3,
+                  type: "spring",
+                  damping: 10,
+                  stiffness: 100,
+                  ease: "cubic-bezier(0.45, 0.05, 0.55, 0.95)",
+                }}
+              >
                 <div className="flex flex-col gap-4 w-full">
                   <div className="flex flex-col gap-2 w-full">
                     <Textarea
@@ -559,11 +583,24 @@ export default function DesktopApp({
                     onValueChange={([value]) => setOpacity(value)}
                   />
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {activeTab === "effects" && (
-              <div key={activeTab} className="flex flex-col gap-8">
+              <motion.div
+                key={activeTab}
+                className="flex flex-col gap-8"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{
+                  duration: 0.3,
+                  type: "spring",
+                  damping: 10,
+                  stiffness: 100,
+                  ease: "cubic-bezier(0.45, 0.05, 0.55, 0.95)",
+                }}
+              >
                 <div className="flex flex-col gap-4">
                   <Slider
                     label="Blur"
@@ -695,7 +732,7 @@ export default function DesktopApp({
                     />
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
           <div className="flex w-full gap-2 p-2 sticky bottom-0  border-t border-primary/10  z-10">

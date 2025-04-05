@@ -9,7 +9,7 @@ import { useSafariCheck } from "@/hooks/use-safari-check";
 
 export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
-  const isSafari = useSafariCheck();
+  const { isSafari, shouldShowPWAPrompt, dismissPWAPrompt } = useSafariCheck();
   const store = useWallpaperStore();
 
   useEffect(() => {
@@ -35,21 +35,30 @@ export default function Home() {
     }
   }, [store.fontFamily]);
 
+  useEffect(() => {
+    if (shouldShowPWAPrompt) {
+      toast("Install our app for the best experience", {
+        description: "Tap the share button and select 'Add to Home Screen'",
+        duration: Infinity,
+        closeButton: true,
+        onDismiss: dismissPWAPrompt,
+      });
+    }
+  }, [shouldShowPWAPrompt]);
+
   const downloadImage = async () => {
     try {
-      // Get the preview canvas
       const previewCanvas = document.querySelector(
         "#wallpaper canvas"
       ) as HTMLCanvasElement;
       if (!previewCanvas) return;
 
-      // Create a temporary canvas at full resolution
       const tempCanvas = document.createElement("canvas");
       tempCanvas.width = store.resolution.width;
       tempCanvas.height = store.resolution.height;
       const ctx = tempCanvas.getContext("2d")!;
 
-      // Draw the preview canvas at full resolution
+      // Draw the preview canvas
       ctx.drawImage(
         previewCanvas,
         0,
@@ -60,18 +69,19 @@ export default function Home() {
 
       // Draw the text
       if (store.sizeMode === "text") {
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = store.htmlContent;
-        const textContent = tempDiv.textContent || "";
-
         ctx.save();
-        ctx.font = `${store.isItalic ? "italic" : ""} ${store.fontWeight} ${
-          store.fontSize
-        }em ${store.fontFamily}`;
-        ctx.fillStyle = store.textColor;
-        ctx.textAlign = store.textAlign;
-        ctx.textBaseline = "middle";
 
+        // Set font properties
+        const fontString = `${store.isItalic ? "italic" : ""} ${
+          store.fontWeight
+        } ${store.fontSize * 16}px ${store.fontFamily}`;
+        ctx.font = fontString;
+        ctx.fillStyle = store.textColor;
+        ctx.textAlign = store.textAlign as CanvasTextAlign;
+        ctx.textBaseline = "middle";
+        ctx.globalAlpha = store.opacity / 100;
+
+        // Set text decorations
         if (store.textShadow.blur > 0) {
           ctx.shadowColor = store.textShadow.color;
           ctx.shadowBlur = store.textShadow.blur;
@@ -79,20 +89,54 @@ export default function Home() {
           ctx.shadowOffsetY = store.textShadow.offsetY;
         }
 
+        // Calculate text position
         let x = store.resolution.width / 2 + store.textPosition.x;
-
-        // Adjust x position based on alignment
         if (store.textAlign === "left") {
-          x = 20 + store.textPosition.x; // Add some padding
+          x = 20 + store.textPosition.x;
         } else if (store.textAlign === "right") {
-          x = store.resolution.width - 20 + store.textPosition.x; // Add some padding
+          x = store.resolution.width - 20 + store.textPosition.x;
         }
 
-        ctx.fillText(
-          textContent,
-          x,
-          store.resolution.height / 2 + store.textPosition.y
-        );
+        // Handle multiline text
+        const lines = store.text.split("\n");
+        const lineHeight = store.fontSize * 16 * store.lineHeight;
+        const totalHeight = lines.length * lineHeight;
+        const startY =
+          store.resolution.height / 2 - totalHeight / 2 + store.textPosition.y;
+
+        lines.forEach((line, index) => {
+          const y = startY + index * lineHeight + lineHeight / 2;
+          ctx.fillText(line, x, y);
+
+          // Draw text decorations
+          if (store.isUnderline || store.isStrikethrough) {
+            const textMetrics = ctx.measureText(line);
+            const textWidth = textMetrics.width;
+            let decorationY = y;
+
+            if (store.isUnderline) {
+              decorationY = y + textMetrics.actualBoundingBoxDescent + 2;
+            }
+            if (store.isStrikethrough) {
+              decorationY = y;
+            }
+
+            let startX = x;
+            if (store.textAlign === "center") {
+              startX = x - textWidth / 2;
+            } else if (store.textAlign === "right") {
+              startX = x - textWidth;
+            }
+
+            ctx.beginPath();
+            ctx.strokeStyle = store.textColor;
+            ctx.lineWidth = Math.max(1, store.fontSize * 0.05);
+            ctx.moveTo(startX, decorationY);
+            ctx.lineTo(startX + textWidth, decorationY);
+            ctx.stroke();
+          }
+        });
+
         ctx.restore();
       }
 
