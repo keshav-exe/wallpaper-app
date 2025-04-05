@@ -4,24 +4,21 @@ import {
   Trash2Icon,
   UploadIcon,
   PaintbrushIcon,
-  PaletteIcon,
   SparklesIcon,
   ItalicIcon,
   UnderlineIcon,
   StrikethroughIcon,
   WandSparklesIcon,
-  LinkedinIcon,
-  FacebookIcon,
-  InstagramIcon,
-  TwitterIcon,
   ZoomInIcon,
   ZoomOutIcon,
-  CropIcon,
   AlignLeftIcon,
   AlignCenterIcon,
   AlignRightIcon,
-  MonitorIcon,
-  ImageIcon,
+  Undo,
+  CopyIcon,
+  PlusIcon,
+  ExpandIcon,
+  ChevronRight,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -39,18 +36,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
-import { CircleProps, FontOption } from "@/lib/constants";
-import { ButtonsChin } from "../ui/buttonsChin";
+import { AppProps, RESOLUTION_PRESETS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useMemo, useRef, useState } from "react";
 import logo from "@/public/logo.svg";
-import { ThemeSwitch } from "../ui/themeSwitch";
 import Image from "next/image";
 import { Textarea } from "../ui/textarea";
 import { CanvasPreview } from "./canvas-preview";
-import Link from "next/link";
-import { IMAGES } from "@/assets";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
@@ -64,96 +56,8 @@ import {
   DragEndEvent,
 } from "@dnd-kit/core";
 import { PositionControl } from "@/components/ui/position-control";
-
-interface DesktopAppProps {
-  backgroundColor: string;
-  fontSize: number;
-  fontWeight: number;
-  letterSpacing: number;
-  fontFamily: string;
-  opacity: number;
-  lineHeight: number;
-  text: string;
-  circles: CircleProps[];
-  textColor: string;
-  generateNewPalette: () => void;
-  isGenerating: boolean;
-  downloadImage: () => void;
-  isDownloading: boolean;
-  previousCircles: CircleProps[];
-  setCircles: (circles: CircleProps[]) => void;
-  setPreviousCircles: (circles: CircleProps[]) => void;
-  setActiveTab: (tab: "design" | "colors" | "filters" | "canvas") => void;
-  activeTab: "design" | "colors" | "filters" | "canvas";
-  setText: (text: string) => void;
-  setFontFamily: (fontFamily: string) => void;
-  setFontSize: (fontSize: number) => void;
-  setFontWeight: (fontWeight: number) => void;
-  setLetterSpacing: (letterSpacing: number) => void;
-  setOpacity: (opacity: number) => void;
-  setLineHeight: (lineHeight: number) => void;
-  setBackgroundColor: (backgroundColor: string) => void;
-  setActiveColorPicker: (color: string) => void;
-  handleColorChange: (color: string) => void;
-  setActiveColorType: (colorType: "gradient" | "background" | "text") => void;
-  setActiveColor: (color: number) => void;
-  updateColor: (color: string, index: number) => void;
-  fonts: FontOption[];
-  activeColorPicker: string;
-  setTextColor: (textColor: string) => void;
-  resolution: { width: number; height: number };
-  setResolution: (res: { width: number; height: number }) => void;
-  saturation: number;
-  setSaturation: (value: number) => void;
-  contrast: number;
-  setContrast: (value: number) => void;
-  brightness: number;
-  setBrightness: (value: number) => void;
-  blur: number;
-  setBlur: (value: number) => void;
-  backgroundImage: string | null;
-  setBackgroundImage: (backgroundImage: string | null) => void;
-  handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  isItalic: boolean;
-  isUnderline: boolean;
-  isStrikethrough: boolean;
-  setIsItalic: (value: boolean) => void;
-  setIsUnderline: (value: boolean) => void;
-  setIsStrikethrough: (value: boolean) => void;
-  numCircles: number;
-  setNumCircles: (num: number) => void;
-  colors: string[];
-  isSafari: boolean;
-  textShadow: {
-    color: string;
-    blur: number;
-    offsetX: number;
-    offsetY: number;
-  };
-  grainIntensity: number;
-  setGrainIntensity: (value: number) => void;
-  vignetteIntensity: number;
-  setVignetteIntensity: (value: number) => void;
-  setTextShadow: React.Dispatch<
-    React.SetStateAction<{
-      color: string;
-      blur: number;
-      offsetX: number;
-      offsetY: number;
-    }>
-  >;
-  isUploading: boolean;
-  setIsUploading: (isUploading: boolean) => void;
-  textPosition: { x: number; y: number };
-  setTextPosition: (position: { x: number; y: number }) => void;
-  textMode: "text" | "image";
-  logoImage: string | null;
-  setTextMode: (mode: "text" | "image") => void;
-  setLogoImage: (image: string | null) => void;
-  textAlign: "left" | "center" | "right";
-  setTextAlign: (align: "left" | "center" | "right") => void;
-}
-
+import VaulDrawer from "../ui/drawer";
+import SettingsDrawerContent from "../drawer-content/settings-drawer-content";
 function DraggablePreview({
   children,
   id,
@@ -240,22 +144,24 @@ export default function DesktopApp({
   setTextShadow,
   grainIntensity,
   setGrainIntensity,
-  vignetteIntensity,
-  setVignetteIntensity,
   isUploading,
   setIsUploading,
   textPosition,
   setTextPosition,
-  textMode,
+  sizeMode,
   logoImage,
   setTextMode,
   setLogoImage,
   textAlign,
   setTextAlign,
-}: DesktopAppProps) {
+  copyImage,
+  isCopying,
+}: AppProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBackgroundImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -263,6 +169,18 @@ export default function DesktopApp({
         setBackgroundImage(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      setTextMode("image");
     }
   };
 
@@ -286,7 +204,7 @@ export default function DesktopApp({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(0.4);
-
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
@@ -316,57 +234,57 @@ export default function DesktopApp({
       <div aria-hidden="true" className="sr-only">
         {fontPreloadText}
       </div>
-      <aside className="flex flex-col gap-2 w-full max-w-[300px] min-w-[220px] h-full overflow-hidden">
-        <div className="flex items-center gap-2 p-2 bg-secondary rounded-2xl w-full border border-primary/10">
-          <div className="flex items-center gap-2 justify-between w-full">
-            <div className="flex items-center justify-between w-full outline-hidden focus:outline-hidden group">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  <Image
-                    src={logo}
-                    alt="logo"
-                    className="size-8"
-                    priority
-                    loading="eager"
-                  />
-                </div>
-              </div>
-              <Link href="https://x.com/kshvbgde" target="_blank">
-                <Image
-                  src={IMAGES.x}
-                  alt="Follow @kshvbgde on X"
-                  className="size-8"
-                  priority
-                  loading="eager"
-                />
-              </Link>
-            </div>
-          </div>
+      <aside className="flex flex-col gap-1 w-full max-w-[260px] min-w-[220px] h-full overflow-hidden">
+        <div className="flex items-center gap-2 p-1 border border-primary/10 bg-secondary rounded-2xl">
+          <button
+            className="flex items-center gap-1 cursor-pointer p-1 hover:bg-foreground/5 transition-all duration-300 rounded-xl"
+            onClick={() => setIsSettingsOpen(true)}
+          >
+            <Image
+              src={logo}
+              alt="logo"
+              className="size-8"
+              priority
+              loading="eager"
+            />
+            <ChevronRight className="size-4" />
+          </button>
+
+          <VaulDrawer
+            isOpen={isSettingsOpen}
+            setIsOpen={setIsSettingsOpen}
+            title="Settings"
+            className="w-[310px] bg-transparent p-2 top-0 bottom-0"
+            direction="left"
+          >
+            <SettingsDrawerContent setIsSettingsOpen={setIsSettingsOpen} />
+          </VaulDrawer>
         </div>
         <Tabs
           value={activeTab}
           onValueChange={(value) =>
-            setActiveTab(value as "design" | "colors" | "filters" | "canvas")
+            setActiveTab(value as "design" | "canvas" | "effects")
           }
           className="flex flex-col items-center w-full"
         >
           <TabsList className="w-full flex items-center gap-1">
-            <div className="flex items-center gap-2 w-full">
+            <div className="flex items-center gap-1 w-full">
               {[
                 { id: "design", icon: PaintbrushIcon },
-                { id: "canvas", icon: CropIcon },
-                { id: "colors", icon: PaletteIcon },
-                { id: "filters", icon: SparklesIcon },
+                { id: "effects", icon: SparklesIcon },
               ].map(({ id, icon: Icon }) => (
                 <TabsTrigger
                   key={id}
                   value={id}
                   className={cn(
-                    "flex-1 relative w-full px-4 py-3 cursor-pointer hover:bg-foreground/25 transition-all duration-300 rounded-2xl  text-foreground border border-primary/10"
+                    "flex-1 relative w-full px-4 py-3 cursor-pointer hover:bg-foreground/25 transition-all duration-300 rounded-2xl text-foreground border border-primary/10 flex items-center gap-2"
                   )}
                   disabled={!!backgroundImage && id === "colors"}
                 >
                   <Icon className="size-4" />
+                  <span className="text-xs tracking-tight capitalize">
+                    {id}
+                  </span>
                 </TabsTrigger>
               ))}
             </div>
@@ -374,37 +292,33 @@ export default function DesktopApp({
         </Tabs>
 
         {/* controls */}
-        <section className="w-full bg-secondary rounded-2xl flex flex-col no-scrollbar overflow-hidden h-full  border border-primary/10">
-          <div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full gap-2 p-4">
+        <section className="w-full bg-secondary rounded-2xl flex flex-col no-scrollbar overflow-hidden h-full  border border-primary/10 relative">
+          <div className="flex flex-col overflow-y-auto justify-between no-scrollbar relative h-full gap-2 p-2">
             {activeTab === "design" && (
               <div key={activeTab} className="flex flex-col gap-8">
-                <h3 className="text-[64px] leading-[100%] text-center font-bold tracking-tighter uppercase bg-clip-text text-transparent bg-gradient-to-b from-foreground/20 to-foreground/70">
-                  {activeTab}
-                </h3>
-
                 <div className="flex flex-col gap-4 w-full">
                   <div className="flex flex-col gap-2 w-full">
                     <Textarea
                       className={cn(
                         "resize-none whitespace-pre-wrap",
-                        textMode === "image" && "opacity-50 cursor-not-allowed"
+                        sizeMode === "image" && "opacity-50 cursor-not-allowed"
                       )}
                       value={text}
                       onChange={(e) => setText(e.target.value)}
                       placeholder="Enter text"
-                      disabled={textMode === "image"}
+                      disabled={sizeMode === "image"}
                     />
                   </div>
 
                   <div className="relative">
-                    <div className="absolute inset-x-0 -top-3 flex items-center justify-center">
+                    <div className="flex items-center justify-center">
                       <span className="bg-secondary px-2 text-xs text-muted-foreground">
                         or
                       </span>
                     </div>
-                    <div className="relative pt-2">
+                    <div className="relative flex flex-col gap-2 pt-2">
                       <label
-                        className={`px-4 py-3 bg-foreground/5 rounded-xl hover:text-foreground/80 text-primary transition-all duration-300 flex items-center gap-2 cursor-pointer justify-center border border-primary/10 ${
+                        className={`px-4 py-2 bg-foreground/5 rounded-xl hover:text-foreground/80 text-primary transition-all duration-300 flex items-center gap-2 cursor-pointer justify-center border border-primary/10  ${
                           isUploading ? "opacity-50 cursor-not-allowed" : ""
                         }`}
                       >
@@ -415,15 +329,7 @@ export default function DesktopApp({
                             if (isUploading) return;
                             setIsUploading(true);
                             try {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  setLogoImage(reader.result as string);
-                                  setTextMode("image");
-                                };
-                                reader.readAsDataURL(file);
-                              }
+                              await handleImageUpload(e);
                             } finally {
                               setIsUploading(false);
                               e.target.value = "";
@@ -454,7 +360,7 @@ export default function DesktopApp({
                         >
                           <Trash2Icon className="size-4" />
                           <span className="text-xs tracking-tight ml-2">
-                            Remove Logo/Image
+                            Remove Image
                           </span>
                         </Button>
                       )}
@@ -463,17 +369,17 @@ export default function DesktopApp({
 
                   <Separator className="my-2" />
 
-                  {textMode === "text" && (
+                  {sizeMode === "text" && (
                     <>
                       <div className="flex flex-col gap-2 w-full">
                         <label className="text-sm text-muted-foreground">
                           Color
                         </label>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 w-full relative">
                           <Popover>
                             <PopoverTrigger asChild>
                               <span
-                                className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
+                                className="w-6 h-6 rounded-full cursor-pointer aspect-square border border-primary/10 absolute left-2 top-1/2 -translate-y-1/2"
                                 style={{ backgroundColor: textColor }}
                               />
                             </PopoverTrigger>
@@ -492,6 +398,7 @@ export default function DesktopApp({
                             </PopoverContent>
                           </Popover>
                           <Input
+                            className="pl-10"
                             type="text"
                             value={textColor}
                             placeholder="Color"
@@ -523,25 +430,81 @@ export default function DesktopApp({
                       </div>
                     </>
                   )}
-
-                  <PositionControl
-                    value={textPosition}
-                    onChange={setTextPosition}
-                    width={resolution.width}
-                    height={resolution.height}
-                    className="max-w-[200px]"
-                  />
-
+                  {sizeMode === "text" && (
+                    <div className="flex flex-col gap-2 w-full">
+                      <label className="text-sm text-muted-foreground">
+                        Decoration
+                      </label>
+                      <div className="grid grid-cols-3 gap-1">
+                        <Button
+                          onClick={() => setTextAlign("left")}
+                          className={cn(
+                            textAlign === "left"
+                              ? "bg-primary/20"
+                              : "bg-background/5"
+                          )}
+                        >
+                          <AlignLeftIcon className="size-4" />
+                        </Button>
+                        <Button
+                          onClick={() => setTextAlign("center")}
+                          className={cn(
+                            textAlign === "center"
+                              ? "bg-primary/20"
+                              : "bg-background/5"
+                          )}
+                        >
+                          <AlignCenterIcon className="size-4" />
+                        </Button>
+                        <Button
+                          onClick={() => setTextAlign("right")}
+                          className={cn(
+                            textAlign === "right"
+                              ? "bg-primary/20"
+                              : "bg-background/5"
+                          )}
+                        >
+                          <AlignRightIcon className="size-4" />
+                        </Button>
+                        <Button
+                          onClick={() => setIsItalic(!isItalic)}
+                          className={cn(
+                            isItalic ? "bg-primary/20 " : "bg-background/5"
+                          )}
+                        >
+                          <ItalicIcon className="size-4" />
+                        </Button>
+                        <Button
+                          onClick={() => setIsUnderline(!isUnderline)}
+                          className={cn(
+                            isUnderline ? "bg-primary/20 " : "bg-background/5"
+                          )}
+                        >
+                          <UnderlineIcon className="size-4 mx-auto" />
+                        </Button>
+                        <Button
+                          onClick={() => setIsStrikethrough(!isStrikethrough)}
+                          className={cn(
+                            isStrikethrough
+                              ? "bg-primary/20"
+                              : "bg-background/5"
+                          )}
+                        >
+                          <StrikethroughIcon className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   <Slider
-                    label={textMode === "text" ? "Size" : "Size"}
-                    min={textMode === "text" ? 12 : 10}
-                    max={textMode === "text" ? 180 : 100}
-                    step={textMode === "text" ? 2 : 1}
+                    label={sizeMode === "text" ? "Size" : "Size"}
+                    min={sizeMode === "text" ? 0 : 10}
+                    max={sizeMode === "text" ? 20 : 100}
+                    step={sizeMode === "text" ? 0.1 : 1}
                     value={[fontSize]}
                     onValueChange={([value]) => setFontSize(value)}
-                    valueSubtext={textMode === "text" ? "px" : "%"}
+                    valueSubtext={sizeMode === "text" ? "em" : "%"}
                   />
-                  {textMode === "text" && (
+                  {sizeMode === "text" && (
                     <>
                       <div className="flex flex-col gap-2 w-full">
                         <Slider
@@ -595,81 +558,75 @@ export default function DesktopApp({
                     value={[opacity]}
                     onValueChange={([value]) => setOpacity(value)}
                   />
-                  {textMode === "text" && (
-                    <div className="flex flex-col gap-2 w-full">
-                      <label className="text-sm text-muted-foreground">
-                        Decoration
-                      </label>
-                      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
-                        <Button
-                          onClick={() => setTextAlign("left")}
-                          className={cn(
-                            textAlign === "left"
-                              ? "bg-primary/20"
-                              : "bg-background/5"
-                          )}
-                        >
-                          <AlignLeftIcon className="size-4" />
-                        </Button>
-                        <Button
-                          onClick={() => setTextAlign("center")}
-                          className={cn(
-                            textAlign === "center"
-                              ? "bg-primary/20"
-                              : "bg-background/5"
-                          )}
-                        >
-                          <AlignCenterIcon className="size-4" />
-                        </Button>
-                        <Button
-                          onClick={() => setTextAlign("right")}
-                          className={cn(
-                            textAlign === "right"
-                              ? "bg-primary/20"
-                              : "bg-background/5"
-                          )}
-                        >
-                          <AlignRightIcon className="size-4" />
-                        </Button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "effects" && (
+              <div key={activeTab} className="flex flex-col gap-8">
+                <div className="flex flex-col gap-4">
+                  <Slider
+                    label="Blur"
+                    min={backgroundImage ? 0 : 400}
+                    max={isSafari ? 800 : 1200}
+                    step={20}
+                    value={[blur]}
+                    valueSubtext="px"
+                    onValueChange={([value]) => setBlur(value)}
+                  />
+
+                  {!isSafari && (
+                    <>
+                      <div className="flex flex-col gap-4">
+                        <Slider
+                          label="Grain"
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={[grainIntensity]}
+                          onValueChange={([value]) => {
+                            setGrainIntensity(value);
+                          }}
+                        />
                       </div>
-                      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar rounded-xl">
-                        <Button
-                          onClick={() => setIsItalic(!isItalic)}
-                          className={cn(
-                            isItalic ? "bg-primary/20 " : "bg-background/5"
-                          )}
-                        >
-                          <ItalicIcon className="size-4" />
-                        </Button>
-                        <Button
-                          onClick={() => setIsUnderline(!isUnderline)}
-                          className={cn(
-                            isUnderline ? "bg-primary/20 " : "bg-background/5"
-                          )}
-                        >
-                          <UnderlineIcon className="size-4 mx-auto" />
-                        </Button>
-                        <Button
-                          onClick={() => setIsStrikethrough(!isStrikethrough)}
-                          className={cn(
-                            isStrikethrough
-                              ? "bg-primary/20"
-                              : "bg-background/5"
-                          )}
-                        >
-                          <StrikethroughIcon className="size-4" />
-                        </Button>
-                      </div>
-                    </div>
+                    </>
                   )}
+
+                  <Separator className="my-2" />
+
+                  <Slider
+                    label="Saturation"
+                    min={0}
+                    max={200}
+                    step={1}
+                    value={[saturation]}
+                    onValueChange={([value]) => setSaturation(value)}
+                  />
+                  <Slider
+                    label="Contrast"
+                    min={5}
+                    max={200}
+                    step={1}
+                    value={[contrast]}
+                    onValueChange={([value]) => setContrast(value)}
+                  />
+                  <Slider
+                    label="Brightness"
+                    min={10}
+                    max={200}
+                    step={1}
+                    value={[brightness]}
+                    onValueChange={([value]) => setBrightness(value)}
+                  />
+
                   <Separator className="my-2" />
 
                   <label className="text-sm text-muted-foreground">Glow</label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full relative">
                     <Popover>
                       <PopoverTrigger asChild>
                         <span
-                          className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
+                          className="w-6 h-6 rounded-full cursor-pointer aspect-square border border-primary/10 absolute left-2 top-1/2 -translate-y-1/2"
                           style={{ backgroundColor: textShadow.color }}
                         />
                       </PopoverTrigger>
@@ -683,6 +640,7 @@ export default function DesktopApp({
                       </PopoverContent>
                     </Popover>
                     <Input
+                      className="pl-10"
                       type="text"
                       value={textShadow.color}
                       placeholder="Glow Color"
@@ -699,7 +657,7 @@ export default function DesktopApp({
                     <Slider
                       label="Intensity"
                       min={0}
-                      max={100} // Changed from 80 to 100 for percentage
+                      max={100}
                       step={1}
                       value={[textShadow.blur]}
                       onValueChange={([value]) =>
@@ -739,630 +697,23 @@ export default function DesktopApp({
                 </div>
               </div>
             )}
+          </div>
+          <div className="flex w-full gap-2 p-2 sticky bottom-0  border-t border-primary/10  z-10">
+            <Button
+              className="flex items-center w-full"
+              variant="accent"
+              onClick={downloadImage}
+              disabled={isDownloading}
+            >
+              <DownloadIcon className="size-4" />
+              <span className="text-sm">Download</span>
+            </Button>
 
-            {activeTab === "canvas" && (
-              <div key={activeTab} className="flex flex-col relative gap-8">
-                <h3 className="text-[64px] leading-[100%] text-center font-bold tracking-tighter uppercase bg-clip-text text-transparent bg-gradient-to-b from-foreground/20 to-foreground/70">
-                  {activeTab}
-                </h3>
-                <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Resolution
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <div className="flex flex-col w-full gap-1">
-                        <label className="text-xs text-muted-foreground">
-                          Width
-                        </label>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={2560}
-                          value={resolution.width}
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value);
-                            if (value > 2560) {
-                              toast.error("Maximum width is 2560px");
-                              return;
-                            }
-                            setResolution({
-                              ...resolution,
-                              width: value,
-                            });
-                          }}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1 w-full">
-                        <label className="text-xs text-muted-foreground">
-                          Height
-                        </label>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={2560}
-                          value={resolution.height}
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value);
-                            if (value > 2560) {
-                              toast.error("Maximum height is 2560px");
-                              return;
-                            }
-                            setResolution({
-                              ...resolution,
-                              height: value,
-                            });
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm text-muted-foreground">
-                      Presets
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button size="sm">
-                            <FacebookIcon className="size-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-48 bg-transparent border-none p-0">
-                          <div className="flex flex-col gap-1">
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1200, height: 630 })
-                              }
-                            >
-                              Feed Post
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1080, height: 1920 })
-                              }
-                            >
-                              Story
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1920, height: 1005 })
-                              }
-                            >
-                              Event Cover
-                            </Button>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button size="sm">
-                            <InstagramIcon className="size-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-48 bg-transparent border-none p-0">
-                          <div className="flex flex-col gap-1">
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1080, height: 1080 })
-                              }
-                            >
-                              Square Post
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1080, height: 1350 })
-                              }
-                            >
-                              Portrait Post
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1080, height: 1920 })
-                              }
-                            >
-                              Story/Reels
-                            </Button>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button size="sm">
-                            <TwitterIcon className="size-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-48 bg-transparent border-none p-0">
-                          <div className="flex flex-col gap-1">
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1600, height: 900 })
-                              }
-                            >
-                              Post Image
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1500, height: 500 })
-                              }
-                            >
-                              Header
-                            </Button>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button size="sm">
-                            <LinkedinIcon className="size-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-48 bg-transparent border-none p-0">
-                          <div className="flex flex-col gap-1">
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1200, height: 627 })
-                              }
-                            >
-                              Post
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1584, height: 396 })
-                              }
-                            >
-                              Banner
-                            </Button>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-
-                      {/* Add Device Presets */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button size="sm">
-                            <MonitorIcon className="size-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-64 bg-transparent border-none p-0">
-                          <div className="flex flex-col gap-1">
-                            <p className="text-xs text-muted-foreground px-2 py-1">
-                              Mobile
-                            </p>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1284, height: 2778 })
-                              }
-                            >
-                              iPhone 14 Pro Max
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1170, height: 2532 })
-                              }
-                            >
-                              iPhone 13/14
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1440, height: 3200 })
-                              }
-                            >
-                              Samsung S21 Ultra
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1080, height: 2400 })
-                              }
-                            >
-                              Android (Medium)
-                            </Button>
-
-                            <Separator className="my-2" />
-                            <p className="text-xs text-muted-foreground px-2 py-1">
-                              Tablet
-                            </p>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 2048, height: 2732 })
-                              }
-                            >
-                              iPad Pro 12.9&quot;
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1668, height: 2388 })
-                              }
-                            >
-                              iPad Air
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 2560, height: 1600 })
-                              }
-                            >
-                              Samsung Tab S7
-                            </Button>
-
-                            <Separator className="my-2" />
-                            <p className="text-xs text-muted-foreground px-2 py-1">
-                              Desktop
-                            </p>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 2560, height: 1440 })
-                              }
-                            >
-                              2K (QHD)
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1920, height: 1080 })
-                              }
-                            >
-                              Full HD
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 3840, height: 2160 })
-                              }
-                            >
-                              4K UHD
-                            </Button>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-
-                      {/* Add OG Image Presets */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button size="sm">
-                            <ImageIcon className="size-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-48 bg-transparent border-none p-0">
-                          <div className="flex flex-col gap-1">
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1200, height: 630 })
-                              }
-                            >
-                              Open Graph
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1200, height: 600 })
-                              }
-                            >
-                              Twitter Card
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 800, height: 418 })
-                              }
-                            >
-                              Blog Cover
-                            </Button>
-                            <Button
-                              onClick={() =>
-                                setResolution({ width: 1280, height: 720 })
-                              }
-                            >
-                              YouTube Thumbnail
-                            </Button>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-                  <Separator className="my-2" />
-                  <div className="flex flex-col gap-4">
-                    <div className="flex flex-col gap-2 w-full">
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm text-muted-foreground">
-                          Background
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <span
-                                className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
-                                style={{ backgroundColor: backgroundColor }}
-                              />
-                            </PopoverTrigger>
-                            <PopoverContent
-                              className="w-auto p-3"
-                              align="start"
-                            >
-                              <HexColorPicker
-                                color={activeColorPicker}
-                                onChange={(color) => {
-                                  setActiveColorType("background");
-                                  setActiveColorPicker(color);
-                                  setBackgroundColor(color);
-                                }}
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <Input
-                            type="text"
-                            value={backgroundColor}
-                            placeholder="Background Color"
-                            onChange={(e) => setBackgroundColor(e.target.value)}
-                            className={cn(
-                              "resize-none",
-                              backgroundImage && "opacity-50 cursor-not-allowed"
-                            )}
-                            disabled={!!backgroundImage}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="relative">
-                      <div className="absolute inset-x-0 -top-3 flex items-center justify-center">
-                        <span className="bg-secondary px-2 text-xs text-muted-foreground">
-                          or
-                        </span>
-                      </div>
-                      <div className="relative pt-2">
-                        <label
-                          className={`px-4 py-3 bg-foreground/5 rounded-xl hover:text-foreground/80 text-primary transition-all duration-300 flex items-center gap-2 cursor-pointer justify-center border border-primary/10 ${
-                            isUploading ? "opacity-50 cursor-not-allowed" : ""
-                          }`}
-                        >
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            key={backgroundImage ? "has-image" : "no-image"}
-                            onChange={async (e) => {
-                              if (isUploading) return;
-                              setIsUploading(true);
-                              try {
-                                await handleImageUpload(e);
-                              } finally {
-                                setIsUploading(false);
-                                e.target.value = "";
-                              }
-                            }}
-                            className="hidden"
-                            disabled={isUploading}
-                          />
-                          {isUploading ? (
-                            <span className="animate-pulse">Uploading...</span>
-                          ) : (
-                            <>
-                              <UploadIcon className="size-4" />
-                              <span className="text-xs tracking-tight">
-                                {backgroundImage
-                                  ? "Change Image"
-                                  : "Upload Image"}
-                              </span>
-                            </>
-                          )}
-                        </label>
-
-                        {backgroundImage && (
-                          <Button
-                            onClick={() => {
-                              setBackgroundImage(null);
-                              if (blur === 0) {
-                                setBlur(600);
-                              }
-                            }}
-                            className="rounded-xl mt-2 w-full"
-                            variant="destructive"
-                          >
-                            <Trash2Icon className="size-4" />
-                            <span className="text-xs tracking-tight">
-                              Remove Image
-                            </span>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator className="my-2" />
-
-                  <div className="flex flex-col gap-2">
-                    <Slider
-                      label="Blur"
-                      min={backgroundImage ? 0 : 400}
-                      max={isSafari ? 800 : 1200}
-                      step={20}
-                      value={[blur]}
-                      valueSubtext="px"
-                      onValueChange={([value]) => setBlur(value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "colors" && (
-              <div key={activeTab} className="flex flex-col relative gap-8">
-                <h3 className="text-[64px] leading-[100%] text-center font-bold tracking-tighter uppercase bg-clip-text text-transparent bg-gradient-to-b from-foreground/20 to-foreground/70">
-                  {activeTab}
-                </h3>
-                <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar">
-                  {!backgroundImage && (
-                    <>
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm text-muted-foreground">
-                          Blobs
-                        </label>
-                        <Slider
-                          label="Blobs"
-                          min={1}
-                          max={10}
-                          step={1}
-                          value={[numCircles]}
-                          onValueChange={([value]) => {
-                            setNumCircles(value);
-                            if (value > circles.length) {
-                              // Only add new circles while preserving existing ones
-                              const newCircles = [...circles];
-                              for (let i = circles.length; i < value; i++) {
-                                newCircles.push({
-                                  color: colors[i % colors.length],
-                                  cx: Math.random() * 100,
-                                  cy: Math.random() * 100,
-                                });
-                              }
-                              setCircles(newCircles);
-                            } else {
-                              // Remove excess circles
-                              setCircles(circles.slice(0, value));
-                            }
-                          }}
-                        />
-                        <span className="text-xs text-muted-foreground">
-                          {numCircles}
-                        </span>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm text-muted-foreground">
-                          Colors
-                        </label>
-                        {circles.map((circle, i) => (
-                          <div
-                            key={i}
-                            className="flex items-start gap-2 relative w-full"
-                          >
-                            <div
-                              className="flex items-center gap-2 w-full"
-                              onClick={() => {
-                                setActiveColorType("gradient");
-                                setActiveColor(i);
-                                setActiveColorPicker(circle.color);
-                              }}
-                            >
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <span
-                                    className="w-8 h-8 rounded-full cursor-pointer aspect-square border border-primary/10"
-                                    style={{ backgroundColor: circle.color }}
-                                  />
-                                </PopoverTrigger>
-                                <PopoverContent
-                                  className="w-auto p-3"
-                                  align="start"
-                                >
-                                  <HexColorPicker
-                                    color={activeColorPicker}
-                                    onChange={(color) => {
-                                      setActiveColorPicker(color);
-                                      handleColorChange(color);
-                                    }}
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <Input
-                                type="text"
-                                value={circle.color}
-                                className="w-full"
-                                placeholder="Color"
-                                onChange={(e) => updateColor(e.target.value, i)}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {activeTab === "filters" && (
-              <div key={activeTab} className="flex flex-col gap-8">
-                <h3 className="text-[64px] leading-[100%] text-center font-bold tracking-tighter uppercase bg-clip-text text-transparent bg-gradient-to-b from-foreground/20 to-foreground/70">
-                  {activeTab}
-                </h3>
-                <div className="flex flex-col gap-4">
-                  {!isSafari && (
-                    <>
-                      <div className="flex flex-col gap-4">
-                        <div className="flex flex-col gap-2">
-                          <Slider
-                            label="Grain"
-                            min={0}
-                            max={100}
-                            step={1}
-                            value={[grainIntensity]}
-                            onValueChange={([value]) => {
-                              setGrainIntensity(value);
-                            }}
-                          />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <Slider
-                            label="Vignette"
-                            min={0}
-                            max={100}
-                            step={1}
-                            value={[vignetteIntensity]}
-                            onValueChange={([value]) => {
-                              setVignetteIntensity(value);
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  <Slider
-                    label="Saturation"
-                    min={0}
-                    max={200}
-                    step={1}
-                    value={[saturation]}
-                    onValueChange={([value]) => setSaturation(value)}
-                  />
-                  <Slider
-                    label="Contrast"
-                    min={5}
-                    max={200}
-                    step={1}
-                    value={[contrast]}
-                    onValueChange={([value]) => setContrast(value)}
-                  />
-                  <Slider
-                    label="Brightness"
-                    min={10}
-                    max={200}
-                    step={1}
-                    value={[brightness]}
-                    onValueChange={([value]) => setBrightness(value)}
-                  />
-                </div>
-              </div>
-            )}
+            <Button onClick={copyImage} disabled={isCopying} className="w-fit">
+              <CopyIcon className="size-4" />
+            </Button>
           </div>
         </section>
-
-        <div className="flex flex-col items-center rounded-2xl w-full gap-4">
-          <div className="flex w-full gap-2 flex-col">
-            <div className="flex w-full gap-2">
-              <Button
-                className="flex items-center w-full justify-between py-4"
-                onClick={downloadImage}
-                disabled={isDownloading}
-              >
-                <div className="flex items-center gap-2">
-                  <DownloadIcon className="size-4" />
-                  <span className="text-sm">Download</span>
-                </div>
-              </Button>
-
-              <ThemeSwitch />
-            </div>
-          </div>
-        </div>
       </aside>
 
       {/* preview section */}
@@ -1370,19 +721,22 @@ export default function DesktopApp({
         ref={containerRef}
         className="flex flex-col gap-4 w-full h-full items-center justify-center relative bg-secondary rounded-2xl border border-primary/10 overflow-hidden"
       >
-        <div className="absolute top-4 right-4 flex items-center gap-2 z-50">
-          <ButtonsChin
-            handleImageUpload={handleImageUpload}
-            backgroundImage={backgroundImage}
-            setBackgroundImage={setBackgroundImage}
-            generateNewPalette={generateNewPalette}
-            isGenerating={isGenerating}
-            previousCircles={previousCircles}
-            setCircles={setCircles}
-            setPreviousCircles={setPreviousCircles}
-            setBlur={setBlur}
-            blur={blur}
-          />
+        <div className="absolute bottom-4 right-0 left-0 flex items-center gap-2 z-10 justify-center">
+          <Button
+            variant="accent"
+            className="w-fit"
+            onClick={() => {
+              generateNewPalette();
+              setBackgroundImage(null);
+              if (blur === 0) {
+                setBlur(600);
+              }
+            }}
+            disabled={isGenerating}
+          >
+            <WandSparklesIcon className="size-4" />
+            <span className="text-xs tracking-tight">Generate</span>
+          </Button>
           <Button
             onClick={() => setZoom((z) => Math.min(z + 0.1, 2))}
             className="w-fit"
@@ -1395,13 +749,30 @@ export default function DesktopApp({
           >
             <ZoomOutIcon className="size-4" />
           </Button>
+          <Button
+            disabled={previousCircles.length === 0}
+            className="w-fit"
+            onClick={() => {
+              setBackgroundImage(null);
+              if (previousCircles.length > 0) {
+                setCircles(previousCircles);
+                setPreviousCircles([]);
+              }
+            }}
+          >
+            {backgroundImage ? (
+              <Trash2Icon className="size-4" />
+            ) : (
+              <Undo className="size-4" />
+            )}
+          </Button>
         </div>
 
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          <div className="rounded-2xl overflow-hidden w-full h-full flex items-center justify-center relative cursor-grab active:cursor-grabbing">
+          <div className="rounded-2xl overflow-hidden w-full h-full flex items-center justify-center relative ">
             <DraggablePreview id="preview">
               <div
-                className="relative overflow-hidden rounded-2xl"
+                className="relative overflow-hidden rounded-2xl cursor-grab active:cursor-grabbing"
                 style={{
                   height: resolution.height * zoom,
                   width: resolution.width * zoom,
@@ -1427,10 +798,10 @@ export default function DesktopApp({
                   <CanvasPreview />
 
                   <div className="absolute inset-0 flex items-center justify-center z-40">
-                    {textMode === "text" ? (
+                    {sizeMode === "text" ? (
                       <p
                         style={{
-                          fontSize: `${fontSize}px`,
+                          fontSize: `${fontSize}em`,
                           fontWeight: fontWeight,
                           letterSpacing: `${letterSpacing}em`,
                           fontFamily: fontFamily,
@@ -1451,8 +822,8 @@ export default function DesktopApp({
                       </p>
                     ) : (
                       logoImage && (
-                        <Image
-                          unoptimized
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
                           src={logoImage}
                           alt="Logo"
                           style={{
@@ -1472,6 +843,346 @@ export default function DesktopApp({
           </div>
         </DndContext>
       </section>
+
+      {/* right controls */}
+      <aside className="flex flex-col gap-2 w-full max-w-[260px] min-w-[200px] h-full overflow-hidden">
+        <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar rounded-2xl bg-secondary border border-primary/10 p-2">
+          <div className="flex flex-col gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button className="w-full flex">
+                  <div className="flex items-center gap-2 justify-between w-full">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-full min-w-4 min-h-4 border border-primary rounded"
+                        style={{
+                          aspectRatio: `${resolution.width}/${resolution.height}`,
+                        }}
+                      />
+
+                      <div className="flex flex-col gap-1">
+                        <p className="text-sm tracking-tight text-left">
+                          {RESOLUTION_PRESETS.find(
+                            (preset) =>
+                              preset.width === resolution.width &&
+                              preset.height === resolution.height
+                          )?.name || "Custom"}
+                        </p>
+                        <p className="text-xs text-muted-foreground text-left">
+                          {resolution.width}x{resolution.height}
+                        </p>
+                      </div>
+                    </div>
+
+                    <ExpandIcon
+                      className={`size-4 transition-all duration-300`}
+                    />
+                  </div>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="max-w-lg w-full border border-primary/10 bg-secondary p-0 h-[400px] overflow-y-auto no-scrollbar rounded-2xl">
+                <div className="flex items-center gap-2 p-4 border-b border-primary/10 sticky top-0 bg-secondary">
+                  <div className="flex flex-col w-full gap-1 relative">
+                    <label className="text-xs text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
+                      W:
+                    </label>
+                    <Input
+                      className="pl-8"
+                      type="number"
+                      min={0}
+                      max={2560}
+                      defaultValue={resolution.width}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        if (value > 2560) {
+                          toast.error("Maximum width is 2560px");
+                          return;
+                        }
+                        e.target.value = value.toString();
+                      }}
+                      id="width-input"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1 w-full relative">
+                    <label className="text-xs text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
+                      H:
+                    </label>
+                    <Input
+                      className="pl-8"
+                      type="number"
+                      min={0}
+                      max={2560}
+                      defaultValue={resolution.height}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        if (value > 2560) {
+                          toast.error("Maximum height is 2560px");
+                          return;
+                        }
+                        e.target.value = value.toString();
+                      }}
+                      id="height-input"
+                    />
+                  </div>
+                  <Button
+                    className="w-fit"
+                    variant="accent"
+                    onClick={() => {
+                      const width = parseInt(
+                        (
+                          document.getElementById(
+                            "width-input"
+                          ) as HTMLInputElement
+                        ).value
+                      );
+                      const height = parseInt(
+                        (
+                          document.getElementById(
+                            "height-input"
+                          ) as HTMLInputElement
+                        ).value
+                      );
+                      if (width > 2560 || height > 2560) {
+                        toast.error("Maximum dimensions are 2560px");
+                        return;
+                      }
+                      setResolution({ width, height });
+                    }}
+                  >
+                    Apply
+                  </Button>
+                </div>
+                <div className="flex flex-col gap-6 p-4">
+                  {Array.from(
+                    new Set(RESOLUTION_PRESETS.map((preset) => preset.category))
+                  ).map((category) => (
+                    <div key={category} className="flex flex-col gap-2">
+                      <p className="text-xs text-muted-foreground">
+                        {category}
+                      </p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {RESOLUTION_PRESETS.filter(
+                          (preset) => preset.category === category
+                        ).map((preset) => (
+                          <div
+                            key={preset.name}
+                            onClick={() =>
+                              setResolution({
+                                width: preset.width,
+                                height: preset.height,
+                              })
+                            }
+                            className="flex flex-col items-center gap-4 cursor-pointer bg-foreground/5 rounded-xl p-2 border border-primary/10 hover:bg-foreground/10 transition-all duration-300 justify-between"
+                          >
+                            <div className="flex flex-col gap-2 items-center">
+                              <p className="tracking-tight text-left font-medium">
+                                {preset.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                ({preset.width}x{preset.height})
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <Separator className="my-2" />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2 w-full">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm text-muted-foreground">
+                  Background
+                </label>
+                <div className="flex items-center gap-2 relative">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <span
+                        className="w-6 h-6 rounded-full cursor-pointer aspect-square border border-primary/10 absolute left-2 top-1/2 -translate-y-1/2"
+                        style={{ backgroundColor: backgroundColor }}
+                      />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-3" align="start">
+                      <HexColorPicker
+                        color={activeColorPicker}
+                        onChange={(color) => {
+                          setActiveColorType("background");
+                          setActiveColorPicker(color);
+                          setBackgroundColor(color);
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Input
+                    type="text"
+                    value={backgroundColor}
+                    placeholder="Background Color"
+                    onChange={(e) => setBackgroundColor(e.target.value)}
+                    className={cn(
+                      "resize-none pl-10",
+                      backgroundImage && "opacity-50 cursor-not-allowed"
+                    )}
+                    disabled={!!backgroundImage}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-center">
+              <span className="bg-secondary px-2 text-xs text-muted-foreground">
+                or
+              </span>
+            </div>
+            <div className="relative">
+              <label
+                className={`px-4 py-2 bg-foreground/5 rounded-xl hover:text-foreground/80 text-primary transition-all duration-300 flex items-center gap-2 cursor-pointer justify-center border border-primary/10 ${
+                  isUploading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                <Input
+                  type="file"
+                  accept="image/*"
+                  key={backgroundImage ? "has-image" : "no-image"}
+                  onChange={async (e) => {
+                    if (isUploading) return;
+                    setIsUploading(true);
+                    try {
+                      await handleBackgroundImageUpload(e);
+                    } finally {
+                      setIsUploading(false);
+                      e.target.value = "";
+                    }
+                  }}
+                  className="hidden"
+                  disabled={isUploading}
+                />
+                {isUploading ? (
+                  <span className="animate-pulse">Uploading...</span>
+                ) : (
+                  <>
+                    <UploadIcon className="size-4" />
+                    <span className="text-xs tracking-tight">
+                      {backgroundImage ? "Change Image" : "Upload Image"}
+                    </span>
+                  </>
+                )}
+              </label>
+
+              {backgroundImage && (
+                <Button
+                  onClick={() => {
+                    setBackgroundImage(null);
+                    if (blur === 0) {
+                      setBlur(600);
+                    }
+                  }}
+                  className="rounded-xl mt-2 w-full"
+                  variant="destructive"
+                >
+                  <Trash2Icon className="size-4" />
+                  <span className="text-xs tracking-tight">Remove Image</span>
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {!backgroundImage && (
+            <>
+              <Separator className="my-2" />
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 justify-between">
+                  <label className="text-sm text-muted-foreground">
+                    Palette
+                  </label>
+                  <button
+                    className="text-muted-foreground hover:text-foreground transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => {
+                      const newCircle = {
+                        color: colors[circles.length % colors.length],
+                        cx: Math.random() * 100,
+                        cy: Math.random() * 100,
+                      };
+                      setCircles([...circles, newCircle]);
+                      setNumCircles(circles.length + 1);
+                    }}
+                    disabled={numCircles >= 10}
+                  >
+                    <PlusIcon className="size-4" />
+                  </button>
+                </div>
+                {circles.map((circle, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-2 relative w-full"
+                  >
+                    <div
+                      className="flex items-center gap-2 w-full"
+                      onClick={() => {
+                        setActiveColorType("gradient");
+                        setActiveColor(i);
+                        setActiveColorPicker(circle.color);
+                      }}
+                    >
+                      <div className="flex items-center gap-2 relative w-full">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <span
+                              className="w-6 h-6 rounded-full cursor-pointer aspect-square border border-primary/10 absolute left-2 top-1/2 -translate-y-1/2"
+                              style={{ backgroundColor: circle.color }}
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-3" align="start">
+                            <HexColorPicker
+                              color={activeColorPicker}
+                              onChange={(color) => {
+                                setActiveColorPicker(color);
+                                handleColorChange(color);
+                              }}
+                            />
+                          </PopoverContent>
+                        </Popover>
+
+                        <Input
+                          type="text"
+                          value={circle.color}
+                          className="w-full pl-10 pr-4"
+                          placeholder="Color"
+                          onChange={(e) => updateColor(e.target.value, i)}
+                        />
+                        <button
+                          className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer"
+                          onClick={() => {
+                            setCircles(
+                              circles.filter((_, index) => index !== i)
+                            );
+                            setNumCircles(circles.length - 1);
+                          }}
+                        >
+                          <Trash2Icon className="size-4 text-muted-foreground hover:text-destructive transition-all duration-300" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2 w-full bg-secondary rounded-2xl p-4 border border-primary/10">
+          <PositionControl
+            value={textPosition}
+            onChange={setTextPosition}
+            width={resolution.width}
+            height={resolution.height}
+            className="max-w-[180px] h-[180px]"
+          />
+        </div>
+      </aside>
     </main>
   );
 }

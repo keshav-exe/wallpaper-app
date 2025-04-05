@@ -3,7 +3,7 @@ import { useEffect, useRef, useCallback, useMemo } from "react";
 import { generateRandomShape } from "@/lib/utils/shapes";
 import "context-filter-polyfill";
 import { debounce } from "@/lib/utils";
-import { applyGrainEffect, applyVignetteEffect } from "@/lib/utils/effects";
+import { applyGrainEffect } from "@/lib/utils/effects";
 import { drawShape } from "@/lib/utils/shapes";
 import { useWallpaperStore } from "@/store/wallpaper";
 
@@ -45,12 +45,11 @@ export function CanvasPreview() {
 
     // Effects
     grainIntensity: store.grainIntensity,
-    vignetteIntensity: store.vignetteIntensity,
     textShadow: store.textShadow,
 
     // Position and Mode
     textPosition: store.textPosition,
-    textMode: store.textMode,
+    sizeMode: store.sizeMode,
     logoImage: store.logoImage,
 
     // Resolution
@@ -182,11 +181,6 @@ export function CanvasPreview() {
       applyGrainEffect(ctx, effectiveValues.grainIntensity / 100);
     }
 
-    // 4. Apply vignette
-    if (effectiveValues.vignetteIntensity > 0) {
-      applyVignetteEffect(ctx, effectiveValues.vignetteIntensity / 100);
-    }
-
     // Update text alignment
     ctx.textAlign = effectiveValues.textAlign;
 
@@ -218,7 +212,6 @@ export function CanvasPreview() {
     effectiveValues.resolution.height,
     effectiveValues.backgroundColor,
     effectiveValues.grainIntensity,
-    effectiveValues.vignetteIntensity,
     effectiveValues.text,
     effectiveValues.textColor,
     effectiveValues.fontSize,

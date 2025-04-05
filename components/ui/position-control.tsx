@@ -97,32 +97,16 @@ export function PositionControl({
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <label className="text-sm text-muted-foreground">Text Position</label>
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={snapToGrid}
-            onCheckedChange={setSnapToGrid}
-            id="snap-grid"
-          />
-          <label
-            htmlFor="snap-grid"
-            className="text-xs text-muted-foreground cursor-pointer"
-          >
-            Snap to Grid
-          </label>
-        </div>
-      </div>
+    <div className="flex flex-col gap-4">
       <div
         className={cn(
-          "relative w-full h-[200px] flex items-center justify-center mx-auto",
+          "relative w-full h-[200px] flex items-center justify-between mx-auto flex-col",
           className
         )}
       >
         <div
           ref={containerRef}
-          className="relative rounded-xl bg-secondary border border-primary/10"
+          className="relative rounded-xl bg-secondary border border-primary/10 my-auto"
           onPointerDown={(e) => {
             setIsDragging(true);
             const pos = absoluteToRelative(e.clientX, e.clientY);
@@ -138,6 +122,20 @@ export function PositionControl({
           <div
             className="absolute w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary cursor-grab active:cursor-grabbing"
             style={handlePosition}
+          />
+        </div>
+
+        <div className="flex items-center justify-between w-full">
+          <label
+            htmlFor="snap-grid"
+            className="text-xs text-muted-foreground cursor-pointer"
+          >
+            Snap to Grid
+          </label>
+          <Switch
+            checked={snapToGrid}
+            onCheckedChange={setSnapToGrid}
+            id="snap-grid"
           />
         </div>
       </div>

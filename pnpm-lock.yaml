@@ -113,6 +113,9 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.0.0(react@19.0.0)
+      react-use-controllable-state:
+        specifier: ^0.0.8
+        version: 0.0.8(react@19.0.0)
       react-zoom-pan-pinch:
         specifier: ^3.6.1
         version: 3.6.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -2417,6 +2420,11 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  react-use-controllable-state@0.0.8:
+    resolution: {integrity: sha512-1Vf6hzv+1ZKJYT6E0DS3KWJvgZ4yE9Hj3BbA95VZkUClPyNs2My6TfWn23aX8iTvcAJFjbZkW/5in6n1Jo0wNA==}
+    peerDependencies:
+      react: '>=16.7.0-alpha.1'
 
   react-zoom-pan-pinch@3.6.1:
     resolution: {integrity: sha512-SdPqdk7QDSV7u/WulkFOi+cnza8rEZ0XX4ZpeH7vx3UZEg7DoyuAy3MCmm+BWv/idPQL2Oe73VoC0EhfCN+sZQ==}
@@ -5168,6 +5176,10 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.0.2
+
+  react-use-controllable-state@0.0.8(react@19.0.0):
+    dependencies:
+      react: 19.0.0
 
   react-zoom-pan-pinch@3.6.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:

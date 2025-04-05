@@ -1,20 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { WandSparklesIcon, Undo, Trash2Icon } from "lucide-react";
+import { WandSparklesIcon } from "lucide-react";
 import { motion } from "motion/react";
-import { CircleProps } from "@/lib/constants";
 import { Button } from "./button";
 
 interface ButtonsChinProps {
   isMobile?: boolean;
   generateNewPalette: () => void;
   isGenerating: boolean;
-  previousCircles: CircleProps[];
-  setCircles: (circles: CircleProps[]) => void;
-  setPreviousCircles: (circles: CircleProps[]) => void;
-  handleImageUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  backgroundImage: string | null;
   setBackgroundImage: (image: string | null) => void;
   setBlur: (blur: number) => void;
   blur: number;
@@ -24,10 +18,6 @@ export function ButtonsChin({
   isMobile = false,
   generateNewPalette,
   isGenerating,
-  previousCircles,
-  setCircles,
-  setPreviousCircles,
-  backgroundImage,
   setBackgroundImage,
   setBlur,
   blur,
@@ -55,21 +45,22 @@ export function ButtonsChin({
 
   return (
     <motion.div
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{
-        duration: 1,
-        ease: "easeInOut",
-        type: "spring",
-        damping: 20,
-        stiffness: 100,
-        mass: 0.5,
-        delay: 0.5,
-      }}
-      className="flex items-center gap-2 mx-auto justify-start lg:justify-center overflow-x-auto no-scrollbar w-fit"
+      // initial={{ scale: 0.9, opacity: 0 }}
+      // animate={{ scale: 1, opacity: 1 }}
+      // transition={{
+      //   duration: 1,
+      //   ease: "easeInOut",
+      //   type: "spring",
+      //   damping: 20,
+      //   stiffness: 100,
+      //   mass: 0.5,
+      //   delay: 0.5,
+      // }}
+      className="flex items-center gap-2 mx-auto justify-start lg:justify-center overflow-x-auto no-scrollbar w-full"
     >
       <Button
-        variant="accent"
+        size="lg"
+        className="flex items-center w-full"
         onClick={() => {
           generateNewPalette();
           setBackgroundImage(null);
@@ -81,24 +72,6 @@ export function ButtonsChin({
       >
         <WandSparklesIcon className="size-4" />
         <span className="text-sm tracking-tight">Generate</span>
-      </Button>
-
-      <Button
-        disabled={previousCircles.length === 0}
-        className="w-fit"
-        onClick={() => {
-          setBackgroundImage(null);
-          if (previousCircles.length > 0) {
-            setCircles(previousCircles);
-            setPreviousCircles([]);
-          }
-        }}
-      >
-        {backgroundImage ? (
-          <Trash2Icon className="size-4" />
-        ) : (
-          <Undo className="size-4" />
-        )}
       </Button>
     </motion.div>
   );

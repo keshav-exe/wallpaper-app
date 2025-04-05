@@ -37,7 +37,6 @@ interface WallpaperState {
   contrast: number;
   brightness: number;
   grainIntensity: number;
-  vignetteIntensity: number;
   textShadow: {
     color: string;
     blur: number;
@@ -46,7 +45,7 @@ interface WallpaperState {
   };
 
   // UI State
-  activeTab: "colors" | "design" | "filters" | "canvas";
+  activeTab: "design" | "effects" | "canvas";
   activeColorPicker: string;
   activeColorType: "text" | "background" | "gradient";
   resolution: { width: number; height: number };
@@ -59,7 +58,7 @@ interface WallpaperState {
   textPosition: { x: number; y: number };
 
   // Add these to WallpaperState interface
-  textMode: "text" | "image";
+  sizeMode: "text" | "image";
   logoImage: string | null;
 
   // Text Alignment
@@ -80,7 +79,7 @@ interface WallpaperState {
   generateNewPalette: () => void;
 
   // Add missing setters
-  setActiveTab: (tab: "colors" | "design" | "filters" | "canvas") => void;
+  setActiveTab: (tab: "design" | "effects" | "canvas") => void;
   setLetterSpacing: (spacing: number) => void;
   setOpacity: (opacity: number) => void;
   setLineHeight: (height: number) => void;
@@ -89,7 +88,6 @@ interface WallpaperState {
   setContrast: (contrast: number) => void;
   setBrightness: (brightness: number) => void;
   setGrainIntensity: (intensity: number) => void;
-  setVignetteIntensity: (intensity: number) => void;
   setTextShadow: Dispatch<
     SetStateAction<{
       color: string;
@@ -116,6 +114,10 @@ interface WallpaperState {
 
   // Add missing setters
   setTextAlign: (align: "left" | "center" | "right") => void;
+
+  // Add to WallpaperState interface
+  isCopying: boolean;
+  setIsCopying: (isCopying: boolean) => void;
 }
 
 export const useWallpaperStore = create<WallpaperState>((set, get) => ({
@@ -132,7 +134,7 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   numCircles: INITIAL_COLORS.length,
   text: "Gradii.",
   htmlContent: "<p>Gradii.</p>",
-  fontSize: 36,
+  fontSize: 10,
   blur: 600,
   fontWeight: 600,
   letterSpacing: -0.02,
@@ -140,7 +142,6 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   fontFamily: "Onest",
   activeTab: "design",
   grainIntensity: 25,
-  vignetteIntensity: 0,
   backgroundColor: "#001220",
   lineHeight: 1,
   textColor: "#f1f1f1",
@@ -166,7 +167,7 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   textPosition: { x: 0, y: 0 },
 
   // Add to initial state
-  textMode: "text",
+  sizeMode: "text",
   logoImage: null,
 
   // Text Alignment
@@ -225,19 +226,10 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
     (grainIntensity: number) => set({ grainIntensity }),
     100
   ),
-  setVignetteIntensity: debounce(
-    (vignetteIntensity: number) => set({ vignetteIntensity }),
-    100
-  ),
   setTextShadow: (value) =>
-    debounce(
-      () =>
-        set({
-          textShadow:
-            typeof value === "function" ? value(get().textShadow) : value,
-        }),
-      100
-    ),
+    set({
+      textShadow: typeof value === "function" ? value(get().textShadow) : value,
+    }),
   setIsItalic: (isItalic) => set({ isItalic }),
   setIsUnderline: (isUnderline) => set({ isUnderline }),
   setIsStrikethrough: (isStrikethrough) => set({ isStrikethrough }),
@@ -251,9 +243,15 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   setTextPosition: (textPosition) => set({ textPosition }),
 
   // Add these actions
-  setTextMode: (mode) => set({ textMode: mode }),
+  setTextMode: (mode) => set({ sizeMode: mode }),
   setLogoImage: (image) => set({ logoImage: image }),
 
   // Add missing setters
   setTextAlign: (align) => set({ textAlign: align }),
+
+  // Add to initial state in useWallpaperStore
+  isCopying: false,
+
+  // Add setter
+  setIsCopying: (isCopying) => set({ isCopying }),
 }));

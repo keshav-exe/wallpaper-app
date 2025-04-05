@@ -44,6 +44,7 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.0.0",
+    "react-use-controllable-state": "^0.0.8",
     "react-zoom-pan-pinch": "^3.6.1",
     "simplex-noise": "^4.0.3",
     "sonner": "^1.7.1",

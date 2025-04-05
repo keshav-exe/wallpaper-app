@@ -59,7 +59,7 @@ export default function Home() {
       );
 
       // Draw the text
-      if (store.textMode === "text") {
+      if (store.sizeMode === "text") {
         const tempDiv = document.createElement("div");
         tempDiv.innerHTML = store.htmlContent;
         const textContent = tempDiv.textContent || "";
@@ -67,7 +67,7 @@ export default function Home() {
         ctx.save();
         ctx.font = `${store.isItalic ? "italic" : ""} ${store.fontWeight} ${
           store.fontSize
-        }px ${store.fontFamily}`;
+        }em ${store.fontFamily}`;
         ctx.fillStyle = store.textColor;
         ctx.textAlign = store.textAlign;
         ctx.textBaseline = "middle";
@@ -96,7 +96,7 @@ export default function Home() {
         ctx.restore();
       }
 
-      if (store.textMode === "image" && store.logoImage) {
+      if (store.sizeMode === "image" && store.logoImage) {
         const img = new Image();
         await new Promise((resolve, reject) => {
           img.onload = resolve;
@@ -144,10 +144,111 @@ export default function Home() {
         URL.revokeObjectURL(url);
       }
 
-      toast.success("Download started");
+      toast.success("Download will start shortly");
     } catch (err) {
       console.error(err);
       toast.error("Failed to download image");
+    }
+  };
+
+  const copyImage = async () => {
+    try {
+      const previewCanvas = document.querySelector(
+        "#wallpaper canvas"
+      ) as HTMLCanvasElement;
+      if (!previewCanvas) return;
+
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = store.resolution.width;
+      tempCanvas.height = store.resolution.height;
+      const ctx = tempCanvas.getContext("2d")!;
+
+      // Draw the preview canvas
+      ctx.drawImage(
+        previewCanvas,
+        0,
+        0,
+        store.resolution.width,
+        store.resolution.height
+      );
+
+      // Handle text/logo drawing same as download
+      if (store.sizeMode === "text") {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = store.htmlContent;
+        const textContent = tempDiv.textContent || "";
+
+        ctx.save();
+        ctx.font = `${store.isItalic ? "italic" : ""} ${store.fontWeight} ${
+          store.fontSize
+        }em ${store.fontFamily}`;
+        ctx.fillStyle = store.textColor;
+        ctx.textAlign = store.textAlign;
+        ctx.textBaseline = "middle";
+
+        if (store.textShadow.blur > 0) {
+          ctx.shadowColor = store.textShadow.color;
+          ctx.shadowBlur = store.textShadow.blur;
+          ctx.shadowOffsetX = store.textShadow.offsetX;
+          ctx.shadowOffsetY = store.textShadow.offsetY;
+        }
+
+        let x = store.resolution.width / 2 + store.textPosition.x;
+        if (store.textAlign === "left") {
+          x = 20 + store.textPosition.x;
+        } else if (store.textAlign === "right") {
+          x = store.resolution.width - 20 + store.textPosition.x;
+        }
+
+        ctx.fillText(
+          textContent,
+          x,
+          store.resolution.height / 2 + store.textPosition.y
+        );
+        ctx.restore();
+      }
+
+      if (store.sizeMode === "image" && store.logoImage) {
+        const img = new Image();
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = store.logoImage as string;
+        });
+
+        const maxWidth = store.resolution.width * 0.5;
+        const maxHeight = store.resolution.height * 0.5;
+        const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+        const width = img.width * scale;
+        const height = img.height * scale;
+
+        ctx.save();
+        ctx.globalAlpha = store.opacity / 100;
+        ctx.filter = `drop-shadow(${store.textShadow.offsetX}px ${store.textShadow.offsetY}px ${store.textShadow.blur}px ${store.textShadow.color})`;
+        ctx.drawImage(
+          img,
+          store.resolution.width / 2 - width / 2 + store.textPosition.x,
+          store.resolution.height / 2 - height / 2 + store.textPosition.y,
+          width,
+          height
+        );
+        ctx.restore();
+      }
+
+      // Convert to blob and copy
+      const blob = await new Promise<Blob>((resolve) =>
+        tempCanvas.toBlob((blob) => resolve(blob!), "image/png")
+      );
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "image/png": blob,
+        }),
+      ]);
+
+      toast.success("Image copied to clipboard");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to copy image");
     }
   };
 
@@ -218,6 +319,7 @@ export default function Home() {
       fonts={FONTS}
       isSafari={isSafari}
       downloadImage={downloadImage}
+      copyImage={copyImage}
       handleColorChange={handleColorChange}
       handleImageUpload={handleImageUpload}
     />
