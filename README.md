@@ -11,11 +11,11 @@
 
 Create beautiful mesh gradients at [https://gradii.fun](https://gradii.fun).
 
-## The Story Behind Gradii
+## Why Gradii?
 
 I use mesh gradients as wallpapers and most of these gradients are locked behind paywalls or not free to use. So I built Gradii - a simple tool that could generate cool gradients for myself and others who love minimal, beautiful wallpapers. What started as a personal project turned into something I wanted to share with everyone who appreciates good design.
 
-## What can you do with this?
+## What can Gradii do?
 
 - Create stunning mesh gradients
 - Add text overlays with various fonts and styles
