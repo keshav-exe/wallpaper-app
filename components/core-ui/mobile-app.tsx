@@ -268,7 +268,7 @@ export default function MobileApp({
   };
 
   return (
-    <main className="relative flex flex-col gap-2 items-center justify-center h-screen w-full">
+    <main className="relative flex flex-col gap-2 items-center justify-center h-[100dvh] w-full">
       <div aria-hidden="true" className="sr-only">
         {fontPreloadText}
       </div>
