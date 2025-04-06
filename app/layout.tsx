@@ -84,14 +84,7 @@ export const metadata = {
     description:
       "A simple gradient generator tool made by designer for designers to create stunning gradients with customizable colors, text, and effects. Use it for your designs, wallpapers, presentations, or mockups or just for fun.",
     siteName: "Gradii",
-    images: [
-      {
-        url: "https://i.ibb.co/xqWH5rCg/gradii-v5-og.png",
-        width: 1200,
-        height: 630,
-        alt: "Gradii - Gradient Wallpaper Generator Preview",
-      },
-    ],
+    images: ["/opengraph-image.png"],
   },
   twitter: {
     card: "summary_large_image",
@@ -99,7 +92,7 @@ export const metadata = {
     description:
       "A simple gradient generator tool made by designer for designers to create stunning gradients with customizable colors, text, and effects. Use it for your designs, wallpapers, presentations, or mockups or just for fun.",
     creator: "@kshvbgde",
-    images: ["https://i.ibb.co/xqWH5rCg/gradii-v5-og.png"],
+    images: ["/opengraph-image.png"],
   },
   robots: {
     index: true,
@@ -140,6 +133,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
         <link rel="manifest" href="/manifest.json" />
         <meta
           name="theme-color"

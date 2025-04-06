@@ -1,3 +1,5 @@
+import { CircleProps } from "../constants";
+
 type ShapeType = "circle" | "blob" | "wave" | "organic";
 
 interface ShapeProps {
@@ -103,4 +105,44 @@ export function renderShape(shape: ShapeProps): string {
         shape.color
       }" opacity="0.8"/>`;
   }
+}
+
+export function drawShape(
+  ctx: CanvasRenderingContext2D,
+  shape: ReturnType<typeof generateRandomShape>,
+  circle: CircleProps
+) {
+  const path = new Path2D();
+
+  // Scale coordinates to canvas size
+  const x = (shape.x / 100) * ctx.canvas.width;
+  const y = (shape.y / 100) * ctx.canvas.height;
+
+  // Generate blob path
+  const points = 6;
+  const radius = (30 / 100) * Math.min(ctx.canvas.width, ctx.canvas.height); // Scale radius
+  const variance = 0.4;
+
+  path.moveTo(x + radius, y);
+
+  for (let i = 1; i <= points; i++) {
+    const angle = (i * 2 * Math.PI) / points;
+    const r = radius * (1 + (Math.random() - 0.5) * variance);
+    const pointX = x + r * Math.cos(angle);
+    const pointY = y + r * Math.sin(angle);
+
+    const prevAngle = ((i - 1) * 2 * Math.PI) / points;
+    const cpRadius = radius * (1.2 + Math.random() * 0.4);
+
+    const cp1x = x + cpRadius * Math.cos(prevAngle + Math.PI / points);
+    const cp1y = y + cpRadius * Math.sin(prevAngle + Math.PI / points);
+    const cp2x = x + cpRadius * Math.cos(angle - Math.PI / points);
+    const cp2y = y + cpRadius * Math.sin(angle - Math.PI / points);
+
+    path.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, pointX, pointY);
+  }
+
+  path.closePath();
+  ctx.fillStyle = circle.color;
+  ctx.fill(path);
 }

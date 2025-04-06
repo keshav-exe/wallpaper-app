@@ -1,82 +1,40 @@
-# Gradii
+<h1 align="center">Gradii</h1>
 
-Create beautiful gradient wallpapers with customizable colors, text, and effects. Built with Next.js 15, TypeScript, and Tailwind CSS.
+<p align="center">
+<img src="https://img.shields.io/badge/Next.js-000000.svg?style=for-the-badge&logo=nextdotjs&logoColor=white">
+<img src="https://img.shields.io/badge/TypeScript-000000.svg?style=for-the-badge&logo=typescript&logoColor=white">
+<img src="https://img.shields.io/badge/TailwindCSS-000000.svg?style=for-the-badge&logo=TailwindCSS&logoColor=white">
+<img src ="https://img.shields.io/badge/shadcn/ui-000000.svg?style=for-the-badge&logo=shadcn/ui&logoColor=white">
+</p>
 
-## Tech Stack
+![GithubBanner](./app/opengraph-image.png)
 
-- Next.js 15
-- TypeScript
-- Tailwind CSS
-- Framer Motion
+Create beautiful mesh gradients at [https://gradii.fun](https://gradii.fun).
+
+## Why Gradii?
+
+I use mesh gradients as wallpapers and most of these gradients are locked behind paywalls or not free to use. So I built Gradii - a simple tool that could generate cool gradients for myself and others who love minimal, beautiful wallpapers. What started as a personal project turned into something I wanted to share with everyone who appreciates good design.
+
+## What can Gradii do?
+
+- Create stunning mesh gradients
+- Add text overlays with various fonts and styles
+- Add image overlays
+- Use it as your wallpaper or as a marketing asset the possibilities are wide
+- Export in multiple resolutions and aspect ratios
 
 ## Development
 
 ```bash
-git clone https://github.com/yourusername/wallpaper-app
 cd wallpaper-app
 pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to start creating.
+## License & Contributing
 
-## Changelog/Features
+This project uses the MIT license. See the [LICENSE](LICENSE) file for details.
 
-### v0.6 BETA
-
-- Mobile responsive UI
-- Added PWA support
-- Improved UI
-- Looks fucking sick
-
-### v0.5 BETA
-
-- Upgraded to Canvas API
-- Added grain and vignette effects using simplex noise
-- Added Text Shadow
-- Added more fonts to select from
-- Improved the initial Color Palette
-- Improved the UI/UX of the app
-- Works seamlessly on all browsers
-
-### v0.4 ALPHA
-
-- Upgraded to Tailwind v4
-- Improved UI of the app
-- Optimization and QoL improvements
-
-### v0.3 ALPHA
-
-- Multiple aspect ratio support (Desktop, Mobile, Square)
-- Background image upload with filters
-- Advanced image adjustments (Saturation, Contrast, Brightness)
-- Safari browser compatibility
-- Improved color picker with hex input
-- Added more fonts to select from
-- Text decoration support (Underline, Strikethrough)
-- Performance improvements
-
-### v0.2 ALPHA RELEASE
-
-- Complete UI rewrite
-- Motion animations with Motion
-- New gradient generation system
-- 4 filter types with SVG patterns
-- Text customization (6 fonts, variable weights)
-- Color adjustment controls
-- Resolution scale switching
-- Undo/redo for gradient changes
-- Blur intensity controls
-- Performance optimizations for large resolutions
-- Mobile detection & fallback UI
-
-### v0.1 PRE-ALPHA RELEASE
-
-- Initial release
-- Basic gradient generation
-- Basic text customization
-- Basic color adjustment
-
-## Feedback & Support
+## Contact & Support
 
 Found a bug or have feedback? Feel free to [DM me on X](https://x.com/kshvbgde).

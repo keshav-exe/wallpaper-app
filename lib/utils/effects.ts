@@ -31,39 +31,3 @@ export function applyGrainEffect(
 
   ctx.putImageData(imageData, 0, 0);
 }
-
-export function applyVignetteEffect(
-  ctx: CanvasRenderingContext2D,
-  intensity: number = 0.7
-) {
-  const w = ctx.canvas.width;
-  const h = ctx.canvas.height;
-
-  // Create a separate canvas for the vignette
-  const vignetteCanvas = document.createElement("canvas");
-  vignetteCanvas.width = w;
-  vignetteCanvas.height = h;
-  const vignetteCtx = vignetteCanvas.getContext("2d")!;
-
-  const gradient = vignetteCtx.createRadialGradient(
-    w / 2,
-    h / 2,
-    0,
-    w / 2,
-    h / 2,
-    Math.max(w / 2, h / 2)
-  );
-
-  gradient.addColorStop(0, "rgba(0,0,0,0)");
-  gradient.addColorStop(0.7, `rgba(0,0,0,${intensity * 0.5})`);
-  gradient.addColorStop(1, `rgba(0,0,0,${intensity})`);
-
-  vignetteCtx.fillStyle = gradient;
-  vignetteCtx.fillRect(0, 0, w, h);
-
-  // Apply vignette with multiply blend mode
-  ctx.save();
-  ctx.globalCompositeOperation = "multiply";
-  ctx.drawImage(vignetteCanvas, 0, 0);
-  ctx.restore();
-}

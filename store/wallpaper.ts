@@ -2,11 +2,10 @@ import { create } from "zustand";
 import {
   INITIAL_COLORS,
   INITIAL_BACKGROUND_COLORS,
-  RESOLUTIONS,
   type CircleProps,
-  FONTS,
 } from "@/lib/constants";
 import { Dispatch, SetStateAction } from "react";
+import { debounce } from "@/lib/utils";
 
 interface WallpaperState {
   // Colors and Circles
@@ -20,6 +19,7 @@ interface WallpaperState {
 
   // Text Properties
   text: string;
+  htmlContent: string;
   fontSize: number;
   fontWeight: number;
   letterSpacing: number;
@@ -37,7 +37,6 @@ interface WallpaperState {
   contrast: number;
   brightness: number;
   grainIntensity: number;
-  vignetteIntensity: number;
   textShadow: {
     color: string;
     blur: number;
@@ -46,15 +45,24 @@ interface WallpaperState {
   };
 
   // UI State
-  activeTab: "colors" | "text" | "effects" | "background";
+  activeTab: "design" | "effects" | "canvas";
   activeColorPicker: string;
   activeColorType: "text" | "background" | "gradient";
-  resolution: (typeof RESOLUTIONS)[number];
-  modifiedProperties: Set<string>;
+  resolution: { width: number; height: number };
   isDownloading: boolean;
   isGenerating: boolean;
   isUploading: boolean;
   backgroundImage: string | null;
+
+  // Position
+  textPosition: { x: number; y: number };
+
+  // Add these to WallpaperState interface
+  sizeMode: "text" | "image";
+  logoImage: string | null;
+
+  // Text Alignment
+  textAlign: "left" | "center" | "right";
 
   // Actions
   setCircles: (circles: CircleProps[]) => void;
@@ -62,16 +70,16 @@ interface WallpaperState {
   setActiveColor: (index: number | null) => void;
   updateColor: (newColor: string, index: number) => void;
   setText: (text: string) => void;
+  setHtmlContent: (content: string) => void;
   setFontSize: (size: number) => void;
   setFontWeight: (weight: number) => void;
   setFontFamily: (family: string) => void;
   setBackgroundColor: (color: string) => void;
   setTextColor: (color: string) => void;
-  trackPropertyModification: (property: string) => void;
   generateNewPalette: () => void;
 
   // Add missing setters
-  setActiveTab: (tab: "colors" | "text" | "effects" | "background") => void;
+  setActiveTab: (tab: "design" | "effects" | "canvas") => void;
   setLetterSpacing: (spacing: number) => void;
   setOpacity: (opacity: number) => void;
   setLineHeight: (height: number) => void;
@@ -80,7 +88,6 @@ interface WallpaperState {
   setContrast: (contrast: number) => void;
   setBrightness: (brightness: number) => void;
   setGrainIntensity: (intensity: number) => void;
-  setVignetteIntensity: (intensity: number) => void;
   setTextShadow: Dispatch<
     SetStateAction<{
       color: string;
@@ -92,12 +99,25 @@ interface WallpaperState {
   setIsItalic: (isItalic: boolean) => void;
   setIsUnderline: (isUnderline: boolean) => void;
   setIsStrikethrough: (isStrikethrough: boolean) => void;
-  setResolution: (resolution: (typeof RESOLUTIONS)[number]) => void;
+  setResolution: (resolution: { width: number; height: number }) => void;
   setBackgroundImage: (image: string | null) => void;
   setIsUploading: (isUploading: boolean) => void;
   setNumCircles: (num: number) => void;
   setActiveColorPicker: (color: string) => void;
   setActiveColorType: (type: "text" | "background" | "gradient") => void;
+  setIsDownloading: (isDownloading: boolean) => void;
+  setTextPosition: (textPosition: { x: number; y: number }) => void;
+
+  // Add these actions
+  setTextMode: (mode: "text" | "image") => void;
+  setLogoImage: (image: string | null) => void;
+
+  // Add missing setters
+  setTextAlign: (align: "left" | "center" | "right") => void;
+
+  // Add to WallpaperState interface
+  isCopying: boolean;
+  setIsCopying: (isCopying: boolean) => void;
 }
 
 export const useWallpaperStore = create<WallpaperState>((set, get) => ({
@@ -113,21 +133,21 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   previousCircles: [],
   numCircles: INITIAL_COLORS.length,
   text: "Gradii.",
-  fontSize: 36,
-  blur: 500,
+  htmlContent: "<p>Gradii.</p>",
+  fontSize: 10,
+  blur: 600,
   fontWeight: 600,
   letterSpacing: -0.02,
   opacity: 100,
   fontFamily: "Onest",
-  activeTab: "text",
+  activeTab: "design",
   grainIntensity: 25,
-  vignetteIntensity: 0,
-  backgroundColor: "#0D1319",
+  backgroundColor: "#001220",
   lineHeight: 1,
   textColor: "#f1f1f1",
   activeColorPicker: "#f1f1f1",
   activeColorType: "text",
-  resolution: RESOLUTIONS[0],
+  resolution: { width: 1920, height: 1080 },
   saturation: 100,
   contrast: 100,
   brightness: 100,
@@ -135,7 +155,6 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   isItalic: false,
   isUnderline: false,
   isStrikethrough: false,
-  modifiedProperties: new Set(),
   isDownloading: false,
   isGenerating: false,
   isUploading: false,
@@ -145,6 +164,14 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
     offsetX: 0,
     offsetY: 0,
   },
+  textPosition: { x: 0, y: 0 },
+
+  // Add to initial state
+  sizeMode: "text",
+  logoImage: null,
+
+  // Text Alignment
+  textAlign: "center",
 
   // Actions
   setCircles: (circles) => set({ circles }),
@@ -160,23 +187,15 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
     set({ circles: newCircles });
   },
   setText: (text) => set({ text }),
-  setFontSize: (size) => {
-    get().trackPropertyModification("fontSize");
-    set({ fontSize: size });
-  },
+  setHtmlContent: (content) => set({ htmlContent: content }),
+  setFontSize: debounce((size: number) => set({ fontSize: size }), 100),
   setFontWeight: (weight) => set({ fontWeight: weight }),
-  setFontFamily: (family) => {
-    get().trackPropertyModification("fontFamily");
-    set({ fontFamily: family });
-  },
+  setFontFamily: (family) => set({ fontFamily: family }),
   setBackgroundColor: (color) => set({ backgroundColor: color }),
   setTextColor: (color) => set({ textColor: color }),
-  trackPropertyModification: (property) => {
-    const { modifiedProperties } = get();
-    set({ modifiedProperties: new Set([...modifiedProperties, property]) });
-  },
+
   generateNewPalette: () => {
-    const { circles, modifiedProperties } = get();
+    const { circles } = get();
     set({
       previousCircles: circles,
       circles: circles.map((circle) => ({
@@ -185,61 +204,23 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
         cy: Math.random() * 100,
       })),
     });
-
-    if (!modifiedProperties.has("backgroundColor")) {
-      const randomColor =
-        INITIAL_BACKGROUND_COLORS[
-          Math.floor(Math.random() * INITIAL_BACKGROUND_COLORS.length)
-        ];
-      set({ backgroundColor: randomColor });
-    }
-
-    if (!modifiedProperties.has("fontFamily")) {
-      const randomFont = FONTS[Math.floor(Math.random() * FONTS.length)];
-      set({ fontFamily: randomFont.name });
-    }
-
-    if (!modifiedProperties.has("fontWeight")) {
-      const randomFont = FONTS[Math.floor(Math.random() * FONTS.length)];
-      const availableWeights = randomFont?.weights || [
-        100, 200, 300, 400, 500, 600, 700, 800, 900,
-      ];
-      set({
-        fontWeight:
-          availableWeights[Math.floor(Math.random() * availableWeights.length)],
-      });
-    }
-
-    if (!modifiedProperties.has("fontSize")) {
-      const fontSizes = [24, 28, 32, 36, 40, 44, 48, 52, 56, 60];
-      set({
-        fontSize: fontSizes[Math.floor(Math.random() * fontSizes.length)],
-      });
-    }
-
-    if (!modifiedProperties.has("letterSpacing")) {
-      set({
-        letterSpacing: Number((Math.random() * 0.15 - 0.05).toFixed(2)),
-      });
-    }
-
-    set({ isGenerating: true });
-    setTimeout(() => {
-      set({ isGenerating: false });
-    }, 1000);
   },
 
-  // Add missing setters
   setActiveTab: (tab) => set({ activeTab: tab }),
-  setLetterSpacing: (spacing) => set({ letterSpacing: spacing }),
+  setLetterSpacing: debounce(
+    (spacing: number) => set({ letterSpacing: spacing }),
+    100
+  ),
   setOpacity: (opacity) => set({ opacity }),
-  setLineHeight: (height) => set({ lineHeight: height }),
-  setBlur: (blur) => set({ blur }),
-  setSaturation: (saturation) => set({ saturation }),
-  setContrast: (contrast) => set({ contrast }),
-  setBrightness: (brightness) => set({ brightness }),
-  setGrainIntensity: (intensity) => set({ grainIntensity: intensity }),
-  setVignetteIntensity: (intensity) => set({ vignetteIntensity: intensity }),
+  setLineHeight: debounce((height: number) => set({ lineHeight: height }), 100),
+  setBlur: debounce((blur: number) => set({ blur }), 100),
+  setSaturation: debounce((saturation: number) => set({ saturation }), 100),
+  setContrast: debounce((contrast: number) => set({ contrast }), 100),
+  setBrightness: debounce((brightness: number) => set({ brightness }), 100),
+  setGrainIntensity: debounce(
+    (grainIntensity: number) => set({ grainIntensity }),
+    100
+  ),
   setTextShadow: (value) =>
     set({
       textShadow: typeof value === "function" ? value(get().textShadow) : value,
@@ -253,4 +234,11 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   setNumCircles: (num) => set({ numCircles: num }),
   setActiveColorPicker: (color) => set({ activeColorPicker: color }),
   setActiveColorType: (type) => set({ activeColorType: type }),
+  setIsDownloading: (isDownloading) => set({ isDownloading }),
+  setTextPosition: (textPosition) => set({ textPosition }),
+  setTextMode: (mode) => set({ sizeMode: mode }),
+  setLogoImage: (image) => set({ logoImage: image }),
+  setTextAlign: (align) => set({ textAlign: align }),
+  isCopying: false,
+  setIsCopying: (isCopying) => set({ isCopying }),
 }));

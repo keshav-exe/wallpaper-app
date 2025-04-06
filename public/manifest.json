@@ -4,7 +4,7 @@
   "description": "Create beautiful wallpapers with gradients and effects",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "transparent",
+  "theme_color": "#09090b",
   "icons": [
     {
       "src": "/icons/logo-192.png",
