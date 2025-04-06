@@ -625,9 +625,18 @@ export default function MobileApp({
                               <Input
                                 className="pl-10"
                                 type="text"
-                                value={textColor}
+                                value={
+                                  textColor.startsWith("#")
+                                    ? textColor
+                                    : `#${textColor}`
+                                }
                                 placeholder="Color"
-                                onChange={(e) => setTextColor(e.target.value)}
+                                onChange={(e) => {
+                                  const color = e.target.value.startsWith("#")
+                                    ? e.target.value
+                                    : `#${e.target.value}`;
+                                  setTextColor(color);
+                                }}
                               />
                             </div>
                           </div>
@@ -896,14 +905,21 @@ export default function MobileApp({
                         <Input
                           className="pl-10"
                           type="text"
-                          value={textShadow.color}
+                          value={
+                            textShadow.color.startsWith("#")
+                              ? textShadow.color
+                              : `#${textShadow.color}`
+                          }
                           placeholder="Glow Color"
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const color = e.target.value.startsWith("#")
+                              ? e.target.value
+                              : `#${e.target.value}`;
                             setTextShadow((prev) => ({
                               ...prev,
-                              color: e.target.value,
-                            }))
-                          }
+                              color: color,
+                            }));
+                          }}
                         />
                       </div>
 
@@ -1168,11 +1184,18 @@ export default function MobileApp({
                             </Popover>
                             <Input
                               type="text"
-                              value={backgroundColor}
-                              placeholder="Background Color"
-                              onChange={(e) =>
-                                setBackgroundColor(e.target.value)
+                              value={
+                                backgroundColor.startsWith("#")
+                                  ? backgroundColor
+                                  : `#${backgroundColor}`
                               }
+                              placeholder="Background Color"
+                              onChange={(e) => {
+                                const color = e.target.value.startsWith("#")
+                                  ? e.target.value
+                                  : `#${e.target.value}`;
+                                setBackgroundColor(color);
+                              }}
                               className={cn(
                                 "resize-none pl-10",
                                 backgroundImage &&
@@ -1322,12 +1345,21 @@ export default function MobileApp({
 
                                   <Input
                                     type="text"
-                                    value={circle.color}
+                                    value={
+                                      circle.color.startsWith("#")
+                                        ? circle.color
+                                        : `#${circle.color}`
+                                    }
                                     className="w-full pl-10 pr-4"
                                     placeholder="Color"
-                                    onChange={(e) =>
-                                      updateColor(e.target.value, i)
-                                    }
+                                    onChange={(e) => {
+                                      const color = e.target.value.startsWith(
+                                        "#"
+                                      )
+                                        ? e.target.value
+                                        : `#${e.target.value}`;
+                                      updateColor(color, i);
+                                    }}
                                   />
                                   <button
                                     className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer"

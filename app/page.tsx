@@ -218,18 +218,19 @@ export default function Home() {
 
       // Handle text/logo drawing same as download
       if (store.sizeMode === "text") {
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = store.htmlContent;
-        const textContent = tempDiv.textContent || "";
-
         ctx.save();
-        ctx.font = `${store.isItalic ? "italic" : ""} ${store.fontWeight} ${
-          store.fontSize
-        }em ${store.fontFamily}`;
-        ctx.fillStyle = store.textColor;
-        ctx.textAlign = store.textAlign;
-        ctx.textBaseline = "middle";
 
+        // Set font properties
+        const fontString = `${store.isItalic ? "italic" : ""} ${
+          store.fontWeight
+        } ${store.fontSize * 16}px ${store.fontFamily}`;
+        ctx.font = fontString;
+        ctx.fillStyle = store.textColor;
+        ctx.textAlign = store.textAlign as CanvasTextAlign;
+        ctx.textBaseline = "middle";
+        ctx.globalAlpha = store.opacity / 100;
+
+        // Set text decorations
         if (store.textShadow.blur > 0) {
           ctx.shadowColor = store.textShadow.color;
           ctx.shadowBlur = store.textShadow.blur;
@@ -237,6 +238,7 @@ export default function Home() {
           ctx.shadowOffsetY = store.textShadow.offsetY;
         }
 
+        // Calculate text position
         let x = store.resolution.width / 2 + store.textPosition.x;
         if (store.textAlign === "left") {
           x = 20 + store.textPosition.x;
@@ -244,11 +246,46 @@ export default function Home() {
           x = store.resolution.width - 20 + store.textPosition.x;
         }
 
-        ctx.fillText(
-          textContent,
-          x,
-          store.resolution.height / 2 + store.textPosition.y
-        );
+        // Handle multiline text
+        const lines = store.text.split("\n");
+        const lineHeight = store.fontSize * 16 * store.lineHeight;
+        const totalHeight = lines.length * lineHeight;
+        const startY =
+          store.resolution.height / 2 - totalHeight / 2 + store.textPosition.y;
+
+        lines.forEach((line, index) => {
+          const y = startY + index * lineHeight + lineHeight / 2;
+          ctx.fillText(line, x, y);
+
+          // Draw text decorations
+          if (store.isUnderline || store.isStrikethrough) {
+            const textMetrics = ctx.measureText(line);
+            const textWidth = textMetrics.width;
+            let decorationY = y;
+
+            if (store.isUnderline) {
+              decorationY = y + textMetrics.actualBoundingBoxDescent + 2;
+            }
+            if (store.isStrikethrough) {
+              decorationY = y;
+            }
+
+            let startX = x;
+            if (store.textAlign === "center") {
+              startX = x - textWidth / 2;
+            } else if (store.textAlign === "right") {
+              startX = x - textWidth;
+            }
+
+            ctx.beginPath();
+            ctx.strokeStyle = store.textColor;
+            ctx.lineWidth = Math.max(1, store.fontSize * 0.05);
+            ctx.moveTo(startX, decorationY);
+            ctx.lineTo(startX + textWidth, decorationY);
+            ctx.stroke();
+          }
+        });
+
         ctx.restore();
       }
 
