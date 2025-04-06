@@ -137,6 +137,11 @@ export default function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
         />
+        <script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="a6c56611-b58e-4db6-96b2-de9da8d17529"
+        ></script>
         <link rel="manifest" href="/manifest.json" />
         <meta
           name="theme-color"
