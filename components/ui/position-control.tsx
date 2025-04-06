@@ -97,36 +97,14 @@ export function PositionControl({
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div
-        className={"relative w-full h-[200px] flex justify-between flex-col"}
-      >
-        <h4 className="text-sm text-muted-foreground">Position Control</h4>
-        <div
-          ref={containerRef}
-          className={cn(
-            "relative rounded-xl bg-secondary border border-primary/10 flex mx-auto scale-95 hover:scale-100 transition-all duration-300 ease-[cubic-bezier(0.45, 0.05, 0.55, 0.95)] hover:border-primary/20",
-            className
-          )}
-          onPointerDown={(e) => {
-            setIsDragging(true);
-            const pos = absoluteToRelative(e.clientX, e.clientY);
-            onChange(pos);
-          }}
-          style={{
-            ...containerStyle,
-            backgroundImage:
-              "radial-gradient(circle at center, hsl(var(--foreground) / 0.1) 1px, transparent 1px)",
-            backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
-          }}
-        >
-          <div
-            className="absolute w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary cursor-grab active:cursor-grabbing"
-            style={handlePosition}
-          />
-        </div>
-
-        <div className="flex items-center justify-between w-full">
+    <div
+      className={
+        "relative w-full flex flex-col pb-32 lg:pb-0 gap-6 lg:min-h-[20vh] lg:max-h-[35vh] h-full"
+      }
+    >
+      <div className="flex items-center justify-between w-full">
+        <h4 className="text-sm text-muted-foreground">Position</h4>
+        <div className="flex items-center gap-2">
           <label
             htmlFor="snap-grid"
             className="text-xs text-muted-foreground cursor-pointer"
@@ -139,6 +117,29 @@ export function PositionControl({
             id="snap-grid"
           />
         </div>
+      </div>
+      <div
+        ref={containerRef}
+        className={cn(
+          "relative rounded-xl bg-secondary border border-primary/10 flex mx-auto scale-95 hover:scale-100 transition-all duration-300 ease-[cubic-bezier(0.45, 0.05, 0.55, 0.95)] hover:border-primary/20",
+          className
+        )}
+        onPointerDown={(e) => {
+          setIsDragging(true);
+          const pos = absoluteToRelative(e.clientX, e.clientY);
+          onChange(pos);
+        }}
+        style={{
+          ...containerStyle,
+          backgroundImage:
+            "radial-gradient(circle at center, hsl(var(--foreground) / 0.1) 1px, transparent 1px)",
+          backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
+        }}
+      >
+        <div
+          className="absolute w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary cursor-grab active:cursor-grabbing"
+          style={handlePosition}
+        />
       </div>
     </div>
   );

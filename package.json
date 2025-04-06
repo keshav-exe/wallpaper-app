@@ -34,7 +34,6 @@
     "clsx": "^2.1.1",
     "context-filter-polyfill": "^0.3.22",
     "framer-motion": "^12.4.3",
-    "html2canvas": "^1.4.1",
     "lucide-react": "^0.469.0",
     "motion": "^11.15.0",
     "next": "15.1.3",

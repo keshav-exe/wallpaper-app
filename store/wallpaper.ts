@@ -193,6 +193,7 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   setFontFamily: (family) => set({ fontFamily: family }),
   setBackgroundColor: (color) => set({ backgroundColor: color }),
   setTextColor: (color) => set({ textColor: color }),
+
   generateNewPalette: () => {
     const { circles } = get();
     set({
@@ -203,14 +204,8 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
         cy: Math.random() * 100,
       })),
     });
-
-    set({ isGenerating: true });
-    setTimeout(() => {
-      set({ isGenerating: false });
-    }, 1000);
   },
 
-  // Add missing setters
   setActiveTab: (tab) => set({ activeTab: tab }),
   setLetterSpacing: debounce(
     (spacing: number) => set({ letterSpacing: spacing }),
@@ -241,17 +236,9 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   setActiveColorType: (type) => set({ activeColorType: type }),
   setIsDownloading: (isDownloading) => set({ isDownloading }),
   setTextPosition: (textPosition) => set({ textPosition }),
-
-  // Add these actions
   setTextMode: (mode) => set({ sizeMode: mode }),
   setLogoImage: (image) => set({ logoImage: image }),
-
-  // Add missing setters
   setTextAlign: (align) => set({ textAlign: align }),
-
-  // Add to initial state in useWallpaperStore
   isCopying: false,
-
-  // Add setter
   setIsCopying: (isCopying) => set({ isCopying }),
 }));

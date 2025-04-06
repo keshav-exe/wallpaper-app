@@ -72,13 +72,17 @@ export default function SettingsDrawerContent({
             </p>
           </div>
         </div>
-        <div className="flex flex-col gap-2 justify-between border border-primary/10 rounded-2xl p-4 bg-foreground/5 min-h-40">
+        <Link
+          href="https://x.com/intent/tweet?text=Check%20out%20Gradii%20-%20A%20beautiful%20open-source%20gradient%20generator%20tool%0A%0Ahttps%3A%2F%2Fgithub.com%2Fkeshav-exe%2Fwallpaper-app"
+          target="_blank"
+          className="flex flex-col gap-2 justify-between border border-primary/10 rounded-2xl p-4 bg-foreground/5 min-h-40"
+        >
           <TwitterIcon className="size-6" />
           <h5 className="font-medium tracking-tight">
             Enjoying <span className="font-bold">Gradii</span>? Share your
             experience on X/Twitter
           </h5>
-        </div>
+        </Link>
       </div>
     </div>
   );

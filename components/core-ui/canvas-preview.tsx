@@ -188,20 +188,16 @@ export function CanvasPreview() {
     if (effectiveValues.text) {
       const textContent = effectiveValues.text;
       ctx.fillStyle = effectiveValues.textColor;
-      ctx.font = `${effectiveValues.fontWeight} ${effectiveValues.fontSize}px ${effectiveValues.fontFamily}`;
+      ctx.font = `${effectiveValues.fontWeight} ${effectiveValues.fontSize}em ${effectiveValues.fontFamily}`;
       ctx.textBaseline = "middle";
-      ctx.fillText(
-        textContent,
-        effectiveValues.textAlign === "center"
-          ? effectiveValues.resolution.width / 2 +
-              effectiveValues.textPosition.x
-          : effectiveValues.textAlign === "left"
-          ? effectiveValues.fontSize + effectiveValues.textPosition.x
-          : effectiveValues.resolution.width -
-            effectiveValues.fontSize +
-            effectiveValues.textPosition.x,
-        effectiveValues.resolution.height / 2 + effectiveValues.textPosition.y
-      );
+
+      // Always calculate position relative to center, regardless of alignment
+      const x =
+        effectiveValues.resolution.width / 2 + effectiveValues.textPosition.x;
+      const y =
+        effectiveValues.resolution.height / 2 + effectiveValues.textPosition.y;
+
+      ctx.fillText(textContent, x, y);
     }
   }, [
     effectiveValues.blur,

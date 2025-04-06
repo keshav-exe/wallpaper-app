@@ -21,6 +21,8 @@ import {
   PlusIcon,
   ExpandIcon,
   Move,
+  RefreshCcwIcon,
+  ShuffleIcon,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -62,6 +64,14 @@ import { PositionControl } from "../ui/position-control";
 import { toast } from "sonner";
 import SettingsDrawerContent from "../drawer-content/settings-drawer-content";
 import { motion } from "motion/react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function DraggablePreview({
   children,
@@ -101,7 +111,6 @@ export default function MobileApp({
   circles,
   textColor,
   generateNewPalette,
-  isGenerating,
   downloadImage,
   isDownloading,
   previousCircles,
@@ -161,6 +170,7 @@ export default function MobileApp({
   setTextAlign,
   copyImage,
   isCopying,
+  handlePaletteChange,
 }: AppProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(0.2);
@@ -168,6 +178,8 @@ export default function MobileApp({
   const [isPositionControlOpen, setIsPositionControlOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isResolutionOpen, setIsResolutionOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);
 
   const handleBackgroundImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -383,22 +395,47 @@ export default function MobileApp({
           </div>
         </DndContext>
 
-        <div className="absolute bottom-0 right-0 left-0 flex items-center gap-2 z-10 justify-between px-4 py-2">
+        <div className="absolute bottom-0 right-0 left-0 flex items-end gap-2 z-10 justify-between px-4 py-2">
           <div className="flex items-center gap-2">
             <Button
-              className="w-fit"
               variant="accent"
+              className="w-fit"
               onClick={() => {
-                generateNewPalette();
+                const hasSeenWarning = localStorage.getItem(
+                  "generate-warning-seen"
+                );
+                if (!hasSeenWarning) {
+                  setShowGenerateConfirm(true);
+                  return;
+                }
+                handlePaletteChange();
                 setBackgroundImage(null);
                 if (blur === 0) {
                   setBlur(600);
                 }
+                setIsGenerating(true);
+                setTimeout(() => {
+                  setIsGenerating(false);
+                }, 1000);
               }}
               disabled={isGenerating}
             >
               <WandSparklesIcon className="size-4" />
-              <span className="text-xs">Generate</span>
+              <span className="text-xs tracking-tight">Generate</span>
+            </Button>
+            <Button
+              className="w-fit"
+              onClick={() => {
+                generateNewPalette();
+                setIsGenerating(true);
+                setTimeout(() => {
+                  setIsGenerating(false);
+                }, 2000);
+              }}
+              disabled={numCircles >= 10}
+            >
+              <ShuffleIcon className="size-4" />
+              <span className="text-xs tracking-tight">Shuffle</span>
             </Button>
             <Button
               disabled={previousCircles.length === 0}
@@ -417,6 +454,9 @@ export default function MobileApp({
                 <Undo className="size-4" />
               )}
             </Button>
+          </div>
+
+          <div className="flex flex-col items-center gap-2">
             <Button
               onClick={() => setZoom((z) => Math.min(z + 0.05, 2))}
               className="w-fit"
@@ -429,13 +469,13 @@ export default function MobileApp({
             >
               <ZoomOutIcon className="size-4" />
             </Button>
+            <Button
+              className="w-fit"
+              onClick={() => setIsPositionControlOpen(true)}
+            >
+              <Move className="size-4" />
+            </Button>
           </div>
-          <Button
-            className="w-fit"
-            onClick={() => setIsPositionControlOpen(true)}
-          >
-            <Move className="size-4" />
-          </Button>
           <VaulDrawer
             isOpen={isPositionControlOpen}
             setIsOpen={setIsPositionControlOpen}
@@ -450,7 +490,7 @@ export default function MobileApp({
                 onChange={setTextPosition}
                 width={resolution.width}
                 height={resolution.height}
-                className="max-w-[220px] h-[220px]"
+                className="max-w-[280px] max-h-[280px]"
               />
             </div>
           </VaulDrawer>
@@ -467,11 +507,11 @@ export default function MobileApp({
                   <motion.div
                     key={activeTab}
                     className="flex flex-col gap-8"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    initial={{ y: 10 }}
+                    animate={{ y: 0 }}
+                    exit={{ y: -10 }}
                     transition={{
-                      duration: 0.3,
+                      duration: 0.2,
                       type: "spring",
                       damping: 10,
                       stiffness: 100,
@@ -765,11 +805,11 @@ export default function MobileApp({
                   <motion.div
                     key={activeTab}
                     className="flex flex-col gap-8"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    initial={{ y: 10 }}
+                    animate={{ y: 0 }}
+                    exit={{ y: -10 }}
                     transition={{
-                      duration: 0.3,
+                      duration: 0.2,
                       type: "spring",
                       damping: 10,
                       stiffness: 100,
@@ -922,11 +962,11 @@ export default function MobileApp({
                   <motion.div
                     key={activeTab}
                     className="flex flex-col gap-8"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    initial={{ y: 10 }}
+                    animate={{ y: 0 }}
+                    exit={{ y: -10 }}
                     transition={{
-                      duration: 0.3,
+                      duration: 0.2,
                       type: "spring",
                       damping: 10,
                       stiffness: 100,
@@ -1213,21 +1253,35 @@ export default function MobileApp({
                             <label className="text-sm text-muted-foreground">
                               Palette
                             </label>
-                            <button
-                              className="text-muted-foreground hover:text-foreground transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                              onClick={() => {
-                                const newCircle = {
-                                  color: colors[circles.length % colors.length],
-                                  cx: Math.random() * 100,
-                                  cy: Math.random() * 100,
-                                };
-                                setCircles([...circles, newCircle]);
-                                setNumCircles(circles.length + 1);
-                              }}
-                              disabled={numCircles >= 10}
-                            >
-                              <PlusIcon className="size-4" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                className="p-0"
+                                onClick={() => {
+                                  generateNewPalette();
+                                }}
+                                disabled={numCircles >= 10}
+                              >
+                                <RefreshCcwIcon className="size-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                className="p-0"
+                                onClick={() => {
+                                  const newCircle = {
+                                    color:
+                                      colors[circles.length % colors.length],
+                                    cx: Math.random() * 100,
+                                    cy: Math.random() * 100,
+                                  };
+                                  setCircles([...circles, newCircle]);
+                                  setNumCircles(circles.length + 1);
+                                }}
+                                disabled={numCircles >= 10}
+                              >
+                                <PlusIcon className="size-4" />
+                              </Button>
+                            </div>
                           </div>
                           {circles.map((circle, i) => (
                             <div
@@ -1331,6 +1385,43 @@ export default function MobileApp({
           </TabsList>
         </Tabs>
       </aside>
+      <Dialog open={showGenerateConfirm} onOpenChange={setShowGenerateConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generate New Colors</DialogTitle>
+            <DialogDescription>
+              Clicking generate will reset all the colors and create a fresh set
+              of colors.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => setShowGenerateConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="accent"
+              onClick={() => {
+                localStorage.setItem("generate-warning-seen", "true");
+                setShowGenerateConfirm(false);
+                handlePaletteChange();
+                setBackgroundImage(null);
+                if (blur === 0) {
+                  setBlur(600);
+                }
+                setIsGenerating(true);
+                setTimeout(() => {
+                  setIsGenerating(false);
+                }, 2000);
+              }}
+            >
+              Generate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

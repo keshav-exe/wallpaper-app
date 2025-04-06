@@ -280,14 +280,33 @@ export default function Home() {
       }
 
       // Convert to blob and copy
-      const blob = await new Promise<Blob>((resolve) =>
-        tempCanvas.toBlob((blob) => resolve(blob!), "image/png")
-      );
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          "image/png": blob,
-        }),
-      ]);
+      try {
+        // Try modern Clipboard API first
+        const blob = await new Promise<Blob>((resolve) =>
+          tempCanvas.toBlob((blob) => resolve(blob!), "image/png")
+        );
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "image/png": blob,
+          }),
+        ]);
+      } catch (e) {
+        console.error(e);
+        // Fallback for Safari
+        const dataUrl = tempCanvas.toDataURL("image/png");
+        const textArea = document.createElement("textarea");
+        textArea.value = dataUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand("copy");
+          document.body.removeChild(textArea);
+        } catch (err) {
+          document.body.removeChild(textArea);
+          console.error(err);
+          throw new Error("Failed to copy to clipboard");
+        }
+      }
 
       toast.success("Image copied to clipboard");
     } catch (err) {
@@ -355,6 +374,139 @@ export default function Home() {
     reader.readAsDataURL(file);
   };
 
+  const handlePaletteChange = () => {
+    const generateHarmonious = () => {
+      // Color schemes with more variety
+      const schemes = [
+        { hueStep: 30, count: Math.floor(Math.random() * 6) + 3 }, // Analogous
+        { hueStep: 120, count: Math.floor(Math.random() * 4) + 3 }, // Triadic
+        { hueStep: 180, count: Math.floor(Math.random() * 4) + 2 }, // Split complementary
+        { hueStep: 60, count: Math.floor(Math.random() * 6) + 3 }, // Hexadic
+        { hueStep: 90, count: Math.floor(Math.random() * 4) + 3 }, // Square
+        { hueStep: 45, count: Math.floor(Math.random() * 5) + 3 }, // Custom angle
+      ];
+
+      const scheme = schemes[Math.floor(Math.random() * schemes.length)];
+      const baseHue = Math.random() * 360;
+
+      // Enhanced saturation and lightness ranges
+      const satRanges = [
+        { min: 70, max: 90 }, // Vibrant
+        { min: 40, max: 60 }, // Muted
+        { min: 85, max: 100 }, // Super saturated
+        { min: 55, max: 75 }, // Balanced
+      ];
+
+      const lightRanges = [
+        { min: 40, max: 60 }, // Medium
+        { min: 60, max: 80 }, // Light
+        { min: 20, max: 40 }, // Dark
+        { min: 30, max: 70 }, // Wide range
+      ];
+
+      // Generate background color with contrasting settings
+      const bgHue = (baseHue + 180) % 360;
+      const bgSat = 20 + Math.random() * 40;
+      const bgLight =
+        Math.random() > 0.5
+          ? 10 + Math.random() * 20 // Dark background
+          : 80 + Math.random() * 15; // Light background
+
+      // Set background color
+      const backgroundColor = hslToHex(bgHue, bgSat, bgLight);
+      store.setBackgroundColor(backgroundColor);
+
+      // Text color: pure white or black based on background, with slight variation
+      const textLight =
+        bgLight < 50
+          ? 95 + Math.random() * 5 // Almost white for dark backgrounds (95-100%)
+          : Math.random() * 5; // Almost black for light backgrounds (0-5%)
+
+      const textColor = hslToHex(0, 0, textLight); // Hue and saturation 0 for pure grayscale
+      store.setTextColor(textColor);
+
+      // Glow: slightly less extreme than text for subtle effect
+      const glowLight =
+        bgLight < 50
+          ? textLight - (10 + Math.random() * 15) // Slightly darker than white text
+          : textLight + (10 + Math.random() * 15); // Slightly lighter than black text
+
+      store.setTextShadow({
+        color: hslToHex(0, 0, glowLight), // Pure grayscale glow
+        blur: store.textShadow.blur, // Smaller blur range for subtlety
+        offsetX: store.textShadow.offsetX,
+        offsetY: store.textShadow.offsetY,
+      });
+
+      const satRange = satRanges[Math.floor(Math.random() * satRanges.length)];
+      const lightRange =
+        lightRanges[Math.floor(Math.random() * lightRanges.length)];
+
+      // Generate base colors from the scheme
+      const baseColors = Array.from({ length: scheme.count }, (_, i) => {
+        const hue = (baseHue + i * scheme.hueStep) % 360;
+        const sat =
+          satRange.min + Math.random() * (satRange.max - satRange.min);
+        const light =
+          lightRange.min + Math.random() * (lightRange.max - lightRange.min);
+        return { h: hue, s: sat, l: light };
+      });
+
+      // Add variations with more diverse modifications
+      const colors = baseColors.flatMap((base) => {
+        const variations = [base];
+
+        // Random chance for additional variations
+        if (Math.random() > 0.3) {
+          variations.push({
+            h: (base.h + 15 - Math.random() * 30) % 360, // Slight hue shift
+            s: Math.max(20, Math.min(100, base.s + (Math.random() * 30 - 15))),
+            l: Math.max(10, Math.min(90, base.l + (Math.random() * 40 - 20))),
+          });
+        }
+        return variations;
+      });
+
+      // Convert HSL to Hex
+      return colors.map(({ h, s, l }) => hslToHex(h, s, l));
+    };
+
+    // Helper function to convert HSL to Hex
+    const hslToHex = (h: number, s: number, l: number) => {
+      const hue = h / 360;
+      const sat = s / 100;
+      const light = l / 100;
+
+      const c = (1 - Math.abs(2 * light - 1)) * sat;
+      const x = c * (1 - Math.abs(((hue * 6) % 2) - 1));
+      const m = light - c / 2;
+
+      let r, g, b;
+      if (hue < 1 / 6) [r, g, b] = [c, x, 0];
+      else if (hue < 2 / 6) [r, g, b] = [x, c, 0];
+      else if (hue < 3 / 6) [r, g, b] = [0, c, x];
+      else if (hue < 4 / 6) [r, g, b] = [0, x, c];
+      else if (hue < 5 / 6) [r, g, b] = [x, 0, c];
+      else [r, g, b] = [c, 0, x];
+
+      const toHex = (n: number) => {
+        const hex = Math.round((n + m) * 255).toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+      };
+
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    };
+
+    const newColors = generateHarmonious();
+    store.setCircles(
+      newColors.map((color) => ({
+        color,
+        cx: Math.random() * 100,
+        cy: Math.random() * 100,
+      }))
+    );
+  };
+
   const AppComponent = isMobile ? MobileApp : DesktopApp;
 
   return (
@@ -366,6 +518,7 @@ export default function Home() {
       copyImage={copyImage}
       handleColorChange={handleColorChange}
       handleImageUpload={handleImageUpload}
+      handlePaletteChange={handlePaletteChange}
     />
   );
 }

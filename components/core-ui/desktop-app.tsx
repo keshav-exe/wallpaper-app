@@ -19,6 +19,7 @@ import {
   PlusIcon,
   ExpandIcon,
   ChevronRight,
+  ShuffleIcon,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -56,11 +57,19 @@ import {
   DragEndEvent,
 } from "@dnd-kit/core";
 import { PositionControl } from "@/components/ui/position-control";
-import VaulDrawer from "../ui/drawer";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import SettingsDrawerContent from "../drawer-content/settings-drawer-content";
 import TwitterIcon from "@/lib/icons/twitter";
 import Link from "next/link";
 import { motion } from "motion/react";
+import VaulDrawer from "../ui/drawer";
 function DraggablePreview({
   children,
   id,
@@ -99,7 +108,6 @@ export default function DesktopApp({
   circles,
   textColor,
   generateNewPalette,
-  isGenerating,
   downloadImage,
   isDownloading,
   previousCircles,
@@ -159,8 +167,11 @@ export default function DesktopApp({
   setTextAlign,
   copyImage,
   isCopying,
+  handlePaletteChange,
 }: AppProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);
 
   const handleBackgroundImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -253,10 +264,10 @@ export default function DesktopApp({
             <ChevronRight className="size-4" />
           </button>
           <Link
-            href="https://twitter.com/intent/tweet?text=Check%20out%20Gradii%20-%20A%20beautiful%20gradient%20generator%20tool%20for%20designers%20%F0%9F%8E%A8%0A%0Ahttps%3A%2F%2Fgithub.com%2Fkeshav-exe%2Fwallpaper-app"
+            href="https://x.com/intent/tweet?text=Check%20out%20Gradii%20-%20A%20beautiful%20open-source%20gradient%20generator%20tool%0A%0Ahttps%3A%2F%2Fgithub.com%2Fkeshav-exe%2Fwallpaper-app"
             target="_blank"
           >
-            <Button variant="accent" size="icon">
+            <Button variant="ghost" size="icon">
               <TwitterIcon className="size-4 " />
             </Button>
           </Link>
@@ -309,11 +320,11 @@ export default function DesktopApp({
               <motion.div
                 key={activeTab}
                 className="flex flex-col gap-8"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
+                exit={{ y: -10 }}
                 transition={{
-                  duration: 0.3,
+                  duration: 0.2,
                   type: "spring",
                   damping: 10,
                   stiffness: 100,
@@ -590,11 +601,11 @@ export default function DesktopApp({
               <motion.div
                 key={activeTab}
                 className="flex flex-col gap-8"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
+                exit={{ y: -10 }}
                 transition={{
-                  duration: 0.3,
+                  duration: 0.2,
                   type: "spring",
                   damping: 10,
                   stiffness: 100,
@@ -763,28 +774,53 @@ export default function DesktopApp({
             variant="accent"
             className="w-fit"
             onClick={() => {
-              generateNewPalette();
+              const hasSeenWarning = localStorage.getItem(
+                "generate-warning-seen"
+              );
+              if (!hasSeenWarning) {
+                setShowGenerateConfirm(true);
+                return;
+              }
+              handlePaletteChange();
               setBackgroundImage(null);
               if (blur === 0) {
                 setBlur(600);
               }
+              setIsGenerating(true);
+              setTimeout(() => {
+                setIsGenerating(false);
+              }, 2000);
             }}
             disabled={isGenerating}
           >
-            <WandSparklesIcon className="size-4" />
-            <span className="text-xs tracking-tight">Generate</span>
+            <WandSparklesIcon className="size-5" />
+            Generate
+          </Button>
+          <Button
+            className="w-fit"
+            onClick={() => {
+              generateNewPalette();
+              setIsGenerating(true);
+              setTimeout(() => {
+                setIsGenerating(false);
+              }, 2000);
+            }}
+            disabled={numCircles >= 10}
+          >
+            <ShuffleIcon className="size-5" />
+            Shuffle
           </Button>
           <Button
             onClick={() => setZoom((z) => Math.min(z + 0.1, 2))}
             className="w-fit"
           >
-            <ZoomInIcon className="size-4" />
+            <ZoomInIcon className="size-5" />
           </Button>
           <Button
             onClick={() => setZoom((z) => Math.max(z - 0.1, 0.1))}
             className="w-fit"
           >
-            <ZoomOutIcon className="size-4" />
+            <ZoomOutIcon className="size-5" />
           </Button>
           <Button
             disabled={previousCircles.length === 0}
@@ -798,9 +834,9 @@ export default function DesktopApp({
             }}
           >
             {backgroundImage ? (
-              <Trash2Icon className="size-4" />
+              <Trash2Icon className="size-5" />
             ) : (
-              <Undo className="size-4" />
+              <Undo className="size-5" />
             )}
           </Button>
         </div>
@@ -827,53 +863,58 @@ export default function DesktopApp({
                     WebkitBackfaceVisibility: "hidden",
                   }}
                 >
-                  {isGenerating && (
+                  {isGenerating ? (
                     <div className="absolute inset-0 bg-background z-50 flex items-center justify-center">
                       <WandSparklesIcon className="size-16 text-primary animate-ping" />
                     </div>
+                  ) : (
+                    <>
+                      <CanvasPreview />
+                      <div className="absolute inset-0 flex items-center justify-center z-40">
+                        {sizeMode === "text" ? (
+                          <p
+                            style={{
+                              fontSize: `${fontSize}em`,
+                              fontWeight: fontWeight,
+                              letterSpacing: `${letterSpacing}em`,
+                              fontFamily: fontFamily,
+                              opacity: opacity / 100,
+                              lineHeight: lineHeight,
+                              color: textColor,
+                              fontStyle: isItalic ? "italic" : "normal",
+                              textDecoration: `${
+                                isUnderline ? "underline" : ""
+                              } ${
+                                isStrikethrough ? "line-through" : ""
+                              }`.trim(),
+                              textShadow: `${textShadow.offsetX}px ${textShadow.offsetY}px ${textShadow.blur}px ${textShadow.color}`,
+                              transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
+                              whiteSpace: "pre-wrap",
+                              textWrap: "nowrap",
+                              textAlign: textAlign,
+                            }}
+                          >
+                            {text}
+                          </p>
+                        ) : (
+                          logoImage && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={logoImage}
+                              alt="Logo"
+                              style={{
+                                maxWidth: `${fontSize}%`,
+                                maxHeight: `${fontSize}%`,
+                                opacity: opacity / 100,
+                                transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
+                                filter: `drop-shadow(${textShadow.offsetX}px ${textShadow.offsetY}px ${textShadow.blur}px ${textShadow.color})`,
+                              }}
+                            />
+                          )
+                        )}
+                      </div>
+                    </>
                   )}
-                  <CanvasPreview />
-
-                  <div className="absolute inset-0 flex items-center justify-center z-40">
-                    {sizeMode === "text" ? (
-                      <p
-                        style={{
-                          fontSize: `${fontSize}em`,
-                          fontWeight: fontWeight,
-                          letterSpacing: `${letterSpacing}em`,
-                          fontFamily: fontFamily,
-                          opacity: opacity / 100,
-                          lineHeight: lineHeight,
-                          color: textColor,
-                          fontStyle: isItalic ? "italic" : "normal",
-                          textDecoration: `${isUnderline ? "underline" : ""} ${
-                            isStrikethrough ? "line-through" : ""
-                          }`.trim(),
-                          textShadow: `${textShadow.offsetX}px ${textShadow.offsetY}px ${textShadow.blur}px ${textShadow.color}`,
-                          transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
-                          whiteSpace: "pre-wrap",
-                          textAlign: textAlign,
-                        }}
-                      >
-                        {text}
-                      </p>
-                    ) : (
-                      logoImage && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={logoImage}
-                          alt="Logo"
-                          style={{
-                            maxWidth: `${fontSize}%`,
-                            maxHeight: `${fontSize}%`,
-                            opacity: opacity / 100,
-                            transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
-                            filter: `drop-shadow(${textShadow.offsetX}px ${textShadow.offsetY}px ${textShadow.blur}px ${textShadow.color})`,
-                          }}
-                        />
-                      )
-                    )}
-                  </div>
                 </div>
               </div>
             </DraggablePreview>
@@ -883,153 +924,149 @@ export default function DesktopApp({
 
       {/* right controls */}
       <aside className="flex flex-col gap-2 w-full max-w-[260px] min-w-[200px] h-full overflow-hidden">
-        <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar rounded-2xl bg-secondary border border-primary/10 p-2">
-          <div className="flex flex-col gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button className="w-full flex">
-                  <div className="flex items-center gap-2 justify-between w-full">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-full min-w-4 min-h-4 border border-primary rounded"
-                        style={{
-                          aspectRatio: `${resolution.width}/${resolution.height}`,
-                        }}
-                      />
+        <div className="flex flex-col gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button className="w-full flex">
+                <div className="flex items-center gap-2 justify-between w-full">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-full min-w-4 min-h-4 border border-primary rounded"
+                      style={{
+                        aspectRatio: `${resolution.width}/${resolution.height}`,
+                      }}
+                    />
 
-                      <div className="flex flex-col gap-1">
-                        <p className="text-sm tracking-tight text-left">
-                          {RESOLUTION_PRESETS.find(
-                            (preset) =>
-                              preset.width === resolution.width &&
-                              preset.height === resolution.height
-                          )?.name || "Custom"}
-                        </p>
-                        <p className="text-xs text-muted-foreground text-left">
-                          {resolution.width}x{resolution.height}
-                        </p>
-                      </div>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm tracking-tight text-left">
+                        {RESOLUTION_PRESETS.find(
+                          (preset) =>
+                            preset.width === resolution.width &&
+                            preset.height === resolution.height
+                        )?.name || "Custom"}
+                      </p>
+                      <p className="text-xs text-muted-foreground text-left">
+                        {resolution.width}x{resolution.height}
+                      </p>
                     </div>
+                  </div>
 
-                    <ExpandIcon
-                      className={`size-4 transition-all duration-300`}
-                    />
-                  </div>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="max-w-lg w-full border border-primary/10 bg-secondary p-0 h-[400px] overflow-y-auto no-scrollbar rounded-2xl">
-                <div className="flex items-center gap-2 p-4 border-b border-primary/10 sticky top-0 bg-secondary">
-                  <div className="flex flex-col w-full gap-1 relative">
-                    <label className="text-xs text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                      W:
-                    </label>
-                    <Input
-                      className="pl-8"
-                      type="number"
-                      min={0}
-                      max={2560}
-                      defaultValue={resolution.width}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (value > 2560) {
-                          toast.error("Maximum width is 2560px");
-                          return;
-                        }
-                        e.target.value = value.toString();
-                      }}
-                      id="width-input"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1 w-full relative">
-                    <label className="text-xs text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                      H:
-                    </label>
-                    <Input
-                      className="pl-8"
-                      type="number"
-                      min={0}
-                      max={2560}
-                      defaultValue={resolution.height}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (value > 2560) {
-                          toast.error("Maximum height is 2560px");
-                          return;
-                        }
-                        e.target.value = value.toString();
-                      }}
-                      id="height-input"
-                    />
-                  </div>
-                  <Button
-                    className="w-fit"
-                    variant="accent"
-                    onClick={() => {
-                      const width = parseInt(
-                        (
-                          document.getElementById(
-                            "width-input"
-                          ) as HTMLInputElement
-                        ).value
-                      );
-                      const height = parseInt(
-                        (
-                          document.getElementById(
-                            "height-input"
-                          ) as HTMLInputElement
-                        ).value
-                      );
-                      if (width > 2560 || height > 2560) {
-                        toast.error("Maximum dimensions are 2560px");
+                  <ExpandIcon
+                    className={`size-4 transition-all duration-300`}
+                  />
+                </div>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="max-w-lg w-full border border-primary/10 bg-secondary p-0 h-[400px] overflow-y-auto no-scrollbar rounded-2xl">
+              <div className="flex items-center gap-2 p-4 border-b border-primary/10 sticky top-0 bg-secondary">
+                <div className="flex flex-col w-full gap-1 relative">
+                  <label className="text-xs text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
+                    W:
+                  </label>
+                  <Input
+                    className="pl-8"
+                    type="number"
+                    min={0}
+                    max={2560}
+                    defaultValue={resolution.width}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (value > 2560) {
+                        toast.error("Maximum width is 2560px");
                         return;
                       }
-                      setResolution({ width, height });
+                      e.target.value = value.toString();
                     }}
-                  >
-                    Apply
-                  </Button>
+                    id="width-input"
+                  />
                 </div>
-                <div className="flex flex-col gap-6 p-4">
-                  {Array.from(
-                    new Set(RESOLUTION_PRESETS.map((preset) => preset.category))
-                  ).map((category) => (
-                    <div key={category} className="flex flex-col gap-2">
-                      <p className="text-xs text-muted-foreground">
-                        {category}
-                      </p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {RESOLUTION_PRESETS.filter(
-                          (preset) => preset.category === category
-                        ).map((preset) => (
-                          <div
-                            key={preset.name}
-                            onClick={() =>
-                              setResolution({
-                                width: preset.width,
-                                height: preset.height,
-                              })
-                            }
-                            className="flex flex-col items-center gap-4 cursor-pointer bg-foreground/5 rounded-xl p-2 border border-primary/10 hover:bg-foreground/10 transition-all duration-300 justify-between"
-                          >
-                            <div className="flex flex-col gap-2 items-center">
-                              <p className="tracking-tight text-left font-medium">
-                                {preset.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                ({preset.width}x{preset.height})
-                              </p>
-                            </div>
+                <div className="flex flex-col gap-1 w-full relative">
+                  <label className="text-xs text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
+                    H:
+                  </label>
+                  <Input
+                    className="pl-8"
+                    type="number"
+                    min={0}
+                    max={2560}
+                    defaultValue={resolution.height}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (value > 2560) {
+                        toast.error("Maximum height is 2560px");
+                        return;
+                      }
+                      e.target.value = value.toString();
+                    }}
+                    id="height-input"
+                  />
+                </div>
+                <Button
+                  className="w-fit"
+                  variant="accent"
+                  onClick={() => {
+                    const width = parseInt(
+                      (
+                        document.getElementById(
+                          "width-input"
+                        ) as HTMLInputElement
+                      ).value
+                    );
+                    const height = parseInt(
+                      (
+                        document.getElementById(
+                          "height-input"
+                        ) as HTMLInputElement
+                      ).value
+                    );
+                    if (width > 2560 || height > 2560) {
+                      toast.error("Maximum dimensions are 2560px");
+                      return;
+                    }
+                    setResolution({ width, height });
+                  }}
+                >
+                  Apply
+                </Button>
+              </div>
+              <div className="flex flex-col gap-6 p-4">
+                {Array.from(
+                  new Set(RESOLUTION_PRESETS.map((preset) => preset.category))
+                ).map((category) => (
+                  <div key={category} className="flex flex-col gap-2">
+                    <p className="text-xs text-muted-foreground">{category}</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {RESOLUTION_PRESETS.filter(
+                        (preset) => preset.category === category
+                      ).map((preset) => (
+                        <div
+                          key={preset.name}
+                          onClick={() =>
+                            setResolution({
+                              width: preset.width,
+                              height: preset.height,
+                            })
+                          }
+                          className="flex flex-col items-center gap-4 cursor-pointer bg-foreground/5 rounded-xl p-2 border border-primary/10 hover:bg-foreground/10 transition-all duration-300 justify-between"
+                        >
+                          <div className="flex flex-col gap-2 items-center">
+                            <p className="tracking-tight text-left font-medium">
+                              {preset.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              ({preset.width}x{preset.height})
+                            </p>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <Separator className="my-2" />
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+        <div className="flex flex-col gap-4 overflow-y-auto h-full no-scrollbar rounded-2xl bg-secondary border border-primary/10 p-2">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2 w-full">
               <div className="flex flex-col gap-2">
@@ -1135,21 +1172,24 @@ export default function DesktopApp({
                   <label className="text-sm text-muted-foreground">
                     Palette
                   </label>
-                  <button
-                    className="text-muted-foreground hover:text-foreground transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => {
-                      const newCircle = {
-                        color: colors[circles.length % colors.length],
-                        cx: Math.random() * 100,
-                        cy: Math.random() * 100,
-                      };
-                      setCircles([...circles, newCircle]);
-                      setNumCircles(circles.length + 1);
-                    }}
-                    disabled={numCircles >= 10}
-                  >
-                    <PlusIcon className="size-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      className="p-0"
+                      onClick={() => {
+                        const newCircle = {
+                          color: colors[circles.length % colors.length],
+                          cx: Math.random() * 100,
+                          cy: Math.random() * 100,
+                        };
+                        setCircles([...circles, newCircle]);
+                        setNumCircles(circles.length + 1);
+                      }}
+                      disabled={numCircles >= 10}
+                    >
+                      <PlusIcon className="size-4" />
+                    </Button>
+                  </div>
                 </div>
                 {circles.map((circle, i) => (
                   <div
@@ -1216,10 +1256,48 @@ export default function DesktopApp({
             onChange={setTextPosition}
             width={resolution.width}
             height={resolution.height}
-            className="max-w-[180px] h-[180px]"
+            className="max-w-[140px] max-h-[140px]"
           />
         </div>
       </aside>
+
+      <Dialog open={showGenerateConfirm} onOpenChange={setShowGenerateConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generate New Colors</DialogTitle>
+            <DialogDescription>
+              Clicking generate will reset all the colors and create a fresh set
+              of colors.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => setShowGenerateConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="accent"
+              onClick={() => {
+                localStorage.setItem("generate-warning-seen", "true");
+                setShowGenerateConfirm(false);
+                handlePaletteChange();
+                setBackgroundImage(null);
+                if (blur === 0) {
+                  setBlur(600);
+                }
+                setIsGenerating(true);
+                setTimeout(() => {
+                  setIsGenerating(false);
+                }, 2000);
+              }}
+            >
+              Generate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

@@ -121,6 +121,61 @@ export interface ResolutionPreset {
 }
 
 export const RESOLUTION_PRESETS: ResolutionPreset[] = [
+  {
+    name: "16:9",
+    width: 1920,
+    height: 1080,
+    category: "",
+  },
+  {
+    name: "3:2",
+    width: 1920,
+    height: 1280,
+    category: "",
+  },
+  {
+    name: "4:3",
+    width: 1920,
+    height: 1440,
+    category: "",
+  },
+  {
+    name: "5:4",
+    width: 1920,
+    height: 1536,
+    category: "",
+  },
+  {
+    name: "1:1",
+    width: 1920,
+    height: 1920,
+    category: "",
+  },
+  {
+    name: "4:5",
+    width: 1080,
+    height: 1350,
+    category: "",
+  },
+  {
+    name: "3:4",
+    width: 1080,
+    height: 1440,
+    category: "",
+  },
+  {
+    name: "2:3",
+    width: 1080,
+    height: 1620,
+    category: "",
+  },
+  {
+    name: "9:16",
+    width: 1080,
+    height: 1920,
+    category: "",
+  },
+
   // Mobile Devices
   {
     name: "iPhone 15",
@@ -181,10 +236,6 @@ export const RESOLUTION_PRESETS: ResolutionPreset[] = [
 
   // Use:
   { name: "Open Graph", width: 1200, height: 630, category: "Metadata" },
-  { name: "Twitter Card", width: 1200, height: 600, category: "Metadata" },
-  { name: "Icon", width: 192, height: 192, category: "Metadata" },
-  { name: "Icon 512", width: 512, height: 512, category: "Metadata" },
-  { name: "Apple Touch Icon", width: 180, height: 180, category: "Metadata" },
 
   // Facebook
   { name: "Story/Reels", width: 1080, height: 1920, category: "Facebook" },
@@ -230,7 +281,6 @@ export interface AppProps {
   circles: CircleProps[];
   textColor: string;
   generateNewPalette: () => void;
-  isGenerating: boolean;
   downloadImage: () => void;
   isDownloading: boolean;
   previousCircles: CircleProps[];
@@ -306,4 +356,5 @@ export interface AppProps {
   copyImage: () => void;
   isCopying: boolean;
   setIsCopying: (isCopying: boolean) => void;
+  handlePaletteChange: () => void;
 }
