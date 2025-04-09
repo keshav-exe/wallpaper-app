@@ -142,6 +142,13 @@ export default function RootLayout({
           src="https://cloud.umami.is/script.js"
           data-website-id="a6c56611-b58e-4db6-96b2-de9da8d17529"
         ></script>
+        <script type="text/javascript">
+          {`(function(c,l,a,r,i,t,y){
+              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+          })(window, document, "clarity", "script", "r1axi2lvjw");`}
+        </script>
         <link rel="manifest" href="/manifest.json" />
         <meta
           name="theme-color"
