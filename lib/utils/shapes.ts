@@ -115,8 +115,8 @@ export function drawShape(
   const path = new Path2D();
 
   // Scale coordinates to canvas size
-  const x = (shape.x / 100) * ctx.canvas.width;
-  const y = (shape.y / 100) * ctx.canvas.height;
+  const x = (circle.cx / 100) * ctx.canvas.width;
+  const y = (circle.cy / 100) * ctx.canvas.height;
 
   // Generate blob path
   const points = 6;

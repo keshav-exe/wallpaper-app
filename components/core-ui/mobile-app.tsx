@@ -23,6 +23,7 @@ import {
   Move,
   RefreshCcwIcon,
   ShuffleIcon,
+  RotateCcwIcon,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -41,7 +42,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import VaulDrawer from "@/components/ui/drawer";
-import { AppProps, RESOLUTION_PRESETS } from "@/lib/constants";
+import { AppProps, INITIAL_COLORS, RESOLUTION_PRESETS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useState, useMemo, useRef, Suspense } from "react";
 import logo from "@/public/logo.svg";
@@ -171,6 +172,7 @@ export default function MobileApp({
   copyImage,
   isCopying,
   handlePaletteChange,
+  resetPalette,
 }: AppProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(0.2);
@@ -369,12 +371,14 @@ export default function MobileApp({
                           whiteSpace: "pre-wrap",
                           textAlign: textAlign,
                         }}
+                        className="transition-all duration-300 ease-[cubic-bezier(0.45, 0.05, 0.55, 0.95)]"
                       >
                         {text}
                       </p>
                     ) : (
                       logoImage && (
                         <Image
+                          className="transition-all duration-300 ease-[cubic-bezier(0.45, 0.05, 0.55, 0.95)]"
                           unoptimized
                           src={logoImage}
                           alt="Logo"
@@ -580,6 +584,7 @@ export default function MobileApp({
                               onClick={() => {
                                 setLogoImage(null);
                                 setTextMode("text");
+                                setFontSize(10);
                               }}
                               variant="destructive"
                             >
@@ -1303,6 +1308,14 @@ export default function MobileApp({
                                 disabled={numCircles >= 10}
                               >
                                 <PlusIcon className="size-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                className="p-0"
+                                onClick={resetPalette}
+                                disabled={colors === INITIAL_COLORS}
+                              >
+                                <RotateCcwIcon className="size-4" />
                               </Button>
                             </div>
                           </div>

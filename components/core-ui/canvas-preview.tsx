@@ -18,50 +18,77 @@ export function CanvasPreview() {
     []
   );
 
-  const savedValues = {
-    // Filters
-    blur: store.blur,
-    brightness: store.brightness,
-    contrast: store.contrast,
-    saturation: store.saturation,
+  const savedValues = useMemo(
+    () => ({
+      // Filters
+      blur: store.blur,
+      brightness: store.brightness,
+      contrast: store.contrast,
+      saturation: store.saturation,
 
-    // Colors and Background
-    backgroundColor: store.backgroundColor,
-    backgroundImage: store.backgroundImage,
-    circles: store.circles,
+      // Colors and Background
+      backgroundColor: store.backgroundColor,
+      backgroundImage: store.backgroundImage,
+      circles: store.circles,
 
-    // Text Properties
-    text: store.text,
-    fontSize: store.fontSize,
-    fontWeight: store.fontWeight,
-    letterSpacing: store.letterSpacing,
-    opacity: store.opacity,
-    fontFamily: store.fontFamily,
-    lineHeight: store.lineHeight,
-    textColor: store.textColor,
-    isItalic: store.isItalic,
-    isUnderline: store.isUnderline,
-    isStrikethrough: store.isStrikethrough,
+      // Text Properties
+      text: store.text,
+      fontSize: store.fontSize,
+      fontWeight: store.fontWeight,
+      letterSpacing: store.letterSpacing,
+      opacity: store.opacity,
+      fontFamily: store.fontFamily,
+      lineHeight: store.lineHeight,
+      textColor: store.textColor,
+      isItalic: store.isItalic,
+      isUnderline: store.isUnderline,
+      isStrikethrough: store.isStrikethrough,
 
-    // Effects
-    grainIntensity: store.grainIntensity,
-    textShadow: store.textShadow,
+      // Effects
+      grainIntensity: store.grainIntensity,
+      textShadow: store.textShadow,
 
-    // Position and Mode
-    textPosition: store.textPosition,
-    sizeMode: store.sizeMode,
-    logoImage: store.logoImage,
+      // Position and Mode
+      textPosition: store.textPosition,
+      sizeMode: store.sizeMode,
+      logoImage: store.logoImage,
 
-    // Resolution
-    resolution: store.resolution,
+      // Resolution
+      resolution: store.resolution,
 
-    // Text Alignment
-    textAlign: store.textAlign,
-  };
+      // Text Alignment
+      textAlign: store.textAlign,
+    }),
+    [
+      store.blur,
+      store.brightness,
+      store.contrast,
+      store.saturation,
+      store.backgroundColor,
+      store.backgroundImage,
+      store.circles,
+      store.text,
+      store.fontSize,
+      store.fontWeight,
+      store.letterSpacing,
+      store.opacity,
+      store.fontFamily,
+      store.lineHeight,
+      store.textColor,
+      store.isItalic,
+      store.isUnderline,
+      store.isStrikethrough,
+      store.grainIntensity,
+      store.textShadow,
+      store.textPosition,
+      store.sizeMode,
+      store.logoImage,
+      store.resolution,
+      store.textAlign,
+    ]
+  );
 
-  const effectiveValues = {
-    ...savedValues,
-  };
+  const effectiveValues = savedValues;
 
   // Initialize canvases once
   useEffect(() => {
@@ -180,25 +207,6 @@ export function CanvasPreview() {
     if (effectiveValues.grainIntensity > 0) {
       applyGrainEffect(ctx, effectiveValues.grainIntensity / 100);
     }
-
-    // Update text alignment
-    ctx.textAlign = effectiveValues.textAlign;
-
-    // Draw text
-    if (effectiveValues.text) {
-      const textContent = effectiveValues.text;
-      ctx.fillStyle = effectiveValues.textColor;
-      ctx.font = `${effectiveValues.fontWeight} ${effectiveValues.fontSize}em ${effectiveValues.fontFamily}`;
-      ctx.textBaseline = "middle";
-
-      // Always calculate position relative to center, regardless of alignment
-      const x =
-        effectiveValues.resolution.width / 2 + effectiveValues.textPosition.x;
-      const y =
-        effectiveValues.resolution.height / 2 + effectiveValues.textPosition.y;
-
-      ctx.fillText(textContent, x, y);
-    }
   }, [
     effectiveValues.blur,
     effectiveValues.brightness,
@@ -208,18 +216,12 @@ export function CanvasPreview() {
     effectiveValues.resolution.height,
     effectiveValues.backgroundColor,
     effectiveValues.grainIntensity,
-    effectiveValues.text,
-    effectiveValues.textColor,
-    effectiveValues.fontSize,
-    effectiveValues.fontWeight,
-    effectiveValues.fontFamily,
-    effectiveValues.textAlign,
-    effectiveValues.textPosition,
   ]);
 
   return (
     <canvas
       id="wallpaper"
+      className="transition-all duration-300 ease-[cubic-bezier(0.45, 0.05, 0.55, 0.95)]"
       ref={canvasRef}
       width={effectiveValues.resolution.width}
       height={effectiveValues.resolution.height}

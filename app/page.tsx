@@ -297,8 +297,8 @@ export default function Home() {
           img.src = store.logoImage as string;
         });
 
-        const maxWidth = store.resolution.width * 0.5;
-        const maxHeight = store.resolution.height * 0.5;
+        const maxWidth = (store.resolution.width * store.fontSize) / 100; // Convert percentage to pixels
+        const maxHeight = (store.resolution.height * store.fontSize) / 100;
         const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
         const width = img.width * scale;
         const height = img.height * scale;
@@ -536,10 +536,10 @@ export default function Home() {
 
     const newColors = generateHarmonious();
     store.setCircles(
-      newColors.map((color) => ({
+      newColors.map((color, i) => ({
         color,
-        cx: Math.random() * 100,
-        cy: Math.random() * 100,
+        cx: store.circles[i]?.cx ?? Math.random() * 100,
+        cy: store.circles[i]?.cy ?? Math.random() * 100,
       }))
     );
   };

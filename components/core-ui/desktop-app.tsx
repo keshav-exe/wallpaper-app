@@ -20,6 +20,7 @@ import {
   ExpandIcon,
   ChevronRight,
   ShuffleIcon,
+  RotateCcwIcon,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -168,6 +169,7 @@ export default function DesktopApp({
   copyImage,
   isCopying,
   handlePaletteChange,
+  resetPalette,
 }: AppProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isGenerating, setIsGenerating] = useState(false);
@@ -390,6 +392,7 @@ export default function DesktopApp({
                           onClick={() => {
                             setLogoImage(null);
                             setTextMode("text");
+                            setFontSize(10);
                           }}
                           variant="destructive"
                         >
@@ -909,6 +912,7 @@ export default function DesktopApp({
                               textWrap: "nowrap",
                               textAlign: textAlign,
                             }}
+                            className="transition-all duration-300 ease-[cubic-bezier(0.45, 0.05, 0.55, 0.95)]"
                           >
                             {text}
                           </p>
@@ -917,6 +921,7 @@ export default function DesktopApp({
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={logoImage}
+                              className="transition-all duration-300 ease-[cubic-bezier(0.45, 0.05, 0.55, 0.95)]"
                               alt="Logo"
                               style={{
                                 maxWidth: `${fontSize}%`,
@@ -1213,6 +1218,13 @@ export default function DesktopApp({
                       disabled={numCircles >= 10}
                     >
                       <PlusIcon className="size-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="p-0"
+                      onClick={resetPalette}
+                    >
+                      <RotateCcwIcon className="size-4" />
                     </Button>
                   </div>
                 </div>

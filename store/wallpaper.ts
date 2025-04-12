@@ -77,6 +77,7 @@ interface WallpaperState {
   setBackgroundColor: (color: string) => void;
   setTextColor: (color: string) => void;
   generateNewPalette: () => void;
+  resetPalette: () => void;
 
   // Add missing setters
   setActiveTab: (tab: "design" | "effects" | "canvas") => void;
@@ -174,7 +175,47 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   textAlign: "center",
 
   // Actions
-  setCircles: (circles) => set({ circles }),
+  setCircles: (circles) => {
+    // Check for overlapping circles and reposition if needed
+    const repositionedCircles = circles.map((circle, index) => {
+      const overlapping = circles.some((other, otherIndex) => {
+        if (index === otherIndex) return false;
+        const distance = Math.sqrt(
+          Math.pow(circle.cx - other.cx, 2) + Math.pow(circle.cy - other.cy, 2)
+        );
+        return distance < 20; // Threshold for overlap
+      });
+
+      if (overlapping) {
+        // Try to find a non-overlapping position
+        let attempts = 0;
+        let newCx = circle.cx;
+        let newCy = circle.cy;
+
+        while (attempts < 10) {
+          newCx = Math.random() * 100;
+          newCy = Math.random() * 100;
+
+          const hasOverlap = circles.some((other, otherIndex) => {
+            if (index === otherIndex) return false;
+            const distance = Math.sqrt(
+              Math.pow(newCx - other.cx, 2) + Math.pow(newCy - other.cy, 2)
+            );
+            return distance < 20;
+          });
+
+          if (!hasOverlap) break;
+          attempts++;
+        }
+
+        return { ...circle, cx: newCx, cy: newCy };
+      }
+
+      return circle;
+    });
+
+    set({ circles: repositionedCircles });
+  },
   setPreviousCircles: (circles) => set({ previousCircles: circles }),
   setActiveColor: (index) => set({ activeColor: index }),
   updateColor: (newColor, index) => {
@@ -241,4 +282,56 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   setTextAlign: (align) => set({ textAlign: align }),
   isCopying: false,
   setIsCopying: (isCopying) => set({ isCopying }),
+  resetPalette: () => {
+    const { circles } = get();
+    const newCircles = INITIAL_COLORS.map((color, index) => ({
+      color,
+      cx: circles[index]?.cx ?? Math.random() * 100,
+      cy: circles[index]?.cy ?? Math.random() * 100,
+    }));
+
+    // Check for overlapping circles and reposition if needed
+    const repositionedCircles = newCircles.map((circle, index) => {
+      const overlapping = newCircles.some((other, otherIndex) => {
+        if (index === otherIndex) return false;
+        const distance = Math.sqrt(
+          Math.pow(circle.cx - other.cx, 2) + Math.pow(circle.cy - other.cy, 2)
+        );
+        return distance < 20;
+      });
+
+      if (overlapping) {
+        let attempts = 0;
+        let newCx = circle.cx;
+        let newCy = circle.cy;
+
+        while (attempts < 10) {
+          newCx = Math.random() * 100;
+          newCy = Math.random() * 100;
+
+          const hasOverlap = newCircles.some((other, otherIndex) => {
+            if (index === otherIndex) return false;
+            const distance = Math.sqrt(
+              Math.pow(newCx - other.cx, 2) + Math.pow(newCy - other.cy, 2)
+            );
+            return distance < 20;
+          });
+
+          if (!hasOverlap) break;
+          attempts++;
+        }
+
+        return { ...circle, cx: newCx, cy: newCy };
+      }
+
+      return circle;
+    });
+
+    set({
+      textColor: "#f1f1f1",
+      backgroundColor: "#001220",
+      circles: repositionedCircles,
+      numCircles: INITIAL_COLORS.length,
+    });
+  },
 }));

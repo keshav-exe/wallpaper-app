@@ -357,4 +357,5 @@ export interface AppProps {
   isCopying: boolean;
   setIsCopying: (isCopying: boolean) => void;
   handlePaletteChange: () => void;
+  resetPalette: () => void;
 }
