@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction } from "react";
+
 export interface CircleProps {
   color: string;
   cx: number;
@@ -358,4 +360,24 @@ export interface AppProps {
   setIsCopying: (isCopying: boolean) => void;
   handlePaletteChange: () => void;
   resetPalette: () => void;
+  pattern: {
+    rotation: number;
+    stripeWidth: number;
+    transparentWidth: number;
+    borderWidth1: number;
+    mainStripeWidth: number;
+    borderWidth2: number;
+    opacity: number;
+  };
+  setPattern: Dispatch<
+    SetStateAction<{
+      rotation: number;
+      stripeWidth: number;
+      transparentWidth: number;
+      borderWidth1: number;
+      mainStripeWidth: number;
+      borderWidth2: number;
+      opacity: number;
+    }>
+  >;
 }

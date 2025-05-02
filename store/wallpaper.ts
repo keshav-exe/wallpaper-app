@@ -119,6 +119,28 @@ interface WallpaperState {
   // Add to WallpaperState interface
   isCopying: boolean;
   setIsCopying: (isCopying: boolean) => void;
+
+  // Pattern Controls
+  pattern: {
+    rotation: number;
+    stripeWidth: number;
+    transparentWidth: number;
+    borderWidth1: number;
+    mainStripeWidth: number;
+    borderWidth2: number;
+    opacity: number;
+  };
+  setPattern: Dispatch<
+    SetStateAction<{
+      rotation: number;
+      stripeWidth: number;
+      transparentWidth: number;
+      borderWidth1: number;
+      mainStripeWidth: number;
+      borderWidth2: number;
+      opacity: number;
+    }>
+  >;
 }
 
 export const useWallpaperStore = create<WallpaperState>((set, get) => ({
@@ -173,6 +195,17 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
 
   // Text Alignment
   textAlign: "center",
+
+  // Pattern Controls
+  pattern: {
+    rotation: 45,
+    stripeWidth: 200,
+    transparentWidth: 32,
+    borderWidth1: 96,
+    mainStripeWidth: 96,
+    borderWidth2: 24,
+    opacity: 0.4,
+  },
 
   // Actions
   setCircles: (circles) => {
@@ -334,4 +367,8 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
       numCircles: INITIAL_COLORS.length,
     });
   },
+  setPattern: (value) =>
+    set({
+      pattern: typeof value === "function" ? value(get().pattern) : value,
+    }),
 }));

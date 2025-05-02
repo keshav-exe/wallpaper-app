@@ -73,6 +73,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { OverlayPattern } from "../ui/overlay-pattern";
 
 function DraggablePreview({
   children,
@@ -173,6 +174,8 @@ export default function MobileApp({
   isCopying,
   handlePaletteChange,
   resetPalette,
+  pattern,
+  setPattern,
 }: AppProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(0.2);
@@ -350,6 +353,10 @@ export default function MobileApp({
                   )}
 
                   <CanvasPreview />
+                  <OverlayPattern
+                    color={textColor}
+                    borderColor={backgroundColor}
+                  />
 
                   <div className="absolute inset-0 flex items-center justify-center z-40">
                     {sizeMode === "text" ? (
@@ -976,6 +983,99 @@ export default function MobileApp({
                         />
                       </div>
                     </div>
+
+                    <Separator className="my-2" />
+
+                    <div className="flex flex-col gap-4">
+                      <label className="text-sm text-muted-foreground">
+                        Pattern Controls
+                      </label>
+                      <Slider
+                        label="Pattern Rotation"
+                        min={0}
+                        max={360}
+                        step={1}
+                        value={[pattern.rotation]}
+                        onValueChange={([value]) =>
+                          setPattern((prev) => ({
+                            ...prev,
+                            rotation: value,
+                          }))
+                        }
+                        valueSubtext="deg"
+                      />
+                      <Slider
+                        label="Pattern Size"
+                        min={100}
+                        max={400}
+                        step={10}
+                        value={[pattern.stripeWidth]}
+                        onValueChange={([value]) =>
+                          setPattern((prev) => ({
+                            ...prev,
+                            stripeWidth: value,
+                          }))
+                        }
+                        valueSubtext="px"
+                      />
+                      <Slider
+                        label="Pattern Spacing"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={[pattern.transparentWidth]}
+                        onValueChange={([value]) =>
+                          setPattern((prev) => ({
+                            ...prev,
+                            transparentWidth: value,
+                          }))
+                        }
+                        valueSubtext="px"
+                      />
+                      <Slider
+                        label="Border Width"
+                        min={0}
+                        max={200}
+                        step={1}
+                        value={[pattern.borderWidth1]}
+                        onValueChange={([value]) =>
+                          setPattern((prev) => ({
+                            ...prev,
+                            borderWidth1: value,
+                          }))
+                        }
+                        valueSubtext="px"
+                      />
+                      <Slider
+                        label="Stripe Width"
+                        min={0}
+                        max={200}
+                        step={1}
+                        value={[pattern.mainStripeWidth]}
+                        onValueChange={([value]) =>
+                          setPattern((prev) => ({
+                            ...prev,
+                            mainStripeWidth: value,
+                          }))
+                        }
+                        valueSubtext="px"
+                      />
+                      <Slider
+                        label="Pattern Opacity"
+                        min={0}
+                        max={1}
+                        step={0.05}
+                        value={[pattern.opacity]}
+                        onValueChange={([value]) =>
+                          setPattern((prev) => ({
+                            ...prev,
+                            opacity: value,
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <Separator className="my-2" />
                   </motion.div>
                 )}
 

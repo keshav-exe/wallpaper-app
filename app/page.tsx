@@ -67,6 +67,62 @@ export default function Home() {
         store.resolution.height
       );
 
+      // Draw the overlay pattern
+      ctx.save();
+      // Pattern dimensions matching CSS
+      const stripeWidth = store.pattern.stripeWidth; // Full pattern width
+      const transparentWidth = store.pattern.transparentWidth;
+      const borderWidth1 = store.pattern.borderWidth1;
+      const mainStripeWidth = store.pattern.mainStripeWidth;
+      const borderWidth2 = store.pattern.borderWidth2;
+
+      // Create pattern
+      ctx.globalAlpha = store.pattern.opacity / 10;
+
+      // Calculate diagonal length for full coverage
+      const diagonal = Math.sqrt(
+        Math.pow(store.resolution.width, 2) +
+          Math.pow(store.resolution.height, 2)
+      );
+      const numStripes = Math.ceil(diagonal / stripeWidth);
+
+      ctx.translate(store.resolution.width / 2, store.resolution.height / 2);
+      ctx.rotate((-store.pattern.rotation * Math.PI) / 180);
+      ctx.translate(-store.resolution.width / 2, -store.resolution.height / 2);
+
+      for (let i = -numStripes; i < numStripes; i++) {
+        const x = i * stripeWidth;
+
+        // First border section
+        ctx.fillStyle = store.backgroundColor;
+        ctx.fillRect(
+          x + transparentWidth,
+          -diagonal,
+          borderWidth1,
+          diagonal * 2
+        );
+
+        // Main stripe
+        ctx.fillStyle = store.textColor;
+        ctx.fillRect(
+          x + transparentWidth + borderWidth1,
+          -diagonal,
+          mainStripeWidth,
+          diagonal * 2
+        );
+
+        // Second border section
+        ctx.fillStyle = store.backgroundColor;
+        ctx.fillRect(
+          x + transparentWidth + borderWidth1 + mainStripeWidth,
+          -diagonal,
+          borderWidth2,
+          diagonal * 2
+        );
+      }
+
+      ctx.restore();
+
       // Draw the text
       if (store.sizeMode === "text") {
         ctx.save();
@@ -216,7 +272,63 @@ export default function Home() {
         store.resolution.height
       );
 
-      // Handle text/logo drawing same as download
+      // Draw the overlay pattern
+      ctx.save();
+      // Pattern dimensions matching CSS
+      const stripeWidth = store.pattern.stripeWidth; // Full pattern width
+      const transparentWidth = store.pattern.transparentWidth;
+      const borderWidth1 = store.pattern.borderWidth1;
+      const mainStripeWidth = store.pattern.mainStripeWidth;
+      const borderWidth2 = store.pattern.borderWidth2;
+
+      // Create pattern
+      ctx.globalAlpha = store.pattern.opacity / 10;
+
+      // Calculate diagonal length for full coverage
+      const diagonal = Math.sqrt(
+        Math.pow(store.resolution.width, 2) +
+          Math.pow(store.resolution.height, 2)
+      );
+      const numStripes = Math.ceil(diagonal / stripeWidth);
+
+      ctx.translate(store.resolution.width / 2, store.resolution.height / 2);
+      ctx.rotate((-store.pattern.rotation * Math.PI) / 180);
+      ctx.translate(-store.resolution.width / 2, -store.resolution.height / 2);
+
+      for (let i = -numStripes; i < numStripes; i++) {
+        const x = i * stripeWidth;
+
+        // First border section
+        ctx.fillStyle = store.backgroundColor;
+        ctx.fillRect(
+          x + transparentWidth,
+          -diagonal,
+          borderWidth1,
+          diagonal * 2
+        );
+
+        // Main stripe
+        ctx.fillStyle = store.textColor;
+        ctx.fillRect(
+          x + transparentWidth + borderWidth1,
+          -diagonal,
+          mainStripeWidth,
+          diagonal * 2
+        );
+
+        // Second border section
+        ctx.fillStyle = store.backgroundColor;
+        ctx.fillRect(
+          x + transparentWidth + borderWidth1 + mainStripeWidth,
+          -diagonal,
+          borderWidth2,
+          diagonal * 2
+        );
+      }
+
+      ctx.restore();
+
+      // Draw the text
       if (store.sizeMode === "text") {
         ctx.save();
 
@@ -556,6 +668,8 @@ export default function Home() {
       handleColorChange={handleColorChange}
       handleImageUpload={handleImageUpload}
       handlePaletteChange={handlePaletteChange}
+      pattern={store.pattern}
+      setPattern={store.setPattern}
     />
   );
 }
